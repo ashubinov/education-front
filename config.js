@@ -2,4 +2,4 @@
 //   window.LQ_API = "https://learnquest-ashubinov.amvera.io";
 // Пустая строка = бэкенд на том же адресе (так работает локальный запуск).
 // Для проверки без правки файла можно открыть сайт один раз с параметром ?api=https://адрес-бэкенда
-window.LQ_API = "";
+window.LQ_API = "window.LQ_API = "https://edr.dushes.amvera.io";";
