@@ -42,6 +42,7 @@ async function api(path, opts = {}) {
   const o = { ...opts, headers: { ...(opts.headers || {}) } };
   if (o.json !== undefined) { o.method = o.method || 'POST'; o.headers['Content-Type'] = 'application/json'; o.body = JSON.stringify(o.json); delete o.json; }
   const t = Token.get(); if (t) o.headers['Authorization'] = 'Bearer ' + t;
+  if (!API_BASE && /\.github\.io$/.test(location.hostname)) throw new Error('Не задан адрес бэкенда. Впишите его в config.js (window.LQ_API = "https://…") и обновите страницу.');
   let r;
   try { r = await fetch(API_BASE + '/api' + path, o); }
   catch (e) { throw new Error('Нет связи с сервером. Проверьте интернет или адрес бэкенда (config.js).'); }
