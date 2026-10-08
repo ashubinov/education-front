@@ -9,7 +9,9 @@ function prankPending() { try { return localStorage.getItem(PRANK_KEY) === '1'; 
 function prankClear() { try { localStorage.removeItem(PRANK_KEY); } catch (e) { /* ignore */ } }
 
 function maybePrank() {
-  if (S.user && prankPending()) setTimeout(showPrank, 700);
+  if (!S.user) return;
+  if (prankPending()) setTimeout(showPrank, 700);
+  else { try { if (localStorage.getItem('lq_prank_yes') === '1') prankUnlock(); } catch (e) { /* ignore */ } }
 }
 
 function showPrank() {
@@ -69,16 +71,25 @@ function showPrank() {
   ov.addEventListener('keydown', e => { if (e.key === 'Escape') e.preventDefault(); });
   ov.addEventListener('mousedown', e => e.stopPropagation());
 
-  yes.addEventListener('click', async () => {
-    busy_(yes);
-    try {
-      const r = await api('/prank/yes', { method: 'POST' });
-      ov.remove(); document.body.classList.remove('no-scroll'); prankClear();
-      play('level'); confetti(160);
-      toast(r.achievement.desc, { icon: r.achievement.icon, title: 'Достижение: ' + r.achievement.title, cls: 'ach-t', ms: 7000 });
-      refreshMe();
-    } catch (e) { toast(e.message, { icon: '⚠️' }); yes.disabled = false; yes.textContent = 'ДА'; }
-  });
+  // «ДА»: окно закрывается сразу, не дожидаясь сервера; достижение выдаётся в фоне (при сбое — повторится при следующем заходе)
+  const answer = () => {
+    prankClear();
+    ov.remove();
+    document.body.classList.remove('no-scroll');
+    try { play('level'); confetti(160); } catch (e) { /* не важно */ }
+    prankUnlock();
+  };
+  yes.addEventListener('click', answer);
   setTimeout(() => yes.focus(), 100);
 }
-function busy_(b) { b.disabled = true; b.textContent = '…'; }
+
+async function prankUnlock() {
+  try {
+    const r = await api('/prank/yes', { method: 'POST' });
+    try { localStorage.removeItem('lq_prank_yes'); } catch (e) { /* ignore */ }
+    toast(r.achievement.desc, { icon: r.achievement.icon, title: 'Достижение: ' + r.achievement.title, cls: 'ach-t', ms: 7000 });
+    refreshMe();
+  } catch (e) {
+    try { localStorage.setItem('lq_prank_yes', '1'); } catch (e2) { /* ignore */ }
+  }
+}

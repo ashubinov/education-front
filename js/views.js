@@ -281,6 +281,11 @@ async function drawSettings() {
     <div class="card"><h3>🎨 Внешний вид</h3><div class="field"><label>Цвет интерфейса</label><div class="swatches">${COLORS.map(c => html`<div class="swatch ${u.theme_color.toLowerCase() === c ? 'on' : ''}" style="background:${c}" data-act="setColor" data-v="${c}"></div>`)}<input type="color" id="customcolor" value="${u.theme_color}" style="width:44px;height:44px;border:0;background:none;padding:0;cursor:pointer" title="Свой цвет"></div></div>
       <div class="field"><label>Тема</label><div class="tabs" style="max-width:340px">${[['dark', '🌙 Тёмная'], ['light', '☀️ Светлая'], ['auto', '🖥 Авто']].map(([k, n]) => html`<button class="${u.theme_mode === k ? 'on' : ''}" data-act="setMode" data-v="${k}">${n}</button>`)}</div></div>
       <div class="row spread"><span><b>Звуковые эффекты</b><div class="small muted">Сигналы за верные и неверные ответы</div></span><label class="switch"><input type="checkbox" id="snd" ${u.sound ? 'checked' : ''}><span></span></label></div></div>
+    <div class="card"><h3>🔒 Пароль</h3><p class="small muted">После смены пароля на других устройствах придётся войти заново. Лучше длинный пароль (10+ символов), которого нет в списках утечек.</p>
+      <div class="field"><label>Текущий пароль</label><input type="password" id="pwcur" autocomplete="current-password"></div>
+      <div class="field"><label>Новый пароль</label><input type="password" id="pwnew" autocomplete="new-password" minlength="6" placeholder="не короче 6 символов"></div>
+      <div class="field"><label>Повтори новый пароль</label><input type="password" id="pwnew2" autocomplete="new-password"></div>
+      <div class="err" id="pwerr"></div><button class="btn" data-act="changePassword">Сменить пароль</button></div>
     <div class="card"><h3>🔔 Напоминания</h3><div class="row spread"><span><b>Напоминать о занятиях</b><div class="small muted">Если сегодня ещё не занимался — уведомление в браузере и в Telegram</div></span><label class="switch"><input type="checkbox" id="remon" ${u.reminders_on ? 'checked' : ''}><span></span></label></div>
       <div class="row mt wrap"><div class="field" style="margin:0"><label>Время</label><input type="time" id="remtime" value="${u.reminder_time}" style="width:140px"></div><button class="btn sm" data-act="saveRem" style="align-self:flex-end">Сохранить</button>
       <button class="btn sm ghost" data-act="askNotif" style="align-self:flex-end">Разрешить уведомления в браузере</button></div>
@@ -442,4 +447,20 @@ actions.catDelete = async b => {
     S.catalog = await api('/catalog');
     await actions.openCatalog();
   } catch (e) { toast(e.message, { icon: '⚠️' }); }
+};
+
+actions.changePassword = async b => {
+  const cur = $('#pwcur').value, n1 = $('#pwnew').value, n2 = $('#pwnew2').value, err = $('#pwerr');
+  err.textContent = '';
+  if (!cur) { err.textContent = 'Введи текущий пароль'; return; }
+  if (n1.length < 6) { err.textContent = 'Новый пароль — не короче 6 символов'; return; }
+  if (n1 !== n2) { err.textContent = 'Новые пароли не совпадают'; return; }
+  busy(b, true, 'Меняю…');
+  try {
+    const r = await api('/me/password', { json: { current_password: cur, new_password: n1 } });
+    Token.set(r.token);
+    ['pwcur', 'pwnew', 'pwnew2'].forEach(id => { $('#' + id).value = ''; });
+    toast('Пароль изменён. На других устройствах нужно войти заново.', { icon: '🔒', ms: 5000 });
+  } catch (e) { err.textContent = e.message; }
+  busy(b, false);
 };
