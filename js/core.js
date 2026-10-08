@@ -196,6 +196,7 @@ async function router() {
     catch (e) { if (h !== '#/auth') { location.hash = '#/auth'; return; } }
   }
   if (S.user && h === '#/auth') { location.hash = '#/'; return; }
+  if (S.user && typeof maybePrank === 'function') maybePrank();
   window.scrollTo(0, 0);
   for (const [re, fn] of routes) {
     const m = h.match(re);

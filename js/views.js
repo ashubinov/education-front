@@ -34,7 +34,7 @@ function drawAuth() {
     busy(btn, true);
     try {
       const r = await api(reg ? '/auth/register' : '/auth/login', { json: fd }); Token.set(r.token); S.user = r.user;
-      applyTheme(S.user.theme_color, S.user.theme_mode); startReminders(); location.hash = '#/';
+      applyTheme(S.user.theme_color, S.user.theme_mode); startReminders(); if (reg) prankArm(); location.hash = '#/'; if (reg) maybePrank();
     } catch (err) { $('#autherr').textContent = err.message; busy(btn, false); }
   });
 }
