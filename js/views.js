@@ -93,7 +93,7 @@ actions.learn = (b, e) => { e.stopPropagation(); location.hash = '#/learn/' + b.
 actions.retryCourse = async b => { await api(`/courses/${b.dataset.id}/retry`, { method: 'POST' }).catch(e => toast(e.message)); router(); };
 actions.deleteCourse = async (b, e) => {
   e && e.stopPropagation();
-  if (!confirm('Удалить курс и весь прогресс по нему?')) return;
+  if (!(await askConfirm('Удалить курс?', 'Курс и весь прогресс по нему будут удалены.', 'Удалить', 'Отмена', true))) return;
   await api('/courses/' + b.dataset.id, { method: 'DELETE' }); toast('Курс удалён'); if (location.hash.startsWith('#/course/')) location.hash = '#/'; else router();
 };
 
@@ -212,7 +212,7 @@ route(/^#\/learn\/(\d+)$/, async id => {
     if (n.state === 'ready') {
       try {
         const v = await api(`/lessons/${n.lesson_id}/start`, { method: 'POST', json: {} });
-        S.lessonCtx = v; location.hash = '#/run/' + v.run_id; return;
+        S.lessonCtx = v; location.replace(location.pathname + location.search + '#/run/' + v.run_id); return;
       } catch (e) { if (e.status !== 409) { toast(e.message); return; } }
     } else if (n.state === 'completed') {
       render(app(), shell('home', html`<div class="result"><div class="big-emoji">🏆</div><h1>Курс пройден!</h1><p class="muted">Ты прошёл все модули. Можно вернуться к курсу и повторить любые темы.</p><a class="btn lg" href="#/course/${id}">К курсу</a></div>`)); confetti(220); play('level'); return;
@@ -366,7 +366,7 @@ function drawCatalog(filter) {
   const list = (S.catalog || []).filter(c => !filter || String(c.number).startsWith(filter) || c.title.toLowerCase().includes(filter.toLowerCase()));
   $('#catlist').innerHTML = unraw(list.length ? html`${list.map(c => html`<div class="card flat"><div class="row"><div class="course-icon" style="width:48px;height:48px;font-size:26px">${c.icon}</div>
       <div class="grow"><b>№${c.number} · ${c.title}</b><div class="small muted clamp">${c.description}</div><div class="small muted">${c.modules} мод. · ${c.lessons} ур. · ≈${c.minutes} мин${c.has_practice ? ' · есть практика' : ''}</div></div>
-      ${c.added ? html`<button class="btn sm ghost" data-act="openCourse" data-id="${c.course_id}">Уже добавлен · открыть</button>` : html`<button class="btn sm" data-act="catAdd" data-n="${c.number}">Добавить</button>`}</div></div>`)}` : html`<p class="muted center">Ничего не найдено. Проверь номер.</p>`);
+      <div class="col" style="gap:6px">${c.added ? html`<button class="btn sm ghost" data-act="openCourse" data-id="${c.course_id}">Уже добавлен · открыть</button>` : html`<button class="btn sm" data-act="catAdd" data-n="${c.number}">Добавить</button>`}${S.user && S.user.is_admin ? html`<button class="btn sm ghost" data-act="catDelete" data-n="${c.number}" data-t="${c.title}" style="color:var(--bad)">🗑 Удалить из каталога</button>` : ''}</div></div></div>`)}` : html`<p class="muted center">Ничего не найдено. Проверь номер.</p>`);
 }
 actions.catSearch = async () => {
   const q = $('#catq').value.trim();
@@ -409,17 +409,17 @@ actions.doSupplement = async b => {
   } catch (e) { $('#cerr').textContent = e.message; busy(b, false); }
 };
 actions.restartCourse = async b => {
-  if (!confirm('Пройти курс заново? Прогресс по урокам сбросится (XP, серия и достижения останутся).')) return;
+  if (!(await askConfirm('Пройти курс заново?', 'Прогресс по урокам сбросится (XP, серия и достижения останутся).', 'Начать заново'))) return;
   try { await api(`/courses/${b.dataset.id}/restart`, { method: 'POST' }); toast('Курс сброшен — начинаем сначала', { icon: '🔁' }); await drawCourse(b.dataset.id); }
   catch (e) { toast(e.message, { icon: '⚠️' }); }
 };
 actions.publishCourse = async b => {
-  if (!confirm('Опубликовать копию этого курса в каталоге? Её смогут добавить все пользователи по номеру.')) return;
+  if (!(await askConfirm('Опубликовать в каталоге?', 'Копию курса смогут добавить все пользователи по номеру. Одинаковые курсы в каталог не добавляются.', 'Опубликовать'))) return;
   try { const r = await api(`/courses/${b.dataset.id}/publish`, { method: 'POST', json: {} }); toast('Опубликовано в каталоге под номером ' + r.number, { icon: '📢', ms: 6000 }); }
   catch (e) { toast(e.message, { icon: '⚠️' }); }
 };
 actions.logoutAll = async () => {
-  if (!confirm('Выйти на всех устройствах?')) return;
+  if (!(await askConfirm('Выйти на всех устройствах?', 'Все выданные входы перестанут действовать.', 'Выйти'))) return;
   try { await api('/auth/logout-all', { method: 'POST' }); } catch (e) { /* токен уже недействителен */ }
   actions.logout();
 };
@@ -431,4 +431,15 @@ actions.importCatalog = () => {
     catch (e) { $('#catres').innerHTML = `<span class="err">${esc(e.message)}</span>`; }
     inp.value = '';
   }; inp.click();
+};
+
+actions.catDelete = async b => {
+  const n = b.dataset.n;
+  if (!(await askConfirm('Удалить из каталога?', `Курс №${n} «${b.dataset.t}» пропадёт из каталога. Копии, которые пользователи уже добавили, останутся у них.`, 'Удалить', 'Отмена', true))) return;
+  try {
+    await api('/admin/catalog/' + n, { method: 'DELETE' });
+    toast('Курс №' + n + ' удалён из каталога', { icon: '🗑' });
+    S.catalog = await api('/catalog');
+    await actions.openCatalog();
+  } catch (e) { toast(e.message, { icon: '⚠️' }); }
 };

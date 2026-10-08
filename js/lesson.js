@@ -75,7 +75,7 @@ actions.taskHint = () => {
   if (P.hint < hs.length) { $('#hintbox').insertAdjacentHTML('beforeend', `<div class="hint">💡 ${esc(hs[P.hint])}</div>`); P.hint++; } else toast('Это все подсказки');
 };
 actions.dontKnow = () => { $('#ans').value = ''; submitAnswer({ text: '' }); };
-actions.taskSkip = () => { if (confirm('Пропустить задание? Покажу разбор, но опыт не начислю.')) submitAnswer({ skip: true }); };
+actions.taskSkip = async () => { if (await askConfirm('Пропустить задание?', 'Покажу разбор, но опыт не начислю.', 'Пропустить')) submitAnswer({ skip: true }); };
 actions.check = () => {
   if (P.answered) return;
   const s = P.v.step, k = s.kind;
@@ -159,9 +159,11 @@ function afterFeedback(res) {
   if (res.finished || !P.v.step) return finishLesson();
   drawStep();
 }
-actions.exitLesson = () => {
-  if (!confirm('Выйти из урока? Прогресс сохранится — продолжишь с этого места.')) return;
-  history.length > 1 ? history.back() : (location.hash = '#/');
+actions.exitLesson = async () => {
+  const ok = await askConfirm('Выйти из урока?', 'Прогресс сохранится — продолжишь с этого места.', 'Выйти', 'Остаться');
+  if (!ok) return;
+  const cid = P && P.v && P.v.course_id;
+  location.replace(location.pathname + location.search + (cid ? '#/course/' + cid : '#/'));  // replace: чтобы «назад» не возвращал в урок
 };
 
 function playerKey(e) {

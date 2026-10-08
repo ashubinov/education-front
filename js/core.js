@@ -152,6 +152,17 @@ function openModal(content, { onClose } = {}) {
 function closeModal() { const r = $('#modal-root'); if (r.firstChild) { r.innerHTML = ''; if (S.modalClose) { S.modalClose(); S.modalClose = null; } } }
 actions.closeModal = closeModal;
 
+/** Окно подтверждения внутри приложения (системный confirm() на телефонах бывает заблокирован). Возвращает Promise<boolean>. */
+function askConfirm(title, text, okLabel = 'Да', cancelLabel = 'Отмена', danger = false) {
+  return new Promise(resolve => {
+    openModal(html`<h2>${title}</h2><p class="muted">${text}</p>
+      <div class="row mt" style="justify-content:flex-end"><button class="btn ghost" data-act="confirmNo">${cancelLabel}</button><button class="btn ${danger ? 'bad' : ''}" data-act="confirmYes">${okLabel}</button></div>`,
+      { onClose: () => resolve(false) });
+    actions.confirmYes = () => { S.modalClose = null; closeModal(); resolve(true); };
+    actions.confirmNo = () => closeModal();
+  });
+}
+
 /* ---------- каркас страниц ---------- */
 function hud() {
   const u = S.user; if (!u) return '';
