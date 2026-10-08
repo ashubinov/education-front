@@ -427,7 +427,7 @@ actions.exportCatalog = async () => { try { await downloadApi('/admin/catalog/ex
 actions.importCatalog = () => {
   const inp = $('#catfile'); inp.onchange = async () => {
     const fd = new FormData(); fd.append('file', inp.files[0]);
-    try { const r = await api('/admin/catalog/import', { method: 'POST', body: fd }); $('#catres').innerHTML = `✅ Добавлено: ${esc((r.added || []).join(', ') || '—')}. Пропущено (уже есть): ${esc((r.skipped || []).join(', ') || '—')}`; }
+    try { const r = await api('/admin/catalog/import?replace=1', { method: 'POST', body: fd }); $('#catres').innerHTML = `✅ Добавлено: ${esc((r.added || []).join(', ') || '—')}. Заменено: ${esc((r.replaced || []).join(', ') || '—')}. Пропущено: ${esc((r.skipped || []).join(', ') || '—')}`; }
     catch (e) { $('#catres').innerHTML = `<span class="err">${esc(e.message)}</span>`; }
     inp.value = '';
   }; inp.click();
