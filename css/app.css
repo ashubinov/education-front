@@ -141,7 +141,8 @@ main { max-width: 1120px; margin: 0 auto; padding: 24px 18px 90px; animation: fa
 .mod .body { flex: 1; padding: 14px 18px; } .mod.locked .body { opacity: .6; }
 .mod:not(:last-child) .node::after { content: ""; position: absolute; top: 52px; left: 50%; width: 4px; height: 20px; margin-left: -2px; background: var(--line); }
 .terms { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-.two { display: grid; grid-template-columns: 1.6fr 1fr; gap: 18px; } @media (max-width: 900px) { .two { grid-template-columns: 1fr; } .course-head { flex-wrap: wrap; } }
+.two { display: grid; grid-template-columns: 1.6fr 1fr; gap: 18px; }
+@media (max-width: 900px) { .two { grid-template-columns: 1fr; } .course-head { flex-wrap: wrap; } }
 .ring { position: relative; width: 120px; height: 120px; flex: none; } .ring svg { transform: rotate(-90deg); } .ring .t { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; font-weight: 900; line-height: 1.1; }
 .note { background: var(--accent-l); border-radius: 16px; padding: 12px 16px; font-size: 14px; }
 
@@ -237,3 +238,53 @@ main { max-width: 1120px; margin: 0 auto; padding: 24px 18px 90px; animation: fa
 .prank-no { position: fixed; z-index: 510; min-width: 110px; transition: opacity .12s; }
 .prank-no.gone { opacity: 0; pointer-events: none; }
 body.no-scroll { overflow: hidden; }
+
+/* =====================================================================
+   Мобильная вёрстка и защита от «расползания» страницы
+   ===================================================================== */
+html, body { overflow-x: clip; max-width: 100%; }
+.two { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); }
+.two > *, .grid > *, .col > *, .card, .mod .body, .course-head .grow, .row > .grow { min-width: 0; }
+.grid { grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr)); }
+.chip { max-width: 100%; }
+.terms .chip { white-space: normal; text-align: left; }
+h1, h2, h3, .q, .term-card .term, .course-card h3 { overflow-wrap: anywhere; }
+@supports (height: 100dvh) {
+  .player, .auth-wrap { min-height: 100dvh; }
+  .loader-screen { min-height: 70dvh; }
+  .modal { max-height: 92dvh; }
+}
+@media (max-width: 900px) {
+  .two { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 560px) {
+  body { background-attachment: scroll; }
+  /* на iOS поля со шрифтом меньше 16px увеличивают страницу при фокусе */
+  input, textarea, select, textarea.code { font-size: 16px; }
+  .row.spread { flex-wrap: wrap; }
+  .tabs button { white-space: nowrap; font-size: 12px; padding: 9px 2px; }
+  .modal-bg { padding: 8px; }
+  .modal.card { padding: 16px; border-radius: 18px; }
+  .cat-row { flex-wrap: wrap; }
+  .cat-row .grow { flex: 1 1 60%; }
+  .cat-actions { flex-direction: row; flex-wrap: wrap; width: 100%; }
+  .cat-actions .btn { flex: 1 1 140px; white-space: normal; }
+  .course-head .col { min-width: 0; }
+  .course-icon { width: 50px; height: 50px; font-size: 28px; }
+  .p-body { padding-bottom: 340px; }
+  .week-dots { gap: 5px; } .week-dots .d { width: 32px; }
+  .stat-row .card { min-width: 100px; flex: 1 1 100px; }
+  .prank-card { padding: 24px 16px; } .prank-card h2 { font-size: 32px; }
+  #toasts { top: 66px; left: 8px; right: 8px; width: auto; }
+  .mod { gap: 10px; } .mod .node { width: 44px; height: 44px; font-size: 18px; } .mod .body { padding: 12px 14px; }
+  .mod:not(:last-child) .node::after { top: 44px; }
+  .btn.lg { padding: 14px 18px; font-size: 15px; }
+  .hud-streak { font-size: 16px; }
+  main { padding-bottom: 96px; }
+}
+@media (max-width: 360px) {
+  h1 { font-size: 21px; } .q { font-size: 18px; }
+  .logo { font-size: 19px; } .topbar-in { padding: 8px 12px; gap: 8px; }
+  .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } .tile b { font-size: 24px; }
+}
+.row.spread > span, .row.spread > div, .files .f span { min-width: 0; overflow-wrap: anywhere; }  /* длинные имена файлов без пробелов */

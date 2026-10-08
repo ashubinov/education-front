@@ -263,6 +263,7 @@ async function drawStats() {
     <h2>Достижения <span class="muted small">${st.achievements.filter(a => a.unlocked).length}/${st.achievements.length}</span></h2>
     <div class="ach-grid">${st.achievements.map(a => html`<div class="ach ${a.unlocked ? '' : 'locked'}"><div class="ic">${a.icon}</div><div><b>${a.title}</b><span>${a.desc}</span></div></div>`)}</div>`));
   $('#statcourse').onchange = e => { S.statCourse = e.target.value; drawStats(); };
+  const hs = $('.heat-scroll'); if (hs) hs.scrollLeft = hs.scrollWidth;  // сразу показываем свежие недели
   S.lastStats = st;
 }
 actions.metric = b => { S.statMetric = b.dataset.k; drawStats(); };
@@ -369,9 +370,9 @@ actions.openCatalog = async () => {
 };
 function drawCatalog(filter) {
   const list = (S.catalog || []).filter(c => !filter || String(c.number).startsWith(filter) || c.title.toLowerCase().includes(filter.toLowerCase()));
-  $('#catlist').innerHTML = unraw(list.length ? html`${list.map(c => html`<div class="card flat"><div class="row"><div class="course-icon" style="width:48px;height:48px;font-size:26px">${c.icon}</div>
+  $('#catlist').innerHTML = unraw(list.length ? html`${list.map(c => html`<div class="card flat"><div class="row cat-row"><div class="course-icon" style="width:48px;height:48px;font-size:26px">${c.icon}</div>
       <div class="grow"><b>№${c.number} · ${c.title}</b><div class="small muted clamp">${c.description}</div><div class="small muted">${c.modules} мод. · ${c.lessons} ур. · ≈${c.minutes} мин${c.has_practice ? ' · есть практика' : ''}</div></div>
-      <div class="col" style="gap:6px">${c.added ? html`<button class="btn sm ghost" data-act="openCourse" data-id="${c.course_id}">Уже добавлен · открыть</button>` : html`<button class="btn sm" data-act="catAdd" data-n="${c.number}">Добавить</button>`}${S.user && S.user.is_admin ? html`<button class="btn sm ghost" data-act="catDelete" data-n="${c.number}" data-t="${c.title}" style="color:var(--bad)">🗑 Удалить из каталога</button>` : ''}</div></div></div>`)}` : html`<p class="muted center">Ничего не найдено. Проверь номер.</p>`);
+      <div class="col cat-actions" style="gap:6px">${c.added ? html`<button class="btn sm ghost" data-act="openCourse" data-id="${c.course_id}">Уже добавлен · открыть</button>` : html`<button class="btn sm" data-act="catAdd" data-n="${c.number}">Добавить</button>`}${S.user && S.user.is_admin ? html`<button class="btn sm ghost" data-act="catDelete" data-n="${c.number}" data-t="${c.title}" style="color:var(--bad)">🗑 Удалить из каталога</button>` : ''}</div></div></div>`)}` : html`<p class="muted center">Ничего не найдено. Проверь номер.</p>`);
 }
 actions.catSearch = async () => {
   const q = $('#catq').value.trim();
