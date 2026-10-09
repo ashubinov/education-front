@@ -278,8 +278,16 @@ async function drawSettings() {
   const [set, tg] = await Promise.all([api('/settings'), api('/telegram/status')]);
   S.settings = set; const u = S.user;
   render(app(), shell('settings', html`<h1>Настройки</h1><div class="col" style="max-width:760px">
-    <div class="card"><h3>👤 Профиль</h3><div class="field"><label>Имя</label><div class="row"><input type="text" id="dname" value="${u.display_name}" maxlength="40"><button class="btn sm" data-act="saveName">Сохранить</button></div></div>
-      <div class="field"><label>Аватар</label><div class="emoji-pick">${AVATARS.map(a => html`<button class="${u.avatar === a ? 'on' : ''}" data-act="setAvatar" data-v="${a}">${a}</button>`)}</div></div></div>
+    <div class="card"><h3>👤 Профиль</h3>
+      <div class="row mb"><div class="pav xl">${av(u)}</div><div class="grow pname"><b style="font-size:20px">${u.display_name}</b><div class="small muted">@${u.username}</div></div></div>
+      <div class="field"><label>Имя</label><div class="row"><input type="text" id="dname" value="${u.display_name}" maxlength="40"><button class="btn sm" data-act="saveName">Сохранить</button></div></div>
+      <div class="field"><label>Аватар</label>
+        <div class="row wrap gap-s"><button class="btn sm" data-act="pickAvatar">📷 Загрузить своё фото</button>${u.avatar_url ? html`<button class="btn sm ghost" data-act="removeAvatar">Убрать фото</button>` : ''}<input type="file" id="avfile" accept="image/png,image/jpeg,image/webp,image/gif" class="hidden"></div>
+        <div class="small muted">Любая картинка: она обрежется по центру в квадрат и уменьшится. Или выбери эмодзи:</div>
+        <div class="emoji-pick">${AVATARS.map(a => html`<button class="${!u.avatar_url && u.avatar === a ? 'on' : ''}" data-act="setAvatar" data-v="${a}">${a}</button>`)}</div></div>
+      <div class="field"><label>Логин (для входа и поиска друзьями)</label>
+        <div class="row wrap gap-s"><input type="text" id="newlogin" value="${u.username}" maxlength="32" autocomplete="off" autocapitalize="off" spellcheck="false" style="flex:1;min-width:140px"><input type="password" id="loginpw" placeholder="пароль для подтверждения" autocomplete="current-password" style="flex:1;min-width:140px"><button class="btn sm" data-act="changeLogin">Сменить</button></div>
+        <div class="err" id="loginerr"></div></div></div>
     <div class="card"><h3>🎨 Внешний вид</h3><div class="field"><label>Цвет интерфейса</label><div class="swatches">${COLORS.map(c => html`<div class="swatch ${u.theme_color.toLowerCase() === c ? 'on' : ''}" style="background:${c}" data-act="setColor" data-v="${c}"></div>`)}<input type="color" id="customcolor" value="${u.theme_color}" style="width:44px;height:44px;border:0;background:none;padding:0;cursor:pointer" title="Свой цвет"></div></div>
       <div class="field"><label>Тема</label><div class="tabs" style="max-width:340px">${[['dark', '🌙 Тёмная'], ['light', '☀️ Светлая'], ['auto', '🖥 Авто']].map(([k, n]) => html`<button class="${u.theme_mode === k ? 'on' : ''}" data-act="setMode" data-v="${k}">${n}</button>`)}</div></div>
       <div class="row spread"><span><b>Звуковые эффекты</b><div class="small muted">Сигналы за верные и неверные ответы</div></span><label class="switch"><input type="checkbox" id="snd" ${u.sound ? 'checked' : ''}><span></span></label></div></div>
@@ -309,9 +317,13 @@ async function drawSettings() {
       <div class="field"><label>Токен Telegram-бота (от @BotFather)</label><input type="password" id="tgtoken" placeholder="${set.telegram.configured ? 'токен задан — оставь пустым, чтобы не менять' : '123456:ABC…'}" autocomplete="off"></div>
       <div class="row"><button class="btn" data-act="saveAdmin">Сохранить</button><button class="btn ghost" data-act="testLLM">Проверить модель</button></div><div id="llmres" class="small mt"></div></div>
     <div class="card"><h3>📚 Каталог готовых курсов</h3><p class="small muted">Готовые курсы получают номер; друзья находят их по номеру и добавляют себе. Свой курс можно опубликовать кнопкой «В каталог» на его странице.</p>
-      <div class="row wrap gap-s"><button class="btn sm ghost" data-act="exportCatalog">⬇ Экспорт каталога (JSON)</button><button class="btn sm ghost" data-act="importCatalog">⬆ Импорт каталога</button><input type="file" id="catfile" accept=".json,application/json" class="hidden"></div><div id="catres" class="small mt"></div></div>` : ''}
+      <div class="row wrap gap-s"><button class="btn sm ghost" data-act="exportCatalog">⬇ Экспорт каталога (JSON)</button><button class="btn sm ghost" data-act="importCatalog">⬆ Импорт каталога</button><input type="file" id="catfile" accept=".json,application/json" class="hidden"></div><div id="catres" class="small mt"></div></div>
+    <div class="card" id="bkcard"><h3>💾 Резервные копии базы</h3><p class="small muted">Раз в сутки сервер сохраняет снимок базы (пользователи, курсы, прогресс, ключи) и хранит несколько последних. Копии лежат на том же сервере, поэтому время от времени скачивай свежую к себе. Файл содержит секреты — храни его как пароли.</p>
+      <div class="row wrap gap-s mb"><button class="btn sm" data-act="backupNow">Сделать копию сейчас</button><button class="btn sm ghost" data-act="backupFresh">⬇ Скачать свежую копию</button></div><div id="bklist" class="small col" style="gap:6px"><span class="muted">загружаю…</span></div></div>` : ''}
     <div class="row wrap"><button class="btn ghost" data-act="logout">Выйти из аккаунта</button><button class="btn ghost" data-act="logoutAll">Выйти на всех устройствах</button></div></div>`));
   window.scrollTo(0, keepY);
+  if (set.is_admin) loadBackups();
+  const avf = $('#avfile'); if (avf) avf.onchange = () => uploadAvatar(avf.files[0]);
   const snd = $('#snd'); if (snd) snd.onchange = async () => { await saveMe({ sound: snd.checked }); };
   const cc = $('#customcolor'); if (cc) cc.oninput = () => applyTheme(cc.value, S.user.theme_mode), cc.onchange = () => saveMe({ theme_color: cc.value }, true);
   if (tg.configured && !tg.linked && S.tgPolling) every(async () => { const s = await api('/telegram/status'); if (s.linked) { S.tgPolling = false; toast('Telegram подключён!', { icon: '✈️' }); drawSettings(); refreshMe(); } }, 3000);
@@ -326,7 +338,45 @@ async function saveMe(patch, quiet) {
   if (!quiet) toast('Сохранено', { icon: '✅', ms: 1500 });
 }
 actions.saveName = () => saveMe({ display_name: $('#dname').value });
-actions.setAvatar = async b => { await saveMe({ avatar: b.dataset.v }, true); drawSettings(); };
+actions.setAvatar = async b => {
+  if (S.user.avatar_url) await api('/me/avatar', { method: 'DELETE' });  // выбранное эмодзи заменяет загруженное фото
+  await saveMe({ avatar: b.dataset.v }, true); drawSettings();
+};
+actions.removeAvatar = async () => { try { S.user = await api('/me/avatar', { method: 'DELETE' }); refreshHud(); toast('Фото убрано', { icon: '🗑', ms: 1500 }); } catch (e) { toast(e.message, { icon: '⚠️' }); } drawSettings(); };
+actions.pickAvatar = () => { const f = $('#avfile'); f.value = ''; f.click(); };
+/** Обрезать фото по центру в квадрат size×size (JPEG): на сервер уходит маленький файл, а не снимок с камеры на несколько мегабайт. */
+function cropSquare(file, size = 256) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file), img = new Image();
+    img.onload = () => {
+      const c = document.createElement('canvas'); c.width = c.height = size;
+      const x = c.getContext('2d'), m = Math.min(img.naturalWidth, img.naturalHeight);
+      x.fillStyle = '#fff'; x.fillRect(0, 0, size, size);
+      x.drawImage(img, (img.naturalWidth - m) / 2, (img.naturalHeight - m) / 2, m, m, 0, 0, size, size);
+      URL.revokeObjectURL(url);
+      c.toBlob(b => b ? resolve(b) : reject(new Error('Не удалось обработать картинку')), 'image/jpeg', 0.9);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Не удалось прочитать картинку — выбери PNG или JPEG')); };
+    img.src = url;
+  });
+}
+async function uploadAvatar(file) {
+  if (!file) return;
+  try {
+    const fd = new FormData(); fd.append('file', await cropSquare(file), 'avatar.jpg');
+    S.user = await api('/me/avatar', { method: 'PUT', body: fd }); refreshHud(); toast('Аватарка обновлена', { icon: '📷', ms: 1800 });
+  } catch (e) { toast(e.message, { icon: '⚠️' }); }
+  drawSettings();
+}
+actions.changeLogin = async b => {
+  const login = $('#newlogin').value.trim(), pw = $('#loginpw').value;
+  if (login === S.user.username) { $('#loginerr').textContent = 'Это твой текущий логин'; return; }
+  if (!/^[\w.\-]{3,32}$/.test(login)) { $('#loginerr').textContent = 'Логин: 3–32 символа, латиница, цифры, . _ -'; return; }
+  if (!pw) { $('#loginerr').textContent = 'Введи пароль для подтверждения'; return; }
+  busy(b, true);
+  try { S.user = await api('/me/username', { method: 'PUT', json: { username: login, password: pw } }); toast('Логин изменён. Входить теперь нужно с ним', { icon: '✅', ms: 3200 }); drawSettings(); }
+  catch (e) { busy(b, false); $('#loginerr').textContent = e.message; }
+};
 actions.setColor = async b => { await saveMe({ theme_color: b.dataset.v }, true); drawSettings(); };
 actions.setMode = async b => { await saveMe({ theme_mode: b.dataset.v }, true); drawSettings(); };
 actions.saveRem = () => saveMe({ reminders_on: $('#remon').checked, reminder_time: $('#remtime').value });
@@ -465,4 +515,21 @@ actions.changePassword = async b => {
     toast('Пароль изменён. На других устройствах нужно войти заново.', { icon: '🔒', ms: 5000 });
   } catch (e) { err.textContent = e.message; }
   busy(b, false);
+};
+
+/* ---------- резервные копии (админ) ---------- */
+async function loadBackups() {
+  const box = $('#bklist'); if (!box) return;
+  try {
+    const r = await api('/admin/backups'), kb = n => n > 1048576 ? (n / 1048576).toFixed(1) + ' МБ' : Math.max(1, Math.round(n / 1024)) + ' КБ';
+    box.innerHTML = unraw(r.backups.length ? html`${r.backups.map(b => html`<div class="row spread"><span>${b.created} · ${kb(b.size)}</span><button class="btn sm ghost" data-act="backupGet" data-name="${b.name}">⬇ Скачать</button></div>`)}<span class="muted">Хранятся последние ${r.keep}, новая копия — раз в ${r.every_hours} ч.</span>` : html`<span class="muted">Копий пока нет — нажми «Сделать копию сейчас».</span>`);
+  } catch (e) { box.textContent = e.message; }
+}
+actions.backupNow = async b => { busy(b, true); try { await api('/admin/backups', { method: 'POST' }); toast('Копия сделана', { icon: '💾', ms: 1800 }); } catch (e) { toast(e.message, { icon: '⚠️' }); } busy(b, false); loadBackups(); };
+actions.backupGet = async b => { try { await downloadApi('/admin/backups/' + encodeURIComponent(b.dataset.name), b.dataset.name); } catch (e) { toast(e.message, { icon: '⚠️' }); } };
+actions.backupFresh = async b => {
+  busy(b, true);
+  try { const info = await api('/admin/backups', { method: 'POST' }); await downloadApi('/admin/backups/' + encodeURIComponent(info.name), info.name); toast('Копия скачана', { icon: '💾', ms: 1800 }); }
+  catch (e) { toast(e.message, { icon: '⚠️' }); }
+  busy(b, false); loadBackups();
 };

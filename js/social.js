@@ -13,7 +13,7 @@ function fmtLast(iso) {
   return d <= 0 ? 'занимался сегодня' : d === 1 ? 'занимался вчера' : d < 30 ? `занимался ${d} ${plural(d, 'день', 'дня', 'дней')} назад` : 'давно не заходил';
 }
 function fmtStamp(s) { try { return new Date(s.replace(' ', 'T') + 'Z').toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' }); } catch (e) { return ''; } }
-const who = p => html`<span class="pav">${p.avatar}</span><div class="grow pname"><b>${p.display_name}</b><div class="small muted">@${p.username}</div></div>`;
+const who = p => html`<span class="pav">${av(p)}</span><div class="grow pname"><b>${p.display_name}</b><div class="small muted">@${p.username}</div></div>`;
 const goBack = (href, text) => html`<a href="${href}" class="small back">← ${text}</a>`;
 
 /* =============================== друзья =============================== */
@@ -41,7 +41,7 @@ async function drawFriends() {
       : html`<div class="card center mb"><div style="font-size:44px">🫂</div><p class="muted" style="margin:6px 0 0">Друзей пока нет. Отправь заявку по логину — и вы увидите успехи друг друга.</p></div>`}
     <h2>Моя страничка</h2>
     <div class="card"><p class="small muted">Подписи, которые друзья оставили у тебя. Они появляются после проверки администратором.</p>
-      ${wall.wall.length ? html`<div class="col">${wall.wall.map(w => html`<div class="sign"><span class="pav sm">${w.author.avatar}</span><div class="grow"><div class="sign-text">${w.text}</div><div class="small muted">${w.author.display_name} · ${fmtStamp(w.updated_at)}</div></div><button class="icon-btn" data-act="wallDelete" data-id="${w.id}" title="Убрать подпись">✕</button></div>`)}</div>`
+      ${wall.wall.length ? html`<div class="col">${wall.wall.map(w => html`<div class="sign"><span class="pav sm">${av(w.author)}</span><div class="grow"><div class="sign-text">${w.text}</div><div class="small muted">${w.author.display_name} · ${fmtStamp(w.updated_at)}</div></div><button class="icon-btn" data-act="wallDelete" data-id="${w.id}" title="Убрать подпись">✕</button></div>`)}</div>`
         : html`<p class="muted" style="margin:0">Пока никто не оставил подпись.</p>`}</div>`));
   window.scrollTo(0, keepY);
   $('#addfriend').addEventListener('submit', async e => {
@@ -75,7 +75,7 @@ async function drawFriend(id) {
   const done = p.achievements.filter(a => a.unlocked);
   render(app(), shell('friends', html`${goBack('#/friends', 'Все друзья')}
     <div class="card quest mb mt-s">
-      <div class="pav xl">${p.avatar}</div>
+      <div class="pav xl">${av(p)}</div>
       <div class="grow"><h2 style="margin:0">${p.display_name}</h2><div class="small muted">@${p.username} · с нами с ${fmtStamp(p.member_since)} · ${fmtLast(p.last_active)}</div>
         <div class="row wrap gap-s mt"><span class="chip accent">Уровень ${p.level_full.level}</span><span class="chip ${p.streak ? 'warn' : ''}">🔥 серия ${p.streak}</span><span class="chip">🏅 рекорд ${p.best_streak}</span></div>
         <div class="bar thin mt"><i style="width:${p.level_full.pct}%"></i></div><div class="small muted">${p.level_full.into} / ${p.level_full.span} XP до уровня ${p.level_full.level + 1}</div></div></div>
@@ -90,7 +90,7 @@ async function drawFriend(id) {
     <div class="card mb"><h3>🏆 Достижения <span class="muted small">${done.length}/${p.achievements.length}</span></h3>
       ${done.length ? html`<div class="ach-grid">${done.map(a => html`<div class="ach"><div class="ic">${a.icon}</div><div><b>${a.title}</b><span>${a.desc}</span></div></div>`)}</div>` : html`<p class="muted small" style="margin:0">Достижений пока нет.</p>`}</div>
     <div class="card mb"><h3>✍️ Подписи на страничке</h3>
-      ${p.wall.length ? html`<div class="col mb">${p.wall.map(w => html`<div class="sign"><span class="pav sm">${w.author.avatar}</span><div class="grow"><div class="sign-text">${w.text}</div><div class="small muted">${w.author.display_name}</div></div></div>`)}</div>` : html`<p class="muted small">Пока никто ничего не написал — будь первым.</p>`}
+      ${p.wall.length ? html`<div class="col mb">${p.wall.map(w => html`<div class="sign"><span class="pav sm">${av(w.author)}</span><div class="grow"><div class="sign-text">${w.text}</div><div class="small muted">${w.author.display_name}</div></div></div>`)}</div>` : html`<p class="muted small">Пока никто ничего не написал — будь первым.</p>`}
       <div class="field" style="margin-bottom:8px"><label>Твоя подпись · <span id="signcnt">${(my ? my.text : '').length}/${p.sign_max}</span></label>
         <div class="row wrap gap-s"><input type="text" id="signtext" maxlength="${p.sign_max}" value="${my ? my.text : ''}" placeholder="Короткая подпись, до ${p.sign_max} символов" autocomplete="off" style="flex:1;min-width:170px"><button class="btn" data-act="saveSign" data-id="${p.id}">${my ? 'Заменить' : 'Оставить'}</button>${my ? html`<button class="btn ghost" data-act="delSign" data-id="${p.id}">Убрать</button>` : ''}</div></div>
       <div id="signmsg" class="small">${st ? html`<span class="chip ${st[0]}">${st[1]}</span>` : html`<span class="muted">Подпись появится на страничке после проверки администратором. Одна подпись от тебя на страничку.</span>`}</div></div>
@@ -155,7 +155,7 @@ function usersTab(users) {
       <div class="row wrap gap-s"><span class="chip">Ур. ${u.level}</span><span class="chip">⭐ ${u.xp}</span><span class="chip">📚 ${u.courses} ${plural(u.courses, 'курс', 'курса', 'курсов')}</span>${u.telegram ? html`<span class="chip">✈️ Telegram</span>` : ''}</div>
       <div class="small muted">Регистрация: ${fmtStamp(u.created_at)} · ${fmtLast(u.last_active)}</div>
       ${u.banned && u.banned_reason ? html`<div class="small err" style="min-height:0">Причина: ${u.banned_reason}</div>` : ''}
-      ${u.is_admin ? '' : u.banned ? html`<div><button class="btn sm good" data-act="unbanUser" data-id="${u.id}">Разблокировать</button></div>` : html`<div><button class="btn sm bad" data-act="banUser" data-id="${u.id}" data-name="${u.display_name} (@${u.username})">🚫 Заблокировать</button></div>`}</div>`)}</div>`;
+      ${u.is_admin ? '' : html`<div class="row wrap gap-s">${u.banned ? html`<button class="btn sm good" data-act="unbanUser" data-id="${u.id}">Разблокировать</button>` : html`<button class="btn sm bad" data-act="banUser" data-id="${u.id}" data-name="${u.display_name} (@${u.username})">🚫 Заблокировать</button>`}<button class="btn sm ghost" data-act="deleteUser" data-id="${u.id}" data-name="${u.display_name} (@${u.username})">🗑 Удалить</button></div>`}</div>`)}</div>`;
 }
 actions.userSearch = () => { S.adminQ = $('#usearch').value.trim(); drawAdmin(); };
 actions.banUser = b => {
@@ -171,3 +171,8 @@ actions.banConfirm = async b => {
   drawAdmin();
 };
 actions.unbanUser = async b => { try { await api(`/admin/users/${b.dataset.id}/unban`, { method: 'POST' }); toast('Пользователь разблокирован', { icon: '✅', ms: 2000 }); } catch (e) { toast(e.message, { icon: '⚠️' }); } drawAdmin(); };
+actions.deleteUser = async b => {
+  if (!await askConfirm('Удалить пользователя навсегда?', `${b.dataset.name}: аккаунт, все его курсы и прогресс, подписи, связи с друзьями и аватарка будут стёрты без возможности восстановления (кроме резервной копии). Если нужно просто закрыть доступ — используй «Заблокировать».`, 'Удалить навсегда', 'Отмена', true)) return;
+  try { await api(`/admin/users/${b.dataset.id}`, { method: 'DELETE' }); toast('Пользователь удалён', { icon: '🗑', ms: 2200 }); } catch (e) { toast(e.message, { icon: '⚠️' }); }
+  drawAdmin();
+};

@@ -1,0 +1,52 @@
+name: CI
+
+# Проверка фронтенда на каждый push в main и на каждый pull request.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Синтаксис всех скриптов
+        run: |
+          for f in config.js js/*.js; do echo "check $f"; node --check "$f"; done
+
+      - name: Файлы, подключённые в index.html, существуют
+        run: |
+          python3 - <<'PY'
+          import re, pathlib, sys
+          html = pathlib.Path("index.html").read_text(encoding="utf-8")
+          missing = []
+          for m in re.finditer(r'(?:src|href)="([^"#]+?)(?:\?[^"]*)?"', html):
+              u = m.group(1)
+              if u.startswith(("http://", "https://", "data:", "//")):
+                  continue
+              if not pathlib.Path(u).exists():
+                  missing.append(u)
+          if missing:
+              print("Не найдены файлы:", missing)
+              sys.exit(1)
+          print("ok")
+          PY
+
+      - name: В коде нет ключей и паролей
+        run: |
+          if grep -rEn "sk-or-v1-[A-Za-z0-9]{10,}|sk-[A-Za-z0-9]{32,}|[0-9]{8,10}:[A-Za-z0-9_-]{35}" --include=*.js --include=*.html .; then
+            echo "Похоже на ключ или токен в коде"; exit 1; fi

@@ -18,6 +18,8 @@ function html(strings, ...vals) {
   });
   return raw(out);
 }
+/** Аватарка пользователя: своя картинка (если загружена) или эмодзи. */
+function av(u) { return u && u.avatar_url ? raw(`<img class="av-img" src="${esc(API_BASE + u.avatar_url)}" alt="" loading="lazy">`) : (u ? u.avatar : ''); }
 const unraw = x => (x && x.__raw !== undefined) ? x.__raw : esc(x);
 
 const S = { user: null, timers: [], settings: null, reminderTimer: null, lessonCtx: null };
@@ -171,7 +173,7 @@ function hud() {
   return html`<div class="hud">
     <div class="hud-streak ${st.current ? '' : 'off'}" title="Серия: ${st.current} дн. (рекорд ${st.best})"><span class="flame">🔥</span>${st.current}</div>
     <div class="hud-level" title="${lv.xp} XP"><span class="lvl-badge">Ур. ${lv.level}</span><div class="bar thin grow" style="width:90px"><i style="width:${lv.pct}%"></i></div><span class="xp small muted">${lv.into}/${lv.span}</span></div>
-    <a href="#/settings" class="avatar" title="${u.display_name}">${u.avatar}</a>
+    <a href="#/settings" class="avatar" title="${u.display_name}">${av(u)}</a>
   </div>`;
 }
 function navItems() {
