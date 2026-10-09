@@ -48,6 +48,7 @@ async function api(path, opts = {}) {
   catch (e) { throw new Error('Нет связи с сервером. Проверьте интернет или адрес бэкенда (config.js).'); }
   let data = null;
   try { data = await r.json(); } catch (e) { /* пусто */ }
+  if (r.status === 403 && data && typeof data.detail === 'string' && data.detail.startsWith('Аккаунт заблокирован') && !path.startsWith('/auth/')) { Token.clear(); S.user = null; S.authNote = data.detail; location.hash = '#/auth'; throw new Error('Нужно войти'); }
   if (r.status === 401 && !path.startsWith('/auth/login') && !path.startsWith('/auth/register') && path !== '/me') { Token.clear(); S.user = null; location.hash = '#/auth'; throw new Error('Нужно войти'); }
   if (!r.ok) { const err = new Error((data && (typeof data.detail === 'string' ? data.detail : data.detail?.[0]?.msg)) || ('Ошибка ' + r.status)); err.status = r.status; throw err; }
   return data;
@@ -173,14 +174,20 @@ function hud() {
     <a href="#/settings" class="avatar" title="${u.display_name}">${u.avatar}</a>
   </div>`;
 }
+function navItems() {
+  const nav = [['#/', '🏠', 'Курсы', 'home'], ['#/friends', '👥', 'Друзья', 'friends'], ['#/stats', '📊', 'Статистика', 'stats'], ['#/settings', '⚙️', 'Настройки', 'settings']];
+  if (S.user && S.user.is_admin) nav.splice(3, 0, ['#/admin', '🛡️', 'Админ', 'admin']);
+  return nav;
+}
+function navBadge(n) { return n[3] === 'admin' && S.user && S.user.moderation_pending ? html`<i class="badge">${S.user.moderation_pending}</i>` : ''; }
 function shell(active, inner) {
-  const nav = [['#/', '🏠', 'Курсы', 'home'], ['#/stats', '📊', 'Статистика', 'stats'], ['#/settings', '⚙️', 'Настройки', 'settings']];
+  const nav = navItems();
   return html`<header class="topbar"><div class="topbar-in">
       <a class="logo" href="#/"><span>🦉</span><span>Learn<b>Quest</b></span></a>
-      <nav class="nav">${nav.map(n => html`<a href="${n[0]}" class="${active === n[3] ? 'on' : ''}">${n[1]} ${n[2]}</a>`)}</nav>
+      <nav class="nav">${nav.map(n => html`<a href="${n[0]}" class="${active === n[3] ? 'on' : ''}">${n[1]} ${n[2]}${navBadge(n)}</a>`)}</nav>
       <div id="hud">${hud()}</div></div></header>
     <main>${inner}</main>
-    <nav class="bottom-nav">${nav.map(n => html`<a href="${n[0]}" class="${active === n[3] ? 'on' : ''}"><span>${n[1]}</span>${n[2]}</a>`)}</nav>`;
+    <nav class="bottom-nav">${nav.map(n => html`<a href="${n[0]}" class="${active === n[3] ? 'on' : ''}"><span>${n[1]}${navBadge(n)}</span>${n[2]}</a>`)}</nav>`;
 }
 function refreshHud() { const h = $('#hud'); if (h) h.innerHTML = unraw(hud()); }
 async function refreshMe() { try { S.user = await api('/me'); refreshHud(); } catch (e) { /* ignore */ } }

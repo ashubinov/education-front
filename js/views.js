@@ -20,6 +20,7 @@ function drawAuth() {
   const reg = S.authTab === 'register';
   render(app(), html`<div class="auth-wrap"><div class="auth">
     <div class="hero"><span class="mascot">🦉</span><h1>Learn<span style="color:var(--accent)">Quest</span></h1><p class="muted">Загрузи материалы — получи курс, XP и серию дней</p></div>
+    ${S.authNote ? html`<div class="card mb" style="border-color:var(--bad)"><b class="err">🚫 ${S.authNote}</b></div>` : ''}
     <form class="card" id="authform" autocomplete="on">
       <div class="tabs"><button type="button" data-act="authTab" data-tab="login" class="${reg ? '' : 'on'}">Вход</button><button type="button" data-act="authTab" data-tab="register" class="${reg ? 'on' : ''}">Регистрация</button></div>
       ${reg ? html`<div class="field"><label>Как тебя зовут</label><input type="text" name="display_name" maxlength="40" placeholder="Например, Андрей"></div>` : ''}
@@ -33,7 +34,7 @@ function drawAuth() {
     const fd = Object.fromEntries(new FormData(e.target)), btn = $('button[type=submit]', e.target);
     busy(btn, true);
     try {
-      const r = await api(reg ? '/auth/register' : '/auth/login', { json: fd }); Token.set(r.token); S.user = r.user;
+      const r = await api(reg ? '/auth/register' : '/auth/login', { json: fd }); Token.set(r.token); S.user = r.user; S.authNote = '';
       applyTheme(S.user.theme_color, S.user.theme_mode); startReminders(); if (reg) prankArm(); location.hash = '#/'; if (reg) maybePrank();
     } catch (err) { $('#autherr').textContent = err.message; busy(btn, false); }
   });
