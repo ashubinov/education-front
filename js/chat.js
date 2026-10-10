@@ -126,6 +126,7 @@ async function chatMountHome() {
       <div class="lq-chat-help"><span id="chatHint">Enter — отправить · Shift+Enter — перенос</span><span id="chatCount">0 / 1000</span></div>
     </form>
   </div>`;
+  if (typeof chatCommandsMount === 'function') chatCommandsMount(generation);
   const form = $('#chatForm'), input = $('#chatText'), area = $('#chatMessages');
   form.addEventListener('submit', e => { e.preventDefault(); chatSend(generation); });
   input.addEventListener('input', () => { const n = $('#chatCount'); if (n) n.textContent = input.value.length + ' / 1000'; });
@@ -218,6 +219,10 @@ async function chatSend(generation) {
   const value = input.value.trim();
   if (!value || button.disabled) return;
   if (value.length > 1000) return;
+  if (value.startsWith('/') && typeof chatCommandFromInput === 'function') {
+    await chatCommandFromInput(value, generation);
+    return;
+  }
   if (CHAT.pendingText !== value) { CHAT.pendingId = chatId(); CHAT.pendingText = value; }
   button.disabled = true;
   chatSetStatus('Отправка…');
