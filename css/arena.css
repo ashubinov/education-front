@@ -1,0 +1,37 @@
+/* LearnQuest — «Арена»: петушиные бои. Графика петухов — js/pet-art.js, общие плашки — pet.css. */
+.ar-page { max-width: 1040px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; padding-bottom: 24px; }
+.ar-gate { text-align: center; padding: 26px 16px; } .ar-gate-ic { font-size: 56px; }
+.ar-ring { position: relative; height: 360px; border-radius: 22px; overflow: hidden; border: 3px solid #7a3b2b; box-shadow: 0 6px 0 #4a2418, var(--shadow); background: linear-gradient(#2a1d2e, #4b2a2a 70%, #3b2020); }
+.ar-ring::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 42%; background: repeating-linear-gradient(90deg, rgba(255, 255, 255, .05) 0 2px, transparent 2px 26px); }
+.ar-floor { position: absolute; left: 5%; right: 5%; bottom: 14px; height: 120px; border-radius: 50%; background: radial-gradient(#ecc98f, #c99a5b 70%); border: 5px solid #a83232; box-shadow: 0 0 0 4px #f4f0e6, 0 10px 18px rgba(0, 0, 0, .45); }
+.ar-fighter { position: absolute; bottom: 30px; width: 250px; text-align: center; transition: transform .25s; }
+.ar-fighter.me { left: 8%; } .ar-fighter.foe { right: 8%; }
+.ar-art { width: 100%; aspect-ratio: 1; } .ar-art svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.ar-fighter.me .ar-art svg { transform: scaleX(-1); }
+.ar-art.boris { filter: hue-rotate(205deg) saturate(.75) brightness(.8); }
+.ar-art.ar-empty { display: grid; place-items: center; font-size: 80px; font-weight: 900; color: rgba(255, 255, 255, .25); }
+.ar-name { display: block; margin-top: -4px; position: relative; color: #fff; text-shadow: 0 2px 4px rgba(0, 0, 0, .7); font-size: 15px; }
+.ar-vs { position: absolute; left: 50%; bottom: 120px; transform: translateX(-50%); font-weight: 900; font-size: 30px; color: #ffe08a; text-shadow: 0 3px 0 #7a3b2b; letter-spacing: 2px; }
+.ar-fighter.enter { animation: arEnter .6s ease-out; } @keyframes arEnter { from { transform: translateX(120px); opacity: 0; } to { transform: none; opacity: 1; } }
+.ar-fighter.me.lunge { animation: arLungeMe .55s ease-in-out; } .ar-fighter.foe.lunge { animation: arLungeFoe .55s ease-in-out; }
+@keyframes arLungeMe { 40% { transform: translateX(120px) rotate(8deg); } 100% { transform: none; } } @keyframes arLungeFoe { 40% { transform: translateX(-120px) rotate(-8deg); } 100% { transform: none; } }
+.ar-fighter.hit { animation: arShake .45s; } @keyframes arShake { 0%, 100% { transform: none; } 20% { transform: translateX(-12px) rotate(-6deg); } 40% { transform: translateX(12px) rotate(6deg); } 60% { transform: translateX(-8px); } 80% { transform: translateX(8px); } }
+.ar-fighter.win { animation: arJump .7s ease-in-out infinite; } @keyframes arJump { 50% { transform: translateY(-14px); } }
+.ar-fighter.lose { filter: grayscale(.5); transform: rotate(-4deg); }
+.ar-feather { position: absolute; bottom: 120px; font-style: normal; font-size: 22px; pointer-events: none; animation: arFeather 1.2s ease-out forwards; }
+@keyframes arFeather { to { transform: translate(var(--dx), var(--dy)) rotate(var(--r)); opacity: 0; } }
+.ar-banner { position: absolute; left: 50%; top: 14px; transform: translateX(-50%); padding: 7px 20px; border-radius: 24px; background: rgba(20, 14, 20, .82); border: 2px solid #ffe08a; color: #fff; font-weight: 900; font-size: 18px; white-space: nowrap; animation: arPop .35s ease-out; }
+.ar-banner.good { border-color: #46e08a; color: #bff7d4; } .ar-banner.bad { border-color: #ff7a7a; color: #ffc9c9; } .ar-banner.big { font-size: 28px; padding: 10px 28px; top: 40px; }
+@keyframes arPop { from { transform: translateX(-50%) scale(.6); opacity: 0; } to { transform: translateX(-50%) scale(1); opacity: 1; } }
+.ar-grid { display: grid; grid-template-columns: minmax(0, 360px) minmax(0, 1fr); gap: 14px; align-items: start; }
+.ar-bets { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+.ar-bet { border: 2px solid var(--line); background: var(--bg3); color: var(--text); border-radius: 12px; padding: 6px 12px; font: inherit; font-weight: 800; cursor: pointer; } .ar-bet.on { border-color: var(--accent); background: var(--accent-l); } .ar-bet:disabled { opacity: .4; cursor: default; }
+.ar-opps { display: flex; flex-direction: column; gap: 10px; }
+.ar-opp { display: flex; align-items: center; gap: 12px; padding: 10px 14px; flex-wrap: wrap; }
+.ar-opp-art { width: 84px; height: 84px; flex: none; background: linear-gradient(#bfe6ff, #e6f7ff 65%, #9edb82 65.5%); border-radius: 14px; overflow: hidden; } .ar-opp-art svg { width: 100%; height: 100%; } .ar-opp-art.boris { filter: hue-rotate(205deg) saturate(.75) brightness(.8); }
+.ar-opp .chip.good { border-color: var(--good); color: var(--good); } .ar-opp .chip.bad { border-color: var(--bad); color: var(--bad); }
+.ar-recent { display: flex; flex-direction: column; gap: 6px; }
+.ar-rec { display: flex; align-items: center; gap: 10px; background: var(--bg3); border: 2px solid var(--line); border-radius: 12px; padding: 6px 12px; } .ar-rec.win { border-color: var(--good); } .ar-rec .up { color: var(--good); } .ar-rec .down { color: var(--bad); }
+@media (max-width: 760px) { .ar-grid { grid-template-columns: minmax(0, 1fr); } .ar-ring { height: 250px; } .ar-fighter { width: 130px; bottom: 36px; } .ar-floor { height: 90px; } .ar-vs { bottom: 90px; font-size: 22px; } .ar-banner { font-size: 14px; } .ar-banner.big { font-size: 20px; }
+  @keyframes arLungeMe { 40% { transform: translateX(70px) rotate(8deg); } 100% { transform: none; } } @keyframes arLungeFoe { 40% { transform: translateX(-70px) rotate(-8deg); } 100% { transform: none; } } }
+@media (prefers-reduced-motion: reduce) { .ar-fighter, .ar-fighter.win, .ar-banner { animation: none !important; } }

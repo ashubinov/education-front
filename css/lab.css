@@ -1,0 +1,23 @@
+/* LearnQuest — «Лаборатория» (подвал фермы): оформление окон. Сама сцена — js/lab-art.js; общие части (рамка, панель, кнопки) — из farm.css. */
+.la-stage { border-color: #3a566b; box-shadow: 0 6px 0 #25394a, var(--shadow); background: #0f1620; }
+.la-world { min-width: 700px; max-height: 84vh; }
+.la-flow { stroke-dasharray: 4 6; animation: laFlow .9s linear infinite; } @keyframes laFlow { to { stroke-dashoffset: -20; } }
+.la-h { margin: 14px 0 6px; font-size: 15px; display: flex; gap: 8px; align-items: baseline; }
+.la-sp.t2 { border-color: #7aa9d6; } .la-sp.t3 { border-color: #d6b24a; } .la-sp small { display: block; }
+.la-mut { margin: 0 0 8px; padding: 6px 10px; border-radius: 10px; background: linear-gradient(90deg, #fff3b8, #d8f6ff); color: #5a4300; font-weight: 800; }
+.la-row { display: flex; justify-content: space-between; gap: 8px; padding: 6px 2px; border-bottom: 1px dashed var(--line); }
+/* стеллаж */
+.la-sell { display: flex; flex-direction: column; gap: 6px; }
+.la-sell-r { display: flex; align-items: center; gap: 10px; background: var(--bg3); border: 2px solid var(--line); border-radius: 14px; padding: 6px 10px; }
+.la-sell-ic { font-size: 28px; } .la-sell-r .up { color: var(--good); } .la-sell-r .down { color: var(--bad); }
+/* журнал */
+.la-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px; }
+.la-j { background: var(--bg3); border: 2px solid var(--line); border-radius: 14px; padding: 8px 4px; display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; }
+.la-j.t2 { border-color: #7aa9d6; } .la-j.t3 { border-color: #d6b24a; } .la-j.t4 { border-color: #c79bff; background: linear-gradient(#fff8d8, #e6f8ff); color: #243; } .la-j.t4 .muted { color: #5a6; }
+.la-j.unk { opacity: .55; border-style: dashed; } .la-j-ic { font-size: 28px; }
+/* улучшения */
+.la-ups { display: flex; flex-direction: column; gap: 8px; }
+.la-up { display: flex; align-items: center; gap: 10px; background: var(--bg3); border: 2px solid var(--line); border-radius: 14px; padding: 8px 12px; }
+.la-up-ic { font-size: 30px; } .la-pips { display: flex; gap: 4px; margin-top: 4px; }
+.la-pips i { width: 16px; height: 7px; border-radius: 4px; background: var(--line); } .la-pips i.on { background: var(--good); }
+@media (prefers-reduced-motion: reduce) { .la-flow { animation: none; } }
