@@ -1,0 +1,83 @@
+/* LearnQuest: mini-games, responsive notifications, truly full-width system chat messages. */
+.mg-page { min-width: 0; }
+.mg-hero { display:flex; gap: 16px; align-items:center; margin-bottom: 20px; }
+.mg-hero h1 { margin-bottom: 6px; }
+.mg-hero p { color:var(--muted);margin:0; }
+.mg-berry { font-size: 56px; flex:0 0 auto; }
+.mg-layout { display:grid; grid-template-columns:minmax(0, 1.2fr) minmax(280px, .8fr); gap:18px;align-items:start; }
+.mg-game, .mg-alerts { min-width: 0; }
+.mg-game > p { overflow-wrap:anywhere; }
+.mg-chips { background:var(--bg3);padding:14px;border-radius:14px;margin:18px 0;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap; }
+.mg-chips strong { color:var(--accent);font-size:19px; }
+.mg-label { display:block;font-weight:900;font-size:13px;color:var(--muted);margin-bottom:5px; }
+.mg-game select,.mg-guess-modal select { display:block;width:100%;margin-bottom:12px; }
+.mg-steal {width:100%;margin:6px 0 12px;}
+.mg-pending { padding:14px; border:1px solid var(--accent);background:var(--accent-l);border-radius:13px; display:grid;gap:10px;margin-bottom:12px;overflow-wrap:anywhere; }
+.mg-pending span { color:var(--muted);font-size:13px; }
+.mg-pending button {justify-self:start;}
+.mg-guess-modal {min-width:0;width:100%;max-width:480px;}
+.mg-guess-modal p {margin:12px 0 18px;}
+.mg-guess-buttons {display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;}
+.mg-nav-badge {background:var(--bad);color:white;border-radius:100px;min-width:17px;height:17px;padding:1px 4px;font-size:10px;font-weight:900;display:inline-flex;justify-content:center;align-items:center;}
+.mg-nav-badge[hidden] {display:none!important;}
+.mg-notice {display:flex;flex-direction:column;align-items:stretch;gap:9px;min-width:min(290px,calc(100vw - 30px));max-width:min(340px,calc(100vw - 30px));}
+.mg-notice span {font-size:13px;}
+.mg-notice button {align-self:flex-start;}
+/* User-authored content stays in textContent. System messages can only be emitted server-side. */
+.lq-chat-list .lq-chat-message.system {align-self:stretch;width:100%;max-width:100%;justify-content:center;flex-direction:row;margin:3px 0;}
+.lq-chat-list .lq-chat-message.system .lq-chat-avatar {display:none;}
+.lq-chat-list .lq-chat-message.system .lq-chat-bubble {max-width:100%;width:100%;border:1px solid var(--accent);border-radius:12px;padding:10px;background:var(--accent-l);text-align:center;}
+.lq-chat-list .lq-chat-message.system .lq-chat-meta {display:flex;justify-content:center;gap:7px;margin-bottom:4px;}
+.lq-chat-list .lq-chat-message.system .lq-chat-meta b {font-weight:900;font-size:10px;letter-spacing:.08em;color:var(--accent);}
+.lq-chat-list .lq-chat-message.system .lq-chat-text {font-size:12px;font-weight:900;overflow-wrap:anywhere;}
+@media (max-width: 900px) {.mg-layout{grid-template-columns:minmax(0,1fr);} }
+@media (max-width: 760px) {
+  .bottom-nav.n7,.bottom-nav.n6 {overflow-x:auto;scrollbar-width:thin;justify-content:flex-start;}
+  .bottom-nav.n7 a,.bottom-nav.n6 a {flex:0 0 69px;min-width:69px;font-size:10px;padding:6px 2px;}
+  .bottom-nav.n7 a span,.bottom-nav.n6 a span {font-size:20px;}
+}
+@media (max-width: 420px) { .mg-berry{font-size:42px;} .mg-hero{gap:10px;} .mg-hero h1{font-size:24px;} .mg-layout{gap:12px;} .mg-guess-buttons{flex-direction:column-reverse;} .mg-guess-buttons .btn{width:100%;} }
+@media (min-width:761px) and (max-width:1200px) {
+  .topbar-in { gap: 8px; }
+  .nav { gap: 2px; margin-left: 5px; }
+  .nav a { padding: 7px 8px; font-size: 12px; gap: 4px; }
+  .hud-level { display: none; }
+}
+@media (max-width: 760px) {
+  .bottom-nav.n8 { overflow-x: auto; scrollbar-width: thin; justify-content: flex-start; }
+  .bottom-nav.n8 a { flex: 0 0 69px; min-width: 69px; font-size: 10px; padding: 6px 2px; }
+  .bottom-nav.n8 a span { font-size: 20px; }
+}
+
+/* v2: 7 items for an administrator. The core stylesheet only optimized n6. */
+.bottom-nav.n7 { width: 100%; max-width: 100vw; }
+.bottom-nav.n7 a {
+  flex: 1 1 0; min-width: 0; padding: 6px 1px;
+  font-size: 10px; line-height: 1.15;
+  overflow-wrap: anywhere; white-space: normal;
+}
+.bottom-nav.n7 a span { font-size: 19px; position: relative; }
+.bottom-nav.n7 a.on { color: var(--accent); background: var(--accent-l); }
+
+/* The desktop header cannot fit all tabs + logo + HUD at tablet widths. */
+@media (min-width: 761px) and (max-width: 1190px) {
+  .topbar .nav { display: none; }
+  .bottom-nav {
+    display: flex; position: fixed; bottom: 0; left: 0; right: 0;
+    z-index: 20; background: var(--bg2);
+    border-top: 2px solid var(--line);
+    padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
+  }
+  .bottom-nav a {
+    flex: 1 1 0; min-width: 0; text-align: center;
+    color: var(--muted); padding: 6px 2px; border-radius: 12px;
+    font-size: 11px; display: flex; flex-direction: column;
+    font-weight: 800;
+  }
+  .bottom-nav a span { font-size: 21px; }
+  .bottom-nav a.on { color: var(--accent); background: var(--accent-l); }
+}
+@media (max-width: 370px) {
+  .bottom-nav.n7 a { font-size: 9px; }
+  .bottom-nav.n7 a span { font-size: 18px; }
+}

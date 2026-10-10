@@ -200,11 +200,12 @@ function hud() {
   </div>`;
 }
 function navItems() {
-  const nav = [['#/', '🏠', 'Курсы', 'home'], ['#/friends', '👥', 'Друзья', 'friends'], ['#/slots', '🎰', 'Слоты', 'slots'], ['#/stats', '📊', 'Статистика', 'stats'], ['#/settings', '⚙️', 'Настройки', 'settings']];
+  const nav = [['#/', '🏠', 'Курсы', 'home'], ['#/friends', '👥', 'Друзья', 'friends'], ['#/slots', '🎰', 'Слоты', 'slots'], ['#/minigames', '🍓', 'Мини-игры', 'minigames'], ['#/stats', '📊', 'Статистика', 'stats'], ['#/settings', '⚙️', 'Настройки', 'settings']];
   if (S.user && S.user.is_admin) nav.splice(3, 0, ['#/admin', '🛡️', 'Админ', 'admin']);
   return nav;
 }
-function navBadge(n) { return n[3] === 'admin' && S.user && S.user.moderation_pending ? html`<i class="badge">${S.user.moderation_pending}</i>` : ''; }
+function navBadge(n) {
+  if (n[3] === 'minigames') return html`<i class="mg-nav-badge" hidden></i>`; return n[3] === 'admin' && S.user && S.user.moderation_pending ? html`<i class="badge">${S.user.moderation_pending}</i>` : ''; }
 function shell(active, inner) {
   const nav = navItems();
   return html`<header class="topbar"><div class="topbar-in">
@@ -266,5 +267,6 @@ document.addEventListener('click', e => {
 function boot() {
   matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => S.user && applyTheme(S.user.theme_color, S.user.theme_mode));
   window.addEventListener('hashchange', router);
+  if (typeof minigamesBoot === 'function') minigamesBoot();
   router();
 }
