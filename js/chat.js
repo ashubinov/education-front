@@ -30,6 +30,25 @@ function chatEntry(msg) {
   const item = document.createElement('article');
   item.className = 'lq-chat-message' + (mine ? ' mine' : '');
   item.dataset.id = msg.id;
+  if (msg.system_kind) {
+    item.classList.add('system');
+    const bubble = document.createElement('div');
+    bubble.className = 'lq-chat-bubble';
+    const header = document.createElement('div');
+    header.className = 'lq-chat-meta';
+    const label = document.createElement('b');
+    label.textContent = msg.system_kind === 'command' ? 'КОМАНДА' : 'СИСТЕМА';
+    const time = document.createElement('time');
+    time.dateTime = msg.created_at;
+    time.textContent = chatTime(msg.created_at);
+    const text = document.createElement('div');
+    text.className = 'lq-chat-text';
+    text.textContent = msg.text; // Never parse system content as HTML.
+    header.append(label, time);
+    bubble.append(header, text);
+    item.append(bubble);
+    return item;
+  }
 
   const avatar = document.createElement('div');
   avatar.className = 'lq-chat-avatar';
