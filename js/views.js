@@ -288,9 +288,17 @@ async function drawSettings() {
       <div class="field"><label>Логин (для входа и поиска друзьями)</label>
         <div class="row wrap gap-s"><input type="text" id="newlogin" value="${u.username}" maxlength="32" autocomplete="off" autocapitalize="off" spellcheck="false" style="flex:1;min-width:140px"><input type="password" id="loginpw" placeholder="пароль для подтверждения" autocomplete="current-password" style="flex:1;min-width:140px"><button class="btn sm" data-act="changeLogin">Сменить</button></div>
         <div class="err" id="loginerr"></div></div></div>
-    <div class="card"><h3>🎨 Внешний вид</h3><div class="field"><label>Цвет интерфейса</label><div class="swatches">${COLORS.map(c => html`<div class="swatch ${u.theme_color.toLowerCase() === c ? 'on' : ''}" style="background:${c}" data-act="setColor" data-v="${c}"></div>`)}<input type="color" id="customcolor" value="${u.theme_color}" style="width:44px;height:44px;border:0;background:none;padding:0;cursor:pointer" title="Свой цвет"></div></div>
+    <div class="card"><h3>🎨 Внешний вид</h3>
+      <div class="field"><label>Готовые темы</label><div class="presets">${THEME_PRESETS.map(p => html`<button class="preset ${(u.theme_extra || {}).preset === p.id ? 'on' : ''}" data-act="setPreset" data-id="${p.id}"><i style="background:${p.color}"></i><span>${p.name}</span></button>`)}</div></div>
+      <div class="field"><label>Цвет интерфейса</label><div class="swatches">${COLORS.map(c => html`<div class="swatch ${u.theme_color.toLowerCase() === c ? 'on' : ''}" style="background:${c}" data-act="setColor" data-v="${c}"></div>`)}<input type="color" id="customcolor" value="${u.theme_color}" style="width:44px;height:44px;border:0;background:none;padding:0;cursor:pointer" title="Свой цвет"></div></div>
       <div class="field"><label>Тема</label><div class="tabs" style="max-width:340px">${[['dark', '🌙 Тёмная'], ['light', '☀️ Светлая'], ['auto', '🖥 Авто']].map(([k, n]) => html`<button class="${u.theme_mode === k ? 'on' : ''}" data-act="setMode" data-v="${k}">${n}</button>`)}</div></div>
-      <div class="row spread"><span><b>Звуковые эффекты</b><div class="small muted">Сигналы за верные и неверные ответы</div></span><label class="switch"><input type="checkbox" id="snd" ${u.sound ? 'checked' : ''}><span></span></label></div></div>
+      <div class="field"><label>Фон</label><div class="tabs" style="max-width:520px">${[['glow', 'Сияние'], ['solid', 'Сплошной'], ['tint', 'В цвет темы'], ['amoled', 'Чёрный']].map(([k, n]) => html`<button class="${(u.theme_extra || {}).bg === k ? 'on' : ''}" data-act="setThemeOpt" data-k="bg" data-v="${k}">${n}</button>`)}</div>
+        <div class="small muted">«Чёрный» — настоящий чёрный фон для OLED-экранов, работает в тёмной теме.</div></div>
+      <div class="field"><label>Скругления</label><div class="tabs" style="max-width:340px">${[['sharp', 'Острые'], ['normal', 'Обычные'], ['round', 'Круглые']].map(([k, n]) => html`<button class="${(u.theme_extra || {}).radius === k ? 'on' : ''}" data-act="setThemeOpt" data-k="radius" data-v="${k}">${n}</button>`)}</div></div>
+      <div class="field"><label>Анимации</label><div class="tabs" style="max-width:340px">${[['full', 'Все'], ['reduced', 'Минимум']].map(([k, n]) => html`<button class="${(u.theme_extra || {}).motion === k ? 'on' : ''}" data-act="setThemeOpt" data-k="motion" data-v="${k}">${n}</button>`)}</div>
+        <div class="small muted">«Минимум» отключает декоративные анимации (покачивание, пульсацию, сияние) — спокойнее и экономит батарею.</div></div>
+      <div class="row spread mb"><span><b>Звуковые эффекты</b><div class="small muted">Сигналы за верные и неверные ответы</div></span><label class="switch"><input type="checkbox" id="snd" ${u.sound ? 'checked' : ''}><span></span></label></div>
+      <button class="btn sm ghost" data-act="resetTheme">↺ Сбросить оформление</button></div>
     <div class="card"><h3>🔒 Пароль</h3><p class="small muted">После смены пароля на других устройствах придётся войти заново. Лучше длинный пароль (10+ символов), которого нет в списках утечек.</p>
       <div class="field"><label>Текущий пароль</label><input type="password" id="pwcur" autocomplete="current-password"></div>
       <div class="field"><label>Новый пароль</label><input type="password" id="pwnew" autocomplete="new-password" minlength="6" placeholder="не короче 6 символов"></div>
@@ -325,7 +333,7 @@ async function drawSettings() {
   if (set.is_admin) loadBackups();
   const avf = $('#avfile'); if (avf) avf.onchange = () => uploadAvatar(avf.files[0]);
   const snd = $('#snd'); if (snd) snd.onchange = async () => { await saveMe({ sound: snd.checked }); };
-  const cc = $('#customcolor'); if (cc) cc.oninput = () => applyTheme(cc.value, S.user.theme_mode), cc.onchange = () => saveMe({ theme_color: cc.value }, true);
+  const cc = $('#customcolor'); if (cc) cc.oninput = () => applyTheme(cc.value, S.user.theme_mode), cc.onchange = () => saveMe({ theme_color: cc.value, theme_extra: { ...(S.user.theme_extra || THEME_DEFAULT), preset: '' } }, true).then(drawSettings);
   if (tg.configured && !tg.linked && S.tgPolling) every(async () => { const s = await api('/telegram/status'); if (s.linked) { S.tgPolling = false; toast('Telegram подключён!', { icon: '✈️' }); drawSettings(); refreshMe(); } }, 3000);
 }
 function tgHtml(tg) {
@@ -377,7 +385,13 @@ actions.changeLogin = async b => {
   try { S.user = await api('/me/username', { method: 'PUT', json: { username: login, password: pw } }); toast('Логин изменён. Входить теперь нужно с ним', { icon: '✅', ms: 3200 }); drawSettings(); }
   catch (e) { busy(b, false); $('#loginerr').textContent = e.message; }
 };
-actions.setColor = async b => { await saveMe({ theme_color: b.dataset.v }, true); drawSettings(); };
+actions.setColor = async b => { await saveMe({ theme_color: b.dataset.v, theme_extra: { ...(S.user.theme_extra || THEME_DEFAULT), preset: '' } }, true); drawSettings(); };
+actions.setPreset = async b => {
+  const p = THEME_PRESETS.find(x => x.id === b.dataset.id); if (!p) return;
+  await saveMe({ theme_color: p.color, theme_extra: { ...(S.user.theme_extra || THEME_DEFAULT), preset: p.id, bg: p.bg } }, true); drawSettings();
+};
+actions.setThemeOpt = async b => { await saveMe({ theme_extra: { ...(S.user.theme_extra || THEME_DEFAULT), preset: '', [b.dataset.k]: b.dataset.v } }, true); drawSettings(); };
+actions.resetTheme = async () => { await saveMe({ theme_color: '#7c5cff', theme_mode: 'dark', theme_extra: { ...THEME_DEFAULT } }, true); toast('Оформление сброшено', { icon: '↺', ms: 1600 }); drawSettings(); };
 actions.setMode = async b => { await saveMe({ theme_mode: b.dataset.v }, true); drawSettings(); };
 actions.saveRem = () => saveMe({ reminders_on: $('#remon').checked, reminder_time: $('#remtime').value });
 actions.askNotif = async () => {

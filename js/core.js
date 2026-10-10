@@ -97,17 +97,40 @@ function hexToHsl(hex) {
 }
 function hsl(h, s, l) { return `hsl(${h.toFixed(0)} ${s.toFixed(0)}% ${l.toFixed(0)}%)`; }
 function lum(hex) { const n = parseInt(hex.slice(1), 16); const f = c => { c /= 255; return c <= .03928 ? c / 12.92 : Math.pow((c + .055) / 1.055, 2.4); }; return .2126 * f(n >> 16) + .7152 * f((n >> 8) & 255) + .0722 * f(n & 255); }
-function applyTheme(color, mode) {
+const THEME_DEFAULT = { preset: '', bg: 'glow', radius: 'normal', motion: 'full' };
+/** Готовые темы: цвет акцента + стиль фона (светлая/тёмная тема выбирается отдельно). */
+const THEME_PRESETS = [
+  { id: 'classic', name: 'Классика', color: '#7c5cff', bg: 'glow' },
+  { id: 'ocean', name: 'Океан', color: '#06b6d4', bg: 'tint' },
+  { id: 'sunset', name: 'Закат', color: '#f97316', bg: 'tint' },
+  { id: 'forest', name: 'Лес', color: '#10b981', bg: 'tint' },
+  { id: 'sakura', name: 'Сакура', color: '#ec4899', bg: 'tint' },
+  { id: 'midnight', name: 'Полночь', color: '#3b82f6', bg: 'amoled' },
+  { id: 'graphite', name: 'Графит', color: '#94a3b8', bg: 'solid' },
+];
+function applyTheme(color, mode, extra) {
   color = /^#[0-9a-f]{6}$/i.test(color) ? color : '#7c5cff';
-  const [h, s, l] = hexToHsl(color), root = document.documentElement.style;
+  extra = { ...THEME_DEFAULT, ...(extra || (S.user && S.user.theme_extra) || {}) };
+  const [h, s, l] = hexToHsl(color), de = document.documentElement, root = de.style;
   root.setProperty('--accent', color);
   root.setProperty('--accent-d', hsl(h, Math.min(100, s + 4), Math.max(14, l - 14)));
   const n = parseInt(color.slice(1), 16);
   root.setProperty('--accent-l', `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},.16)`);
   root.setProperty('--accent-ink', lum(color) > .42 ? '#14171f' : '#ffffff');
   const dark = mode === 'dark' || (mode === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches) || !mode;
-  document.documentElement.dataset.theme = dark ? 'dark' : 'light';
-  const m = $('meta[name=theme-color]'); if (m) m.content = dark ? '#12141c' : '#f3f5fb';
+  de.dataset.theme = dark ? 'dark' : 'light';
+  // фон: по умолчанию значения из CSS; «в цвет темы» подкрашивает фоны оттенком акцента, «чёрный» — для OLED-экранов (только тёмная тема)
+  ['--bg', '--bg2', '--bg3', '--line'].forEach(v => root.removeProperty(v));
+  const sat = Math.min(s, 70) / 100;
+  if (extra.bg === 'tint') {
+    const set = (v, ss, ll) => root.setProperty(v, hsl(h, ss, ll));
+    if (dark) { set('--bg', 12 + 30 * sat, 7); set('--bg2', 10 + 28 * sat, 11); set('--bg3', 10 + 26 * sat, 16); set('--line', 10 + 24 * sat, 23); }
+    else { set('--bg', 30 + 60 * sat, 96); root.setProperty('--bg2', '#ffffff'); set('--bg3', 25 + 50 * sat, 94); set('--line', 20 + 40 * sat, 88); }
+  } else if (extra.bg === 'amoled' && dark) {
+    root.setProperty('--bg', '#000000'); root.setProperty('--bg2', '#0b0b0f'); root.setProperty('--bg3', '#15151b'); root.setProperty('--line', '#26262e');
+  }
+  de.dataset.bg = extra.bg; de.dataset.radius = extra.radius; de.dataset.motion = extra.motion;
+  const m = $('meta[name=theme-color]'); if (m) m.content = getComputedStyle(de).getPropertyValue('--bg').trim() || (dark ? '#12141c' : '#f3f5fb');
 }
 
 /* ---------- звуки ---------- */

@@ -205,18 +205,17 @@ actions.slotDaily = async b => {
 /* =============================== обмен XP на жетоны =============================== */
 function slBuyReason(p) {
   const ex = SL.st.exchange;
-  if (SL.st.balance >= ex.buy_only_below) return `Докупить можно, когда жетонов меньше ${ex.buy_only_below}`;
-  if (p.chips > ex.remaining_today) return ex.remaining_today ? `Дневной лимит: сегодня можно ещё ${ex.remaining_today}` : 'Дневной лимит покупок исчерпан — приходи завтра';
+  if (ex.buy_only_below != null && SL.st.balance >= ex.buy_only_below) return `Докупить можно, когда жетонов меньше ${ex.buy_only_below}`;
+  if (ex.remaining_today != null && p.chips > ex.remaining_today) return ex.remaining_today ? `Дневной лимит: сегодня можно ещё ${ex.remaining_today}` : 'Дневной лимит покупок исчерпан — приходи завтра';
   if (p.xp > ex.xp_available) return `Не хватает ${p.xp - ex.xp_available} XP`;
   return '';
 }
 function slExchangeHtml() {
-  const ex = SL.st.exchange;
-  return html`<div class="card exch-card"><h3 style="margin:0 0 4px">💱 Докупить жетоны за XP</h3>
-    <p class="small muted" style="margin:0 0 10px">Цена жёсткая: <b>${ex.xp_per_chip} XP = 1 жетон</b>, без скидок. Один урок приносит в среднем около ${Math.round(145 / ex.xp_per_chip)} жетонов. Покупать можно, когда жетонов меньше ${ex.buy_only_below}, и не больше ${ex.daily_limit} в день. Потраченные XP не возвращаются, но уровень и достижения от этого не меняются.</p>
-    <div class="row wrap gap-s mb"><span class="chip accent">⭐ доступно ${slFmt(ex.xp_available)} XP</span><span class="chip">заработано ${slFmt(ex.xp_total)}</span><span class="chip">потрачено ${slFmt(ex.xp_spent)}</span><span class="chip ${ex.remaining_today ? '' : 'warn'}">сегодня куплено ${ex.bought_today} / ${ex.daily_limit}</span></div>
-    <div class="packs">${ex.packs.map(p => { const why = slBuyReason(p); return html`<button class="pack ${why ? 'off' : ''}" data-act="slotBuy" data-chips="${p.chips}" data-xp="${p.xp}" ${why ? 'disabled' : ''} title="${why}"><b>+${p.chips} 🪙</b><span>${slFmt(p.xp)} XP</span></button>`; })}</div>
-    ${(() => { const w = ex.packs.map(slBuyReason).find(x => x); return w && ex.packs.every(slBuyReason) ? html`<div class="small muted mt">${w}</div>` : ''; })()}</div>`;
+  const ex = SL.st.exchange, reasons = ex.packs.map(slBuyReason), allOff = reasons.every(x => x);
+  return html`<div class="card exch-card"><h3 style="margin:0 0 10px">💱 Докупить жетоны за XP</h3>
+    <div class="row wrap gap-s mb"><span class="chip accent">⭐ доступно ${slFmt(ex.xp_available)} XP</span><span class="chip">заработано ${slFmt(ex.xp_total)}</span><span class="chip">потрачено ${slFmt(ex.xp_spent)}</span>${ex.daily_limit != null ? html`<span class="chip ${ex.remaining_today ? '' : 'warn'}">сегодня куплено ${ex.bought_today} / ${ex.daily_limit}</span>` : ''}</div>
+    <div class="packs">${ex.packs.map((p, i) => html`<button class="pack ${reasons[i] ? 'off' : ''}" data-act="slotBuy" data-chips="${p.chips}" data-xp="${p.xp}" ${reasons[i] ? 'disabled' : ''} title="${reasons[i]}"><b>+${p.chips} 🪙</b><span>${slFmt(p.xp)} XP</span></button>`)}</div>
+    ${allOff ? html`<div class="small muted mt">${reasons[0]}</div>` : ''}</div>`;
 }
 actions.slotBuy = async b => {
   const chips = +b.dataset.chips, xp = +b.dataset.xp;
