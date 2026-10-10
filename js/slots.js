@@ -47,7 +47,7 @@ async function drawSlots() {
         <div class="slot-panel">
           <div class="slot-box"><span class="lbl">Баланс</span><b id="slBalance">🪙 ${slFmt(st.balance)}</b></div>
           <button class="spin-btn" id="spinBtn" data-act="slotSpin" aria-label="Крутить"><span class="sp-t">SPIN</span><span class="sp-s" id="spinSub"></span></button>
-          <div class="slot-box"><span class="lbl">Ставка</span><div class="bet-row"><button class="bet-b" data-act="slotBet" data-d="-1" aria-label="Меньше">‹</button><button class="bet-val" id="slBet" data-len="${String(SL.bet).length}" data-act="slotBetEdit" title="Выбрать свою сумму">${SL.bet}</button><button class="bet-b" data-act="slotBet" data-d="1" aria-label="Больше">›</button></div></div>
+          <div class="slot-box"><span class="lbl">Ставка</span><div class="bet-row"><button class="bet-b" data-act="slotBet" data-d="-1" aria-label="Меньше">‹</button><button class="bet-val" id="slBet" data-len="${slBetLabel(SL.bet).length}" data-act="slotBetEdit" title="Выбрать свою сумму">${slBetLabel(SL.bet)}</button><button class="bet-b" data-act="slotBet" data-d="1" aria-label="Больше">›</button></div></div>
         </div>
       </div>
       <div class="slots-side" id="slotSide"></div>
@@ -68,9 +68,11 @@ function slControls() {
   b.classList.toggle('busy', SL.spinning); b.classList.toggle('idle', !SL.spinning && can);
   $('#spinSub').textContent = SL.spinning ? '' : can ? '−' + SL.bet : 'мало жетонов';
   $$('.bet-b').forEach(x => x.disabled = SL.spinning);
-  $('#slBet').textContent = SL.bet; $('#slBet').dataset.len = String(SL.bet).length; $('#slBet').disabled = SL.spinning;
+  $('#slBet').textContent = slBetLabel(SL.bet); $('#slBet').title = 'Ставка ' + slFmt(SL.bet) + ' — нажми, чтобы выбрать свою сумму'; $('#slBet').dataset.len = slBetLabel(SL.bet).length; $('#slBet').disabled = SL.spinning;
 }
 function slStored() { try { return localStorage.getItem('lq_slot_bet') || ''; } catch (e) { return ''; } }
+/** Короткая подпись ставки в тесной рамке: от 10 000 — в тысячах (50000 → «50K», 12340 → «12.3K»), остальные суммы целиком. */
+function slBetLabel(v) { return v >= 10000 ? String(+(v / 1000).toFixed(1)) + 'K' : String(v); }
 function slValidBet(v) { const st = SL.st; return Number.isInteger(v) && st && v >= st.min_bet && v <= st.max_bet && v % st.bet_step === 0; }
 function slSetBet(v, quiet) {
   SL.bet = v; SL.pendingId = null;
