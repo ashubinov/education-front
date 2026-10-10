@@ -229,6 +229,9 @@ async function router() {
     catch (e) { if (h !== '#/auth') { location.hash = '#/auth'; return; } }
   }
   if (S.user && h === '#/auth') { location.hash = '#/'; return; }
+  // администратор сбросил пароль: пока пользователь не задал свой, доступен только экран смены пароля
+  if (S.user && S.user.must_change_password && h !== '#/newpass') { location.hash = '#/newpass'; return; }
+  if (S.user && !S.user.must_change_password && h === '#/newpass') { location.hash = '#/'; return; }
   if (S.user && typeof maybePrank === 'function') maybePrank();
   window.scrollTo(0, 0);
   for (const [re, fn] of routes) {

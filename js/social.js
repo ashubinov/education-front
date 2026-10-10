@@ -161,7 +161,7 @@ function usersTab(users) {
       <div class="row wrap gap-s"><span class="chip">Ур. ${u.level}</span><span class="chip">⭐ ${u.xp}</span><span class="chip">📚 ${u.courses} ${plural(u.courses, 'курс', 'курса', 'курсов')}</span>${u.telegram ? html`<span class="chip">✈️ Telegram</span>` : ''}</div>
       <div class="small muted">Регистрация: ${fmtStamp(u.created_at)} · ${fmtLast(u.last_active)}</div>
       ${u.banned && u.banned_reason ? html`<div class="small err" style="min-height:0">Причина: ${u.banned_reason}</div>` : ''}
-      ${u.is_admin ? '' : html`<div class="row wrap gap-s">${u.banned ? html`<button class="btn sm good" data-act="unbanUser" data-id="${u.id}">Разблокировать</button>` : html`<button class="btn sm bad" data-act="banUser" data-id="${u.id}" data-name="${u.display_name} (@${u.username})">🚫 Заблокировать</button>`}<button class="btn sm ghost" data-act="deleteUser" data-id="${u.id}" data-name="${u.display_name} (@${u.username})">🗑 Удалить</button></div>`}</div>`)}</div>`;
+      ${u.is_admin ? '' : html`<div class="row wrap gap-s">${u.banned ? html`<button class="btn sm good" data-act="unbanUser" data-id="${u.id}">Разблокировать</button>` : html`<button class="btn sm bad" data-act="banUser" data-id="${u.id}" data-name="${u.display_name} (@${u.username})">🚫 Заблокировать</button>`}<button class="btn sm ghost" data-act="resetPw" data-id="${u.id}" data-name="${u.display_name} (@${u.username})">🔑 Сбросить пароль</button><button class="btn sm ghost" data-act="deleteUser" data-id="${u.id}" data-name="${u.display_name} (@${u.username})">🗑 Удалить</button></div>`}</div>`)}</div>`;
 }
 actions.userSearch = () => { S.adminQ = $('#usearch').value.trim(); drawAdmin(); };
 actions.banUser = b => {
@@ -181,4 +181,49 @@ actions.deleteUser = async b => {
   if (!await askConfirm('Удалить пользователя навсегда?', `${b.dataset.name}: аккаунт, все его курсы и прогресс, подписи, связи с друзьями и аватарка будут стёрты без возможности восстановления (кроме резервной копии). Если нужно просто закрыть доступ — используй «Заблокировать».`, 'Удалить навсегда', 'Отмена', true)) return;
   try { await api(`/admin/users/${b.dataset.id}`, { method: 'DELETE' }); toast('Пользователь удалён', { icon: '🗑', ms: 2200 }); } catch (e) { toast(e.message, { icon: '⚠️' }); }
   drawAdmin();
+};
+
+/* =============================== временный пароль =============================== */
+route(/^#\/newpass$/, async () => { drawNewPass(); });
+function drawNewPass() {
+  render(app(), html`<div class="auth-wrap"><div class="auth">
+    <div class="hero"><span class="mascot">🔑</span><h1>Задай свой пароль</h1><p class="muted">Администратор сбросил тебе пароль. Введи временный пароль, который он дал, и придумай свой — им и будешь пользоваться.</p></div>
+    <form class="card" id="npform" autocomplete="off">
+      <div class="field"><label>Временный пароль</label><input type="text" name="cur" required autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Xk7P-m2Qd-Rw9F"></div>
+      <div class="field"><label>Новый пароль</label><input type="password" name="pw1" required minlength="6" autocomplete="new-password" placeholder="не короче 6 символов"></div>
+      <div class="field"><label>Повтори новый пароль</label><input type="password" name="pw2" required minlength="6" autocomplete="new-password"></div>
+      <div class="err" id="nperr"></div>
+      <button class="btn block lg" type="submit">Сохранить пароль</button>
+      <button class="btn ghost block mt" type="button" data-act="logout">Выйти</button>
+    </form></div></div>`);
+  $('#npform').addEventListener('submit', async e => {
+    e.preventDefault();
+    const f = e.target.elements, err = $('#nperr'), btn = $('button[type=submit]', e.target);
+    err.textContent = '';
+    if (f.pw1.value !== f.pw2.value) { err.textContent = 'Пароли не совпадают'; return; }
+    if (f.pw1.value === f.cur.value.trim()) { err.textContent = 'Новый пароль должен отличаться от временного'; return; }
+    busy(btn, true);
+    try {
+      const r = await api('/me/password', { json: { current_password: f.cur.value.trim(), new_password: f.pw1.value } });
+      Token.set(r.token); S.user = await api('/me');
+      toast('Пароль сохранён. Теперь можно пользоваться сайтом', { icon: '🔑', ms: 3200 });
+      location.hash = '#/';
+    } catch (er) { busy(btn, false); err.textContent = er.message; }
+  });
+}
+
+/* администратор: сброс пароля пользователя */
+actions.resetPw = async b => {
+  if (!await askConfirm('Сбросить пароль?', `${b.dataset.name}: старый пароль перестанет работать, все его устройства выйдут. Ты увидишь временный пароль — передай его пользователю, при входе он задаст свой.`, 'Сбросить', 'Отмена', true)) return;
+  try {
+    const r = await api(`/admin/users/${b.dataset.id}/reset-password`, { method: 'POST' });
+    openModal(html`<h2>🔑 Новый пароль</h2><p class="muted" style="margin-top:0">${b.dataset.name}</p>
+      <div class="code-box" id="tmpPw">${r.password}</div>
+      <p class="small muted mt">Показывается один раз: после закрытия окна увидеть его снова нельзя (можно сбросить ещё раз). Передай пользователю лично или в личном сообщении. При входе он обязан задать свой пароль.</p>
+      <div class="row mt wrap"><button class="btn" data-act="copyTmpPw" data-pw="${r.password}">📋 Скопировать</button><button class="btn ghost" data-act="closeModal">Готово</button></div>`);
+  } catch (e) { toast(e.message, { icon: '⚠️' }); }
+};
+actions.copyTmpPw = async b => {
+  try { await navigator.clipboard.writeText(b.dataset.pw); toast('Пароль скопирован', { icon: '📋', ms: 1800 }); }
+  catch (e) { const r = document.createRange(); r.selectNodeContents($('#tmpPw')); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); toast('Выдели и скопируй пароль вручную', { icon: 'ℹ️' }); }
 };
