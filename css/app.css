@@ -412,3 +412,9 @@ h1, h2, h3, .q, .term-card .term, .course-card h3 { overflow-wrap: anywhere; }
   .pay-row { grid-template-columns: 32px 1fr; } .pay-v { grid-column: 1 / -1; }
 }
 @media (prefers-reduced-motion: reduce) { .sym.dog svg, .mini-dog, .eye, .spin-btn.idle, .slot-machine::before, .bw-rays { animation: none !important; } }
+.exch-card { border-color: var(--warn); }
+.packs { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; }
+.pack { display: flex; flex-direction: column; gap: 2px; align-items: center; padding: 12px 8px; border-radius: 16px; border: 2px solid var(--warn); background: var(--warn-l); color: var(--text); cursor: pointer; font-family: inherit; box-shadow: 0 3px 0 var(--line); }
+.pack b { font-size: 20px; font-weight: 900; } .pack span { font-size: 13px; font-weight: 800; color: var(--warn); }
+.pack:active:not([disabled]) { transform: translateY(2px); box-shadow: 0 1px 0 var(--line); }
+.pack.off, .pack[disabled] { opacity: .45; cursor: not-allowed; border-color: var(--line); background: var(--bg3); } .pack.off span { color: var(--muted); }

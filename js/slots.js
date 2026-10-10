@@ -53,7 +53,7 @@ async function drawSlots() {
       <div class="slots-side" id="slotSide"></div>
     </div>`));
   slSide();
-  slMsg(st.balance < st.min_bet ? 'Жетоны закончились — забери ежедневный бонус или загляни завтра' : 'Крути барабаны и лови выигрыш! <small>Пробел — SPIN</small>');
+  slMsg(st.balance < st.min_bet ? 'Жетоны закончились — забери ежедневный бонус, докупи за XP или загляни завтра' : 'Крути барабаны и лови выигрыш! <small>Пробел — SPIN</small>');
   slControls();
   const onKey = e => { if (e.code === 'Space' && !/INPUT|TEXTAREA|SELECT|BUTTON|A/.test(document.activeElement?.tagName || '')) { e.preventDefault(); actions.slotSpin(); } };
   document.addEventListener('keydown', onKey);
@@ -187,6 +187,7 @@ function slSide() {
   el.innerHTML = unraw(html`
     <div class="card daily-card ${d.available ? 'ready' : ''}"><div class="row spread wrap"><div><h3 style="margin:0">🎁 Ежедневный бонус</h3><div class="small muted">${d.available ? `Забери ${d.amount} жетонов — раз в день.` : 'Сегодняшний бонус уже получен. Загляни завтра!'}</div></div>
       ${d.available ? html`<button class="btn good" data-act="slotDaily">Забрать +${d.amount}</button>` : html`<span class="chip">⏳ завтра</span>`}</div></div>
+    ${slExchangeHtml()}
     <div class="tiles slot-tiles"><div class="card tile"><b>🎰 ${slFmt(s.spins)}</b><span>вращений</span></div><div class="card tile"><b>🏆 ${slFmt(s.best_win)}</b><span>лучший выигрыш</span></div><div class="card tile"><b>🪙 ${slFmt(s.won_total)}</b><span>всего выиграно</span></div><div class="card tile"><b>${Math.round(s.win_rate * 100)}%</b><span>вращений с выигрышем</span></div></div>
     <div class="two"><div class="card"><h3>Последние вращения</h3><div class="col" style="gap:6px" id="slHist">${hist}</div></div>
       <div class="card"><h3>🏅 Лучшие выигрыши</h3><div class="col" style="gap:8px">${board}</div></div></div>
@@ -199,4 +200,34 @@ actions.slotDaily = async b => {
     SL.st.balance = r.balance; play('coin'); toast(`+${r.amount} жетонов`, { icon: '🎁', title: 'Ежедневный бонус', ms: 2600 });
     slNum($('#slBalance'), r.balance - r.amount, r.balance, 700); slMsg('Бонус получен — крути!'); slControls(); await slRefresh();
   } catch (e) { busy(b, false); toast(e.message, { icon: '⚠️' }); }
+};
+
+/* =============================== обмен XP на жетоны =============================== */
+function slBuyReason(p) {
+  const ex = SL.st.exchange;
+  if (SL.st.balance >= ex.buy_only_below) return `Докупить можно, когда жетонов меньше ${ex.buy_only_below}`;
+  if (p.chips > ex.remaining_today) return ex.remaining_today ? `Дневной лимит: сегодня можно ещё ${ex.remaining_today}` : 'Дневной лимит покупок исчерпан — приходи завтра';
+  if (p.xp > ex.xp_available) return `Не хватает ${p.xp - ex.xp_available} XP`;
+  return '';
+}
+function slExchangeHtml() {
+  const ex = SL.st.exchange;
+  return html`<div class="card exch-card"><h3 style="margin:0 0 4px">💱 Докупить жетоны за XP</h3>
+    <p class="small muted" style="margin:0 0 10px">Цена жёсткая: <b>${ex.xp_per_chip} XP = 1 жетон</b>, без скидок. Один урок приносит в среднем около ${Math.round(145 / ex.xp_per_chip)} жетонов. Покупать можно, когда жетонов меньше ${ex.buy_only_below}, и не больше ${ex.daily_limit} в день. Потраченные XP не возвращаются, но уровень и достижения от этого не меняются.</p>
+    <div class="row wrap gap-s mb"><span class="chip accent">⭐ доступно ${slFmt(ex.xp_available)} XP</span><span class="chip">заработано ${slFmt(ex.xp_total)}</span><span class="chip">потрачено ${slFmt(ex.xp_spent)}</span><span class="chip ${ex.remaining_today ? '' : 'warn'}">сегодня куплено ${ex.bought_today} / ${ex.daily_limit}</span></div>
+    <div class="packs">${ex.packs.map(p => { const why = slBuyReason(p); return html`<button class="pack ${why ? 'off' : ''}" data-act="slotBuy" data-chips="${p.chips}" data-xp="${p.xp}" ${why ? 'disabled' : ''} title="${why}"><b>+${p.chips} 🪙</b><span>${slFmt(p.xp)} XP</span></button>`; })}</div>
+    ${(() => { const w = ex.packs.map(slBuyReason).find(x => x); return w && ex.packs.every(slBuyReason) ? html`<div class="small muted mt">${w}</div>` : ''; })()}</div>`;
+}
+actions.slotBuy = async b => {
+  const chips = +b.dataset.chips, xp = +b.dataset.xp;
+  if (SL.spinning) return;
+  if (!await askConfirm('Купить жетоны?', `Потратить ${slFmt(xp)} XP и получить ${chips} жетонов? Обратно XP не вернуть (уровень не изменится).`, `Купить за ${slFmt(xp)} XP`, 'Отмена')) return;
+  busy(b, true);
+  try {
+    const r = await api('/slots/buy', { json: { chips, request_id: slId() } });
+    const prev = SL.st.balance; SL.st.balance = r.balance; play('coin');
+    toast(`+${r.chips} жетонов за ${slFmt(r.xp)} XP`, { icon: '💱', ms: 2600 });
+    slNum($('#slBalance'), prev, r.balance, 700); slMsg('Жетоны куплены — крути!'); slControls();
+  } catch (e) { toast(e.message, { icon: '⚠️' }); }
+  await slRefresh();
 };
