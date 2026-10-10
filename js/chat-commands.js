@@ -4,7 +4,7 @@
 'use strict';
 
 const CHAT_COMMANDS = { open: false, modal: null, ticker: null, refresh: null,
-  rows: [], fetchedAt: 0, busy: false, pending: new Map() };
+  rows: [], fetchedAt: 0, busy: false, pending: new Map(), editId: null };
 
 function chatCommandsMount(generation) {
   const header = document.querySelector('.lq-chat-heading');
@@ -37,7 +37,7 @@ async function chatCommandsOpen(generation) {
     <p class="small muted">Нажми «Использовать» или введи команду в чат. Таймаут персональный: после использования он действует только для тебя.</p>
     <div id="cmdList" class="lq-chat-cmd-list" aria-live="polite"><div class="small muted">Загрузка…</div></div>
     <section id="cmdAdmin" class="lq-chat-cmd-admin" hidden>
-      <h3>Создать команду <span class="small muted">(администратор)</span></h3>
+      <h3 id="cmdFormTitle">Создать команду <span class="small muted">(администратор)</span></h3>
       <form id="cmdCreateForm" class="lq-chat-cmd-form">
         <label>Текст команды <input name="command" type="text" maxlength="33" placeholder="/кость" required></label>
         <label>Что происходит <input name="description" type="text" maxlength="200" placeholder="Получить жетоны для слотов" required></label>
@@ -48,7 +48,7 @@ async function chatCommandsOpen(generation) {
           <label>Единицы <select name="cooldown_unit"><option value="seconds">секунды</option><option value="minutes">минуты</option><option value="hours" selected>часы</option></select></label>
         </div>
         <div id="cmdCreateError" class="err" role="alert"></div>
-        <button class="btn sm" id="cmdCreateBtn" type="submit">Создать команду</button>
+        <div class="row gap-s"><button class="btn sm" id="cmdCreateBtn" type="submit">Создать команду</button><button class="btn sm ghost hidden" id="cmdCancelEdit" type="button">Отмена</button></div>
       </form>
     </section>
   </div>`, { onClose: chatCommandsClose });
@@ -56,6 +56,7 @@ async function chatCommandsOpen(generation) {
   CHAT_COMMANDS.open = true; CHAT_COMMANDS.modal = modal;
   modal.querySelector('#cmdClose').onclick = closeModal;
   modal.querySelector('#cmdCreateForm').addEventListener('submit', chatCommandsCreate);
+  modal.querySelector('#cmdCancelEdit').onclick = () => chatCommandsEditStop();
   await chatCommandsFetch();
   if (!CHAT_COMMANDS.open) return;
   CHAT_COMMANDS.ticker = setInterval(chatCommandsTick, 1000);
@@ -65,7 +66,7 @@ async function chatCommandsOpen(generation) {
 }
 
 function chatCommandsClose() {
-  CHAT_COMMANDS.open = false;
+  CHAT_COMMANDS.open = false; CHAT_COMMANDS.editId = null;
   CHAT_COMMANDS.modal = null;
   clearInterval(CHAT_COMMANDS.ticker); CHAT_COMMANDS.ticker = null;
   clearInterval(CHAT_COMMANDS.refresh); CHAT_COMMANDS.refresh = null;
@@ -130,6 +131,26 @@ function chatCommandsRender() {
         } catch (e) { toast(e.message, {icon: '⚠️'}); toggle.disabled = false; }
       };
       controls.append(toggle);
+      const edit = document.createElement('button');
+      edit.type = 'button'; edit.className = 'lq-chat-cmd-toggle'; edit.textContent = 'Изменить';
+      edit.onclick = () => chatCommandsEditStart(c);
+      const del = document.createElement('button');
+      del.type = 'button'; del.className = 'lq-chat-cmd-toggle lq-chat-cmd-del'; del.textContent = 'Удалить';
+      del.onclick = async () => {
+        if (!del.dataset.sure) {  // двойное нажатие: первое просит подтверждения, второе удаляет
+          del.dataset.sure = '1'; del.textContent = 'Точно?';
+          setTimeout(() => { if (del.isConnected) { delete del.dataset.sure; del.textContent = 'Удалить'; } }, 3000);
+          return;
+        }
+        del.disabled = true;
+        try {
+          await api(`/chat/commands/${c.id}`, { method: 'DELETE' });
+          if (CHAT_COMMANDS.editId === c.id) chatCommandsEditStop();
+          toast('Команда удалена', { icon: '🗑', ms: 1600 });
+          await chatCommandsFetch();
+        } catch (e) { toast(e.message, { icon: '⚠️' }); del.disabled = false; }
+      };
+      controls.append(edit, del);
     }
     row.append(info, controls);
     list.append(row);
@@ -212,10 +233,37 @@ async function chatCommandsCreate(e) {
   };
   button.disabled = true;
   try {
-    await api('/chat/commands', { json: payload });
-    toast('Команда создана', {icon: '⌘'});
-    form.reset();
+    if (CHAT_COMMANDS.editId) {
+      await api(`/chat/commands/${CHAT_COMMANDS.editId}`, { method: 'PUT', json: payload });
+      toast('Команда изменена', { icon: '✏️' });
+      chatCommandsEditStop();
+    } else {
+      await api('/chat/commands', { json: payload });
+      toast('Команда создана', {icon: '⌘'});
+      form.reset();
+    }
     await chatCommandsFetch();
   } catch (e) { error.textContent = e.message; }
   finally { button.disabled = false; }
+}
+
+/** Форма создания превращается в форму редактирования выбранной команды. */
+function chatCommandsEditStart(c) {
+  const m = CHAT_COMMANDS.modal; if (!m) return;
+  const f = m.querySelector('#cmdCreateForm');
+  CHAT_COMMANDS.editId = c.id;
+  f.elements.command.value = c.command; f.elements.description.value = c.description; f.elements.amount.value = c.amount;
+  f.elements.cooldown_value.value = c.cooldown_value; f.elements.cooldown_unit.value = c.cooldown_unit;
+  m.querySelector('#cmdFormTitle').textContent = 'Изменить команду ' + c.command;
+  m.querySelector('#cmdCreateBtn').textContent = 'Сохранить';
+  m.querySelector('#cmdCancelEdit').classList.remove('hidden');
+  m.querySelector('#cmdCreateError').textContent = '';
+  f.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
+function chatCommandsEditStop() {
+  const m = CHAT_COMMANDS.modal; CHAT_COMMANDS.editId = null; if (!m) return;
+  const f = m.querySelector('#cmdCreateForm'); f.reset();
+  m.querySelector('#cmdFormTitle').innerHTML = 'Создать команду <span class="small muted">(администратор)</span>';
+  m.querySelector('#cmdCreateBtn').textContent = 'Создать команду';
+  m.querySelector('#cmdCancelEdit').classList.add('hidden');
 }

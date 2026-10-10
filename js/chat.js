@@ -25,6 +25,32 @@ function chatTime(iso) {
   return Number.isNaN(d.getTime()) ? '' : d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
 }
 
+/** Кнопки администратора на сообщении: удалить (любое) и заблокировать автора (обычные сообщения других людей). */
+function chatModButtons(msg) {
+  if (!S.user || !S.user.is_admin) return null;
+  const box = document.createElement('span');
+  box.className = 'lq-chat-mod';
+  const del = document.createElement('button');
+  del.type = 'button'; del.className = 'lq-chat-mod-btn'; del.textContent = '🗑';
+  del.title = 'Удалить сообщение'; del.setAttribute('aria-label', 'Удалить сообщение');
+  del.dataset.act = 'chatDelete'; del.dataset.id = msg.id;
+  box.append(del);
+  if (!msg.system_kind && msg.user_id !== S.user.id) {
+    const ban = document.createElement('button');
+    ban.type = 'button'; ban.className = 'lq-chat-mod-btn'; ban.textContent = '🚫';
+    ban.title = 'Заблокировать автора'; ban.setAttribute('aria-label', 'Заблокировать автора');
+    ban.dataset.act = 'banUser'; ban.dataset.id = msg.user_id; ban.dataset.name = msg.name;
+    box.append(ban);
+  }
+  return box;
+}
+actions.chatDelete = async b => {
+  const id = +b.dataset.id;
+  if (!await askConfirm('Удалить сообщение?', 'Оно исчезнет у всех участников чата.', 'Удалить', 'Отмена', true)) return;
+  try { await api('/chat/messages/' + id, { method: 'DELETE' }); chatRemove(id); toast('Сообщение удалено', { icon: '🗑', ms: 1500 }); }
+  catch (e) { toast(e.message, { icon: '⚠️' }); }
+};
+
 function chatEntry(msg) {
   const mine = S.user && msg.user_id === S.user.id;
   const item = document.createElement('article');
@@ -45,6 +71,7 @@ function chatEntry(msg) {
     text.className = 'lq-chat-text';
     text.textContent = msg.text; // Never parse system content as HTML.
     header.append(label, time);
+    const mod = chatModButtons(msg); if (mod) header.append(mod);
     bubble.append(header, text);
     item.append(bubble);
     return item;
@@ -72,6 +99,7 @@ function chatEntry(msg) {
   time.dateTime = msg.created_at;
   time.textContent = chatTime(msg.created_at);
   header.append(who, time);
+  const mod = chatModButtons(msg); if (mod) header.append(mod);
 
   const text = document.createElement('div');
   text.className = 'lq-chat-text';

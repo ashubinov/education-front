@@ -46,3 +46,6 @@
   .lq-chat-heading .lq-chat-status { display: none; }
   .lq-chat-cmd-cooldown { grid-template-columns: 1fr; }
 }
+
+.lq-chat-cmd-del { color: var(--bad); }
+.lq-chat-cmd-controls .lq-chat-cmd-toggle { font-size: 10px; padding: 2px; }

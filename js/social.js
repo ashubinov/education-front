@@ -174,7 +174,7 @@ actions.banConfirm = async b => {
   busy(b, true);
   try { await api(`/admin/users/${b.dataset.id}/ban`, { json: { reason: $('#banreason').value.trim() } }); closeModal(); toast('Пользователь заблокирован', { icon: '🚫', ms: 2200 }); }
   catch (e) { busy(b, false); toast(e.message, { icon: '⚠️' }); return; }
-  drawAdmin();
+  if (location.hash === '#/admin') drawAdmin();  // из чата блокировка вызывается с главной — остаёмся на ней
 };
 actions.unbanUser = async b => { try { await api(`/admin/users/${b.dataset.id}/unban`, { method: 'POST' }); toast('Пользователь разблокирован', { icon: '✅', ms: 2000 }); } catch (e) { toast(e.message, { icon: '⚠️' }); } drawAdmin(); };
 actions.deleteUser = async b => {

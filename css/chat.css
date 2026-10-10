@@ -81,3 +81,10 @@
   .lq-chat-compose textarea { min-height: 48px; }
   .lq-chat-help { font-size: 10px; }
 }
+
+/* кнопки администратора на сообщениях */
+.lq-chat-mod { margin-left: auto; display: inline-flex; gap: 2px; opacity: .45; transition: opacity .15s; }
+.lq-chat-message:hover .lq-chat-mod, .lq-chat-mod:focus-within { opacity: 1; }
+.lq-chat-mod-btn { border: 0; background: transparent; cursor: pointer; font-size: 12px; line-height: 1; padding: 2px 3px; border-radius: 6px; }
+.lq-chat-mod-btn:hover { background: var(--bad-l); }
+@media (hover: none) { .lq-chat-mod { opacity: .85; } }
