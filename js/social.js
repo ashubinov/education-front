@@ -84,6 +84,11 @@ async function drawFriend(id) {
       <div class="card tile"><b>✅ ${p.totals.lessons}</b><span>уроков</span></div>
       <div class="card tile"><b>⏱ ${p.totals.minutes}</b><span>минут</span></div>
       <div class="card tile"><b>🎯 ${p.totals.answers}</b><span>ответов</span></div></div>
+    <div class="card mb"><h3>🐾 Питомец <span class="muted small">— зайди в гости</span></h3>${petFriendCard(p.pet, p.id, p.display_name)}</div>
+    <div class="card mb"><h3>🚜 Ферма</h3>${farmFriendCard(p.farm, p.display_name, p.lab)}</div>
+    <div class="card mb"><h3>🎨 Пиксел баттл</h3>${p.pixels ? html`<div class="tiles slot-tiles">
+        <div class="card tile"><b>🎨 ${slFmt(p.pixels.placed)}</b><span>пикселов поставил</span></div>
+        <div class="card tile"><b>🏁 ${slFmt(p.pixels.owned)}</b><span>сейчас на доске</span></div></div>` : html`<p class="muted small" style="margin:0">Ещё не рисовал на общей доске.</p>`}</div>
     <div class="card mb"><h3>🎰 Слоты</h3>${p.slots ? html`<div class="tiles slot-tiles friend-slots">
         <div class="card tile"><b>🪙 ${slFmt(p.slots.wagered)}</b><span>потрачено (ставки)</span></div>
         <div class="card tile"><b>🏆 ${slFmt(p.slots.won)}</b><span>выиграно</span></div>

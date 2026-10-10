@@ -1,0 +1,74 @@
+/* LearnQuest — «Питомец». */
+.pet-page { max-width: 1040px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; padding-bottom: 24px; }
+.pet-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; } .pet-top h2 { margin: 0 0 2px; }
+.pet-grid { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 16px; align-items: start; }
+.pet-stage-card { padding: 0; overflow: hidden; display: flex; flex-direction: column; position: sticky; top: 12px; }
+.pet-info { padding: 14px 16px 16px; }
+.pet-scene {
+  position: relative; aspect-ratio: 1 / .86; display: flex; align-items: flex-end; justify-content: center; overflow: hidden;
+  background: linear-gradient(#8ed0ff 0%, #d6f1ff 62%, #8ad36b 62.5%, #5fb04a 100%);
+}
+.pet-scene::before { content: ""; position: absolute; left: 10%; top: 10%; width: 38px; height: 38px; border-radius: 50%; background: #fff6b0; box-shadow: 0 0 0 8px rgba(255, 246, 176, .35); }
+.pet-scene::after { content: "☁️"; position: absolute; right: 12%; top: 14%; font-size: 30px; opacity: .85; }
+.pet-scene.mini { width: 150px; flex: none; aspect-ratio: 1; border-radius: 16px; border: 2px solid var(--line); }
+.pet-scene.mini::before { width: 18px; height: 18px; box-shadow: 0 0 0 4px rgba(255, 246, 176, .35); } .pet-scene.mini::after { font-size: 16px; }
+.pet-art { position: relative; width: 78%; max-width: 300px; aspect-ratio: 1; margin-bottom: -2%; }
+.pet-scene.mini .pet-art { width: 96%; }
+.pet-svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.pet-body { transform-origin: 50% 90%; animation: petIdle 3.2s ease-in-out infinite; }
+.pet-eyes { transform-box: fill-box; transform-origin: center; animation: petBlink 4.6s infinite; }
+.mood-hungry .pet-body { animation-duration: 4.4s; } .mood-starving .pet-body { animation: petSad 3s ease-in-out infinite; }
+.pet-art.eating .pet-body { animation: petHop .45s ease-in-out 2; }
+@keyframes petIdle { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.025, .975); } }
+@keyframes petSad { 0%, 100% { transform: translateY(2px) scale(1, .985); } 50% { transform: translateY(4px) scale(1.01, .965); } }
+@keyframes petHop { 0%, 100% { transform: translateY(0); } 45% { transform: translateY(-14px) scale(.98, 1.04); } }
+@keyframes petBlink { 0%, 93%, 100% { transform: scaleY(1); } 96% { transform: scaleY(.1); } }
+.pet-fly { position: absolute; left: 50%; top: 4%; font-size: 40px; animation: petFly .85s ease-in forwards; pointer-events: none; }
+@keyframes petFly { 0% { transform: translate(-50%, -30px) scale(1); opacity: 1; } 75% { opacity: 1; } 100% { transform: translate(-50%, 110px) scale(.4); opacity: 0; } }
+.pet-gain { position: absolute; left: 50%; top: 10%; transform: translateX(-50%); font-weight: 900; font-size: 18px; color: #fff; background: rgba(0, 0, 0, .45); border-radius: 12px; padding: 3px 10px; white-space: nowrap; animation: petGain 1.4s ease-out forwards; pointer-events: none; }
+@keyframes petGain { 0% { transform: translate(-50%, 20px); opacity: 0; } 20% { opacity: 1; } 100% { transform: translate(-50%, -34px); opacity: 0; } }
+.pet-bars { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.pet-bar { display: grid; grid-template-columns: 96px minmax(0, 1fr) 54px; align-items: center; gap: 8px; font-size: 14px; } .pet-bar b { text-align: right; font-size: 13px; }
+.pet-fill.happy { background: var(--good); } .pet-fill.ok { background: var(--warn); } .pet-fill.hungry, .pet-fill.starving { background: var(--bad); }
+.pet-shop { min-width: 0; }
+.pet-foods { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
+.pet-food { position: relative; background: var(--bg2); border: 2px solid var(--line); border-radius: 16px; padding: 12px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 2px; }
+.pet-food.liked { border-color: var(--warn); background: linear-gradient(var(--warn-l), var(--bg2) 70%); }
+.pet-food-ic { font-size: 38px; line-height: 1.1; } .pet-food b { font-size: 15px; }
+.pet-star { position: absolute; left: 8px; top: 6px; font-style: normal; font-size: 16px; }
+.pet-have { position: absolute; right: 8px; top: 6px; font-style: normal; font-weight: 900; font-size: 13px; background: var(--accent); color: var(--accent-ink); border-radius: 10px; padding: 1px 8px; }
+.pet-food-act { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; justify-content: center; } .pet-food-act .btn { padding: 6px 11px; }
+.pet-choose { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
+.pet-card { background: var(--bg2); border: 3px solid var(--line); border-radius: 20px; padding: 10px 12px 14px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; color: var(--text); font: inherit; transition: transform .12s, border-color .12s; }
+.pet-card:hover { transform: translateY(-3px); } .pet-card.on { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-l); }
+.pet-card b { font-size: 18px; }
+.pet-card-art { width: 100%; max-width: 170px; aspect-ratio: 1; background: linear-gradient(#bfe6ff, #e6f7ff 65%, #9edb82 65.5%); border-radius: 14px; overflow: hidden; }
+.pet-name-card { display: flex; flex-direction: column; gap: 8px; max-width: 560px; }
+.pet-guest { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+@media (max-width: 860px) {
+  .pet-grid { grid-template-columns: minmax(0, 1fr); } .pet-stage-card { position: static; }
+  .pet-scene { aspect-ratio: 1 / .7; } .pet-art { width: 62%; }
+  .pet-foods { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (prefers-reduced-motion: reduce) { .pet-body, .pet-eyes { animation: none; } }
+
+/* Меню стало длиннее (до 9 пунктов с «Админ»): ужимаем шапку на ноутбуках и даём нижней панели телефона прокручиваться. */
+.nav a { white-space: nowrap; }
+/* девять пунктов на ноутбуке: ужимаем шапку */
+@media (min-width: 1191px) and (max-width: 1330px) { .topbar-in { gap: 8px; } .nav { gap: 2px; margin-left: 5px; } .nav a { padding: 7px 9px; font-size: 13px; gap: 5px; } .hud-level { display: none; } }
+/* у админа 10 пунктов: на 1191–1330 px в шапку они не влезают — там меню, как на планшете, уезжает вниз */
+@media (min-width: 1191px) and (max-width: 1330px) {
+  body:has(.bottom-nav.n10) .topbar .nav { display: none; }
+  .bottom-nav.n10 { display: flex; position: fixed; bottom: 0; left: 0; right: 0; z-index: 20; background: var(--bg2); border-top: 2px solid var(--line); padding: 6px 6px calc(6px + env(safe-area-inset-bottom)); }
+  .bottom-nav.n10 a { flex: 1 1 0; min-width: 0; text-align: center; color: var(--muted); padding: 6px 2px; border-radius: 12px; font-size: 11px; display: flex; flex-direction: column; font-weight: 800; }
+  .bottom-nav.n10 a span { font-size: 21px; } .bottom-nav.n10 a.on { color: var(--accent); background: var(--accent-l); }
+  main:has(~ .bottom-nav.n10) { padding-bottom: 90px; }
+}
+@media (min-width: 1331px) and (max-width: 1480px) {
+  .topbar-in { gap: 8px; } .nav { gap: 2px; margin-left: 5px; } .nav a { padding: 7px 9px; font-size: 13px; gap: 5px; } .hud-level { display: none; }
+}
+@media (max-width: 760px) {
+  .bottom-nav.n9, .bottom-nav.n10 { overflow-x: auto; scrollbar-width: thin; justify-content: flex-start; }
+  .bottom-nav.n9 a, .bottom-nav.n10 a { flex: 0 0 69px; min-width: 69px; font-size: 10px; padding: 6px 2px; }
+  .bottom-nav.n9 a span, .bottom-nav.n10 a span { font-size: 20px; }
+}

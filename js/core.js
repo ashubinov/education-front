@@ -200,7 +200,7 @@ function hud() {
   </div>`;
 }
 function navItems() {
-  const nav = [['#/', '🏠', 'Курсы', 'home'], ['#/friends', '👥', 'Друзья', 'friends'], ['#/slots', '🎰', 'Слоты', 'slots'], ['#/minigames', '🍓', 'Мини-игры', 'minigames'], ['#/stats', '📊', 'Статистика', 'stats'], ['#/settings', '⚙️', 'Настройки', 'settings']];
+  const nav = [['#/', '🏠', 'Курсы', 'home'], ['#/friends', '👥', 'Друзья', 'friends'], ['#/slots', '🎰', 'Слоты', 'slots'], ['#/pixels', '🎨', 'Пикселы', 'pixels'], ['#/pet', '🐾', 'Питомец', 'pet'], ['#/farm', '🚜', 'Ферма', 'farm'], ['#/minigames', '🍓', 'Мини-игры', 'minigames'], ['#/stats', '📊', 'Статистика', 'stats'], ['#/settings', '⚙️', 'Настройки', 'settings']];
   if (S.user && S.user.is_admin) nav.splice(3, 0, ['#/admin', '🛡️', 'Админ', 'admin']);
   return nav;
 }
