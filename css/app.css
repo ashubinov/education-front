@@ -437,3 +437,7 @@ html[data-motion="reduced"] *:not(.reel-strip):not(.spinner):not(.spinner *) { a
 .bet-chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .bet-chip { padding: 8px 14px; border-radius: 12px; border: 2px solid var(--line); background: var(--bg3); color: var(--text); font: inherit; font-weight: 900; cursor: pointer; }
 .bet-chip:hover { border-color: var(--accent); } .bet-chip.max { border-color: var(--warn); color: var(--warn); background: var(--warn-l); }
+
+.friend-slots .tile.plus b { color: var(--good); } .friend-slots .tile.minus b { color: var(--bad); }
+.friend-slots .tile b { font-size: 22px; overflow-wrap: anywhere; }
+.bet-val { font-size: clamp(15px, 4.4vw, 24px); }

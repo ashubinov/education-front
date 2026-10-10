@@ -84,6 +84,12 @@ async function drawFriend(id) {
       <div class="card tile"><b>✅ ${p.totals.lessons}</b><span>уроков</span></div>
       <div class="card tile"><b>⏱ ${p.totals.minutes}</b><span>минут</span></div>
       <div class="card tile"><b>🎯 ${p.totals.answers}</b><span>ответов</span></div></div>
+    <div class="card mb"><h3>🎰 Слоты</h3>${p.slots ? html`<div class="tiles slot-tiles friend-slots">
+        <div class="card tile"><b>🪙 ${slFmt(p.slots.wagered)}</b><span>потрачено (ставки)</span></div>
+        <div class="card tile"><b>🏆 ${slFmt(p.slots.won)}</b><span>выиграно</span></div>
+        <div class="card tile ${p.slots.net >= 0 ? 'plus' : 'minus'}"><b>${p.slots.net >= 0 ? '+' : '−'}${slFmt(Math.abs(p.slots.net))}</b><span>итог</span></div>
+        <div class="card tile"><b>🎰 ${slFmt(p.slots.spins)}</b><span>вращений</span></div></div>
+      <div class="small muted mt">Лучший выигрыш: <b>${slFmt(p.slots.best_win)}</b> жетонов. Жетоны виртуальные, это игровая валюта.</div>` : html`<p class="muted small" style="margin:0">Ещё не играл в слоты.</p>`}</div>
     <div class="two mb"><div class="card"><h3>Неделя</h3>${barChart(p.week, 'xp', 'XP')}</div>
       <div class="card"><h3>Курсы</h3>${p.courses.length ? html`<div class="col">${p.courses.map(c => html`<div><div class="row spread small"><span>${c.icon} <b>${c.title}</b></span><span class="muted">${c.status === 'completed' ? '🏆 пройден' : c.progress.percent + '%'}</span></div>
           <div class="bar thin ${c.status === 'completed' ? 'good' : ''}"><i style="width:${c.progress.percent}%"></i></div></div>`)}</div>` : html`<p class="muted small" style="margin:0">Пока нет курсов.</p>`}</div></div>
