@@ -430,3 +430,10 @@ html[data-radius="sharp"] :is(.btn, .opt, input, textarea, select, .chip, .tile,
 html[data-radius="round"] { --r: 28px; }
 html[data-radius="round"] :is(.btn, .opt, input, textarea, select, .tile, .ach, .modal, .banner, .note, .preset, .pack) { border-radius: 22px; }
 html[data-motion="reduced"] *:not(.reel-strip):not(.spinner):not(.spinner *) { animation: none !important; }
+
+/* ---------- своя ставка ---------- */
+.bet-val { font: 900 clamp(18px, 5vw, 26px)/1.2 "Nunito", sans-serif; color: #ffe27a; text-shadow: 0 2px 0 #5a2a00; background: none; border: 0; border-bottom: 2px dashed rgba(255, 226, 122, .6); padding: 0 2px; cursor: pointer; min-width: 2.2ch; }
+.bet-val:hover { border-bottom-style: solid; } .bet-val[disabled] { cursor: not-allowed; opacity: .7; }
+.bet-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.bet-chip { padding: 8px 14px; border-radius: 12px; border: 2px solid var(--line); background: var(--bg3); color: var(--text); font: inherit; font-weight: 900; cursor: pointer; }
+.bet-chip:hover { border-color: var(--accent); } .bet-chip.max { border-color: var(--warn); color: var(--warn); background: var(--warn-l); }

@@ -32,7 +32,7 @@ async function drawSlots() {
   render(app(), shell('slots', html`<div class="center muted mt-l"><span class="spinner"></span></div>`));
   const [st, board] = await Promise.all([api('/slots/state'), api('/slots/leaderboard').catch(() => [])]);
   SL.st = st; SL.board = board; SL.spinning = false;
-  if (!st.bets.includes(SL.bet)) SL.bet = st.bets[1] || st.bets[0];
+  SL.bet = slValidBet(SL.bet) ? SL.bet : (slValidBet(+slStored()) ? +slStored() : (st.bets.includes(20) ? 20 : st.bets[0]));
   const last = st.history[0];
   SL.grid = last ? last.reels : SL_START;
   render(app(), shell('slots', html`${raw(SLOT_DEFS)}
@@ -47,7 +47,7 @@ async function drawSlots() {
         <div class="slot-panel">
           <div class="slot-box"><span class="lbl">Баланс</span><b id="slBalance">🪙 ${slFmt(st.balance)}</b></div>
           <button class="spin-btn" id="spinBtn" data-act="slotSpin" aria-label="Крутить"><span class="sp-t">SPIN</span><span class="sp-s" id="spinSub"></span></button>
-          <div class="slot-box"><span class="lbl">Ставка</span><div class="bet-row"><button class="bet-b" data-act="slotBet" data-d="-1" aria-label="Меньше">‹</button><b id="slBet">${SL.bet}</b><button class="bet-b" data-act="slotBet" data-d="1" aria-label="Больше">›</button></div></div>
+          <div class="slot-box"><span class="lbl">Ставка</span><div class="bet-row"><button class="bet-b" data-act="slotBet" data-d="-1" aria-label="Меньше">‹</button><button class="bet-val" id="slBet" data-act="slotBetEdit" title="Выбрать свою сумму">${SL.bet}</button><button class="bet-b" data-act="slotBet" data-d="1" aria-label="Больше">›</button></div></div>
         </div>
       </div>
       <div class="slots-side" id="slotSide"></div>
@@ -68,13 +68,46 @@ function slControls() {
   b.classList.toggle('busy', SL.spinning); b.classList.toggle('idle', !SL.spinning && can);
   $('#spinSub').textContent = SL.spinning ? '' : can ? '−' + SL.bet : 'мало жетонов';
   $$('.bet-b').forEach(x => x.disabled = SL.spinning);
-  $('#slBet').textContent = SL.bet;
+  $('#slBet').textContent = SL.bet; $('#slBet').disabled = SL.spinning;
+}
+function slStored() { try { return localStorage.getItem('lq_slot_bet') || ''; } catch (e) { return ''; } }
+function slValidBet(v) { const st = SL.st; return Number.isInteger(v) && st && v >= st.min_bet && v <= st.max_bet && v % st.bet_step === 0; }
+function slSetBet(v, quiet) {
+  SL.bet = v; SL.pendingId = null;
+  try { localStorage.setItem('lq_slot_bet', String(v)); } catch (e) { /* без хранилища просто не запоминаем */ }
+  if (!quiet) play('tap');
+  slControls(); slPay();
 }
 actions.slotBet = b => {
   if (SL.spinning) return;
-  const bets = SL.st.bets, i = bets.indexOf(SL.bet), j = Math.max(0, Math.min(bets.length - 1, i + +b.dataset.d));
-  SL.bet = bets[j]; SL.pendingId = null; play('tap'); slControls(); slPay();
+  const bets = [...SL.st.bets].sort((x, y) => x - y), d = +b.dataset.d;
+  const next = d > 0 ? bets.find(x => x > SL.bet) : [...bets].reverse().find(x => x < SL.bet);
+  if (next != null) slSetBet(next);
 };
+actions.slotBetEdit = () => {
+  if (SL.spinning) return;
+  const st = SL.st, maxAfford = Math.max(st.min_bet, Math.min(st.max_bet, Math.floor(st.balance / st.bet_step) * st.bet_step));
+  openModal(html`<h2>🎰 Ставка</h2><p class="muted small" style="margin-top:0">Любая сумма от ${st.min_bet} до ${slFmt(st.max_bet)} жетонов, кратная ${st.bet_step}: ставка делится поровну между ${st.meta.lines.length} линиями. Выигрыш растёт вместе со ставкой.</p>
+    <div class="field"><label>Своя ставка</label><input type="number" id="betInput" inputmode="numeric" min="${st.min_bet}" max="${st.max_bet}" step="${st.bet_step}" value="${SL.bet}" autocomplete="off"></div>
+    <div class="bet-chips">${st.bets.map(v => html`<button class="bet-chip" data-act="betPick" data-v="${v}">${slFmt(v)}</button>`)}<button class="bet-chip max" data-act="betPick" data-v="${maxAfford}">МАКС ${slFmt(maxAfford)}</button></div>
+    <div class="err" id="betErr"></div>
+    <div class="row mt" style="justify-content:flex-end"><button class="btn ghost" data-act="closeModal">Отмена</button><button class="btn" id="betOk" data-act="betApply">Готово</button></div>`);
+  const inp = $('#betInput'); inp.focus(); inp.select();
+  inp.addEventListener('input', slBetCheck); inp.addEventListener('keydown', e => { if (e.key === 'Enter') actions.betApply(); });
+  slBetCheck();
+};
+function slBetCheck() {
+  const st = SL.st, v = Number($('#betInput').value), err = $('#betErr');
+  let m = '';
+  if (!Number.isInteger(v)) m = 'Введи целое число';
+  else if (v < st.min_bet || v > st.max_bet) m = `Ставка — от ${st.min_bet} до ${slFmt(st.max_bet)}`;
+  else if (v % st.bet_step) m = `Сумма должна делиться на ${st.bet_step} (например ${Math.round(v / st.bet_step) * st.bet_step || st.bet_step})`;
+  else if (v > st.balance) m = `Больше, чем на балансе (${slFmt(st.balance)}) — крутить с такой ставкой пока нельзя`;
+  err.textContent = m; $('#betOk').disabled = !!m && !(Number.isInteger(v) && slValidBet(v));
+  return slValidBet(v);
+}
+actions.betPick = b => { $('#betInput').value = b.dataset.v; slBetCheck(); };
+actions.betApply = () => { const v = Number($('#betInput').value); if (!slValidBet(v)) { slBetCheck(); return; } closeModal(); slSetBet(v); };
 
 function slNum(el, from, to, ms = 700) {
   if (!el) return;
@@ -113,7 +146,9 @@ actions.slotSpin = async () => {
   await slAnimate(res.reels);
   SL.grid = res.reels;
   await slResult(res);
-  SL.st.balance = res.balance; SL.spinning = false; slControls();
+  SL.st.balance = res.balance; SL.spinning = false;
+  if (res.balance < SL.bet && res.balance >= SL.st.min_bet) { const lower = Math.floor(res.balance / SL.st.bet_step) * SL.st.bet_step; slSetBet(lower, true); slMsg(`Жетонов осталось ${slFmt(res.balance)} — ставка снижена до <b>${slFmt(lower)}</b>`); }
+  slControls();
   slRefresh();
 };
 
