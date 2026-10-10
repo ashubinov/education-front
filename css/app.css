@@ -441,3 +441,5 @@ html[data-motion="reduced"] *:not(.reel-strip):not(.spinner):not(.spinner *) { a
 .friend-slots .tile.plus b { color: var(--good); } .friend-slots .tile.minus b { color: var(--bad); }
 .friend-slots .tile b { font-size: 22px; overflow-wrap: anywhere; }
 .bet-val { font-size: clamp(15px, 4.4vw, 24px); }
+.bet-val[data-len="4"] { font-size: clamp(14px, 4vw, 21px); } .bet-val[data-len="5"] { font-size: clamp(12px, 3.3vw, 17px); letter-spacing: -.02em; }
+@media (max-width: 560px) { .bet-row { gap: 3px; } .bet-b { width: 30px; height: 30px; } }
