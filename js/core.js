@@ -177,7 +177,7 @@ function hud() {
   </div>`;
 }
 function navItems() {
-  const nav = [['#/', '🏠', 'Курсы', 'home'], ['#/friends', '👥', 'Друзья', 'friends'], ['#/stats', '📊', 'Статистика', 'stats'], ['#/settings', '⚙️', 'Настройки', 'settings']];
+  const nav = [['#/', '🏠', 'Курсы', 'home'], ['#/friends', '👥', 'Друзья', 'friends'], ['#/slots', '🎰', 'Слоты', 'slots'], ['#/stats', '📊', 'Статистика', 'stats'], ['#/settings', '⚙️', 'Настройки', 'settings']];
   if (S.user && S.user.is_admin) nav.splice(3, 0, ['#/admin', '🛡️', 'Админ', 'admin']);
   return nav;
 }
@@ -189,7 +189,7 @@ function shell(active, inner) {
       <nav class="nav">${nav.map(n => html`<a href="${n[0]}" class="${active === n[3] ? 'on' : ''}">${n[1]} ${n[2]}${navBadge(n)}</a>`)}</nav>
       <div id="hud">${hud()}</div></div></header>
     <main>${inner}</main>
-    <nav class="bottom-nav">${nav.map(n => html`<a href="${n[0]}" class="${active === n[3] ? 'on' : ''}"><span>${n[1]}${navBadge(n)}</span>${n[2]}</a>`)}</nav>`;
+    <nav class="bottom-nav n${nav.length}">${nav.map(n => html`<a href="${n[0]}" class="${active === n[3] ? 'on' : ''}"><span>${n[1]}${navBadge(n)}</span>${n[2]}</a>`)}</nav>`;
 }
 function refreshHud() { const h = $('#hud'); if (h) h.innerHTML = unraw(hud()); }
 async function refreshMe() { try { S.user = await api('/me'); refreshHud(); } catch (e) { /* ignore */ } }
