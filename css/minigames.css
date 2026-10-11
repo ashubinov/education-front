@@ -81,3 +81,8 @@
   .bottom-nav.n7 a { font-size: 9px; }
   .bottom-nav.n7 a span { font-size: 18px; }
 }
+
+.mg-amount-input { margin-bottom: 5px; }
+.mg-max-hint { margin: 1px 0 10px; overflow-wrap: anywhere; }
+.mg-amount-input:disabled { opacity: .6; }
+/* STRAWBERRY_RULES_20261011_V4 */

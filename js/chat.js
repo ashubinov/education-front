@@ -56,7 +56,7 @@ function chatEntry(msg) {
   const item = document.createElement('article');
   item.className = 'lq-chat-message' + (mine ? ' mine' : '');
   item.dataset.id = msg.id;
-  if (msg.system_kind) {
+  if (msg.system_kind && msg.system_kind !== 'command') {
     item.classList.add('system');
     const bubble = document.createElement('div');
     bubble.className = 'lq-chat-bubble';
@@ -77,6 +77,7 @@ function chatEntry(msg) {
     return item;
   }
 
+  if (msg.system_kind === 'command') item.classList.add('command');
   const avatar = document.createElement('div');
   avatar.className = 'lq-chat-avatar';
   if (msg.avatar_url && /^\/api\/avatars\/[A-Za-z0-9_-]+$/.test(msg.avatar_url)) {
@@ -99,6 +100,12 @@ function chatEntry(msg) {
   time.dateTime = msg.created_at;
   time.textContent = chatTime(msg.created_at);
   header.append(who, time);
+  if (msg.system_kind === 'command') {
+    const tag = document.createElement('span');
+    tag.className = 'lq-chat-command-tag';
+    tag.textContent = '⌘ КОМАНДА';
+    header.appendChild(tag);
+  }
   const mod = chatModButtons(msg); if (mod) header.append(mod);
 
   const text = document.createElement('div');
@@ -293,3 +300,5 @@ async function chatSend(generation) {
 
 // Старый адрес чата ведёт на главную страницу, где чат теперь встроен.
 route(/^#\/chat$/, () => { location.hash = '#/'; });
+
+// CHAT_COMMAND_BUBBLE_20261011_V4

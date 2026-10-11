@@ -1,5 +1,5 @@
 /* LearnQuest — Mini Games / Strawberry Thief.
-   The server alone chooses the prize, transfers chips, and decides the guess. */
+   The server enforces the 30% limit, locks stolen chips, and decides the guess. */
 'use strict';
 
 const MG = {
@@ -83,7 +83,8 @@ async function mgRender() {
   MG.state = data;
   MG.pendingCount = data.pending.length;
   mgNotificationBadge();
-  const locked = data.cooldown_remaining > 0 || data.has_active_theft || data.balance < 1;
+  const locked = data.cooldown_remaining > 0 || data.has_active_theft;
+  const initialFriend = data.friends[0];
   render(app(), shell('minigames', html`
     <div class="mg-page">
       <header class="mg-hero"><span class="mg-berry">🍓</span><div>
@@ -97,18 +98,25 @@ async function mgRender() {
           <label class="mg-label" for="mgVictim">Кого отклубничить?</label>
           <select id="mgVictim" ${data.friends.length ? '' : 'disabled'}>
             ${data.friends.map(f => html`<option value="${f.id}">${f.name} (@${f.username})</option>`)}</select>
+          <label class="mg-label" for="mgAmount">Сколько жетонов украсть?</label>
+          <input id="mgAmount" class="mg-amount-input" type="number" inputmode="numeric" step="1" min="1"
+            max="${initialFriend?.max_steal || 0}" value="${initialFriend?.max_steal ? Math.min(10, initialFriend.max_steal) : ''}" aria-describedby="mgAmountHint">
+          <p class="small muted mg-max-hint" id="mgAmountHint">Максимум для выбранного друга: ${mgFmt(initialFriend?.max_steal || 0)} 🪙 (30% доступного баланса).</p>
           <button class="btn mg-steal" id="mgSteal" data-act="mgSteal" ${locked || !data.friends.length ? 'disabled' : ''}>🍓 Отклубничить</button>
-          <p id="mgCooldown" class="small muted" aria-live="polite">${data.has_active_theft ? 'Замороженные жетоны ждут исхода предыдущей кражи.' : data.balance < 1 ? 'Для резерва компенсации нужен хотя бы 1 жетон.' : data.cooldown_remaining > 0 ? 'Следующая попытка через ' + mgDuration(data.cooldown_remaining) : 'Готово к краже!'}</p>
+          <p id="mgCooldown" class="small muted" aria-live="polite">${data.has_active_theft ? 'Замороженные жетоны ждут исхода предыдущей кражи.' : data.cooldown_remaining > 0 ? 'Следующая попытка через ' + mgDuration(data.cooldown_remaining) : 'Готово к краже!'}</p>
           ${!data.friends.length ? html`<p class="small muted">Пока нет друзей. Добавь друга во вкладке «Друзья».</p>` : ''}
-          <p class="small muted">Размер кражи: ${data.min_steal}–${data.max_steal} жетонов, не больше баланса друга. Для 5% компенсации заранее резервируется небольшая сумма твоих жетонов. Между попытками — ${mgDuration(data.cooldown_seconds)}.</p>
+          <p class="small muted">Укажи целое количество жетонов, не больше 30% доступного баланса друга. Твои собственные жетоны не требуются. Между попытками — ${mgDuration(data.cooldown_seconds)}.</p>
         </section>
         <aside class="card mg-alerts"><h2>🔔 Твои уведомления</h2>
           ${data.pending.length ? data.pending.map(t => html`<div class="mg-pending"><b>🍓 У тебя украли ${mgFmt(t.amount)} жетонов</b><span>Есть одна попытка угадать. Осталось примерно ${mgDuration(Math.max(0, t.expires_ts - Math.floor(Date.now() / 1000)))}.</span>
             <button class="btn sm" data-act="mgGuessOpen" data-id="${t.id}">Угадать вора</button></div>`) : html`<p class="muted">Неразгаданных краж нет.</p>`}
-          <p class="small muted">Угадаешь — получишь назад украденное и компенсацию 5% (минимум 1 жетон). Не угадаешь или не ответишь за 24 часа — вор получит добычу.</p>
+          <p class="small muted">Угадаешь — вернёшь ровно украденное. Не угадаешь или не ответишь за 24 часа — вор получит добычу. Компенсаций нет.</p>
         </aside>
       </div>
     </div>`));
+  document.querySelector('#mgVictim')?.addEventListener('change', () => mgUpdateAmount(true));
+  document.querySelector('#mgAmount')?.addEventListener('input', () => mgUpdateAmount(false));
+  mgUpdateAmount(true);
   if (MG.openedFromNotice) {
     const id = MG.openedFromNotice;
     MG.openedFromNotice = null;
@@ -116,15 +124,17 @@ async function mgRender() {
   }
   // A short clock only updates the label; the game decisions remain server-side.
   const initial = Date.now();
+  MG.cooldownReady = data.cooldown_remaining === 0;
   const ownState = data;
   every(() => {
     if (MG.state !== ownState) return;
     if (location.hash !== '#/minigames' || !MG.state) return;
     const left = Math.max(0, data.cooldown_remaining - Math.floor((Date.now() - initial) / 1000));
+    MG.cooldownReady = left === 0;
     const cd = document.querySelector('#mgCooldown');
-    if (cd) cd.textContent = data.has_active_theft ? 'Дождись завершения текущей кражи.' : data.balance < 1 ? 'Для резерва компенсации нужен хотя бы 1 жетон.' : left ? 'Следующая попытка через ' + mgDuration(left) : 'Готово к краже!';
+    if (cd) cd.textContent = data.has_active_theft ? 'Дождись завершения текущей кражи.' : left ? 'Следующая попытка через ' + mgDuration(left) : 'Готово к краже!';
     const btn = document.querySelector('#mgSteal');
-    if (btn && !MG.busy) btn.disabled = left > 0 || data.has_active_theft || data.balance < 1 || !data.friends.length;
+    if (btn && !MG.busy) btn.disabled = left > 0 || data.has_active_theft || !mgValidAmount();
   }, 1000);
   every(async () => {
     if (MG.state === data && location.hash === '#/minigames' && !MG.busy) {
@@ -134,20 +144,46 @@ async function mgRender() {
   }, 12000);
 }
 
+
+function mgMaxAmount() {
+  const fid = Number(document.querySelector('#mgVictim')?.value);
+  return MG.state?.friends.find(f => f.id === fid)?.max_steal || 0;
+}
+function mgValidAmount() {
+  const rawAmount = document.querySelector('#mgAmount')?.value;
+  const n = Number(rawAmount);
+  return rawAmount !== '' && Number.isSafeInteger(n) && n >= 1 && n <= mgMaxAmount();
+}
+function mgUpdateAmount(changeFriend = false) {
+  const input = document.querySelector('#mgAmount'), button = document.querySelector('#mgSteal');
+  if (!input || !MG.state) return;
+  const maximum = mgMaxAmount();
+  input.max = String(maximum);
+  input.disabled = maximum < 1;
+  if (changeFriend) input.value = maximum < 1 ? '' : String(Math.min(10, maximum));
+  const note = document.querySelector('#mgAmountHint');
+  if (note) note.textContent = 'Максимум для выбранного друга: ' + mgFmt(maximum) + ' 🪙 (30% доступного баланса).';
+  if (button && !MG.busy) button.disabled = MG.state.has_active_theft ||
+    MG.state.cooldown_remaining > 0 && !MG.cooldownReady || !mgValidAmount();
+}
+
 actions.mgSteal = async () => {
   if (MG.busy) return;
   const victimId = Number(document.querySelector('#mgVictim')?.value);
   if (!victimId) return;
   const friend = MG.state?.friends.find(f => f.id === victimId);
-  if (!friend || !await askConfirm('Отклубничить?', `Украсть случайное количество жетонов у @${friend.username}? Друг получит уведомление и сможет угадать тебя.`, 'Отклубничить', 'Отмена')) return;
+  const amount = Number(document.querySelector('#mgAmount')?.value);
+  if (!friend || !mgValidAmount()) { toast('Укажи целую сумму от 1 до лимита 30% друга'); return; }
+  if (!await askConfirm('Отклубничить?', `Украсть ${mgFmt(amount)} жетонов у ${friend.name}? Друг получит уведомление и сможет угадать тебя.`, 'Отклубничить', 'Отмена')) return;
   MG.busy = true;
   const btn = document.querySelector('#mgSteal');
   if (btn) btn.disabled = true;
-  const requestId = MG.pendingRequests.get(victimId) || mgId();
-  MG.pendingRequests.set(victimId, requestId);
+  const requestKey = `${victimId}:${amount}`;
+  const requestId = MG.pendingRequests.get(requestKey) || mgId();
+  MG.pendingRequests.set(requestKey, requestId);
   try {
-    const result = await api('/minigames/strawberry/steal', { json: { victim_id: victimId, request_id: requestId } });
-    MG.pendingRequests.delete(victimId);
+    const result = await api('/minigames/strawberry/steal', { json: { victim_id: victimId, amount, request_id: requestId } });
+    MG.pendingRequests.delete(requestKey);
     toast(`🍓 ${mgFmt(result.amount)} жетонов заморожено до разгадки или истечения 24 часов.`, { ms: 6500 });
     await mgRender();
   } catch (e) { toast(e.message, { icon: '⚠️' }); }
@@ -194,7 +230,7 @@ async function mgSubmitGuess(theft, modal) {
     MG.awaitingGuess.delete(theft.id);
     closeModal();
     toast(data.caught
-      ? `Угадал! Возвращено ${mgFmt(data.amount)} и ${mgFmt(data.compensation)} жетонов компенсации.`
+      ? `Угадал! Возвращено ${mgFmt(data.amount)} жетонов.`
       : data.timed_out ? '24 часа прошли: жетоны получил вор.' : 'Не угадал! Украденные жетоны достались вору.', { ms: 7000 });
     MG.lastCheck = 0;
     await mgRender();
@@ -206,3 +242,5 @@ async function mgSubmitGuess(theft, modal) {
     // A rerun of an uncertain request must use the same candidate and id.
   } finally { MG.busy = false; }
 }
+
+// STRAWBERRY_RULES_20261011_V4
