@@ -203,14 +203,16 @@ function hud() {
 /* ---------- навигация: Курсы · Слоты · (Админ) · Игры; аватар ведёт в профиль. Внутри раздела — полоса переключения ---------- */
 const NAV_GAMES = [['#/pixels', '🎨', 'Пикселы', 'pixels'], ['#/pet', '🐾', 'Питомец', 'pet'], ['#/farm', '🚜', 'Ферма', 'farm'], ['#/minigames', '🍓', 'Мини-игры', 'minigames']];
 const NAV_PROFILE = [['#/settings', '⚙️', 'Настройки', 'settings'], ['#/friends', '👥', 'Друзья', 'friends'], ['#/stats', '📊', 'Статистика', 'stats']];
-const NAV_MENUS = { games: ['🎮', 'Игры', NAV_GAMES], profile: ['👤', 'Профиль', NAV_PROFILE] };
+const NAV_PLAN = [['#/today', '☀️', 'Сегодня', 'today'], ['#/tasks', '✅', 'Задачи', 'tasks'], ['#/calendar', '📅', 'Календарь', 'calendar']];
+const NAV_MENUS = { plan: ['📅', 'План', NAV_PLAN], games: ['🎮', 'Игры', NAV_GAMES], profile: ['👤', 'Профиль', NAV_PROFILE] };
 function navGroup(active) {
+  if (NAV_PLAN.some(n => n[3] === active)) return 'plan';
   if (NAV_GAMES.some(n => n[3] === active)) return 'games';
   if (NAV_PROFILE.some(n => n[3] === active)) return 'profile';
   return '';
 }
 function navItems() {
-  const nav = [['#/', '🏠', 'Курсы', 'home'], ['#/slots', '🎰', 'Слоты', 'slots']];
+  const nav = [['#/', '🏠', 'Курсы', 'home'], [NAV_PLAN[0][0], '📅', 'План', 'plan', true], ['#/slots', '🎰', 'Слоты', 'slots']];
   if (S.user && S.user.is_admin) nav.push(['#/admin', '🛡️', 'Админ', 'admin']);
   nav.push([NAV_GAMES[0][0], '🎮', 'Игры', 'games', true]);   // ведёт на первую игру; остальные — в полосе сверху
   return nav;
