@@ -196,25 +196,50 @@ function hud() {
   return html`<div class="hud">
     <div class="hud-streak ${st.current ? '' : 'off'}" title="Серия: ${st.current} дн. (рекорд ${st.best})"><span class="flame">🔥</span>${st.current}</div>
     <div class="hud-level" title="${lv.xp} XP"><span class="lvl-badge">Ур. ${lv.level}</span><div class="bar thin grow" style="width:90px"><i style="width:${lv.pct}%"></i></div><span class="xp small muted">${lv.into}/${lv.span}</span></div>
-    <a href="#/settings" class="avatar" title="${u.display_name}">${av(u)}</a>
+    <a href="#/settings" class="avatar ${navGroup(S.active) === 'profile' ? 'on' : ''}" title="${u.display_name}">${av(u)}</a>
   </div>`;
 }
+
+/* ---------- навигация: Курсы · Слоты · (Админ) · Игры; аватар ведёт в профиль. Внутри раздела — полоса переключения ---------- */
+const NAV_GAMES = [['#/pixels', '🎨', 'Пикселы', 'pixels'], ['#/pet', '🐾', 'Питомец', 'pet'], ['#/farm', '🚜', 'Ферма', 'farm'], ['#/minigames', '🍓', 'Мини-игры', 'minigames']];
+const NAV_PROFILE = [['#/settings', '⚙️', 'Настройки', 'settings'], ['#/friends', '👥', 'Друзья', 'friends'], ['#/stats', '📊', 'Статистика', 'stats']];
+const NAV_MENUS = { games: ['🎮', 'Игры', NAV_GAMES], profile: ['👤', 'Профиль', NAV_PROFILE] };
+function navGroup(active) {
+  if (NAV_GAMES.some(n => n[3] === active)) return 'games';
+  if (NAV_PROFILE.some(n => n[3] === active)) return 'profile';
+  return '';
+}
 function navItems() {
-  const nav = [['#/', '🏠', 'Курсы', 'home'], ['#/friends', '👥', 'Друзья', 'friends'], ['#/slots', '🎰', 'Слоты', 'slots'], ['#/pixels', '🎨', 'Пикселы', 'pixels'], ['#/pet', '🐾', 'Питомец', 'pet'], ['#/farm', '🚜', 'Ферма', 'farm'], ['#/minigames', '🍓', 'Мини-игры', 'minigames'], ['#/stats', '📊', 'Статистика', 'stats'], ['#/settings', '⚙️', 'Настройки', 'settings']];
-  if (S.user && S.user.is_admin) nav.splice(3, 0, ['#/admin', '🛡️', 'Админ', 'admin']);
+  const nav = [['#/', '🏠', 'Курсы', 'home'], ['#/slots', '🎰', 'Слоты', 'slots']];
+  if (S.user && S.user.is_admin) nav.push(['#/admin', '🛡️', 'Админ', 'admin']);
+  nav.push([NAV_GAMES[0][0], '🎮', 'Игры', 'games', true]);   // ведёт на первую игру; остальные — в полосе сверху
   return nav;
 }
 function navBadge(n) {
-  if (n[3] === 'minigames') return html`<i class="mg-nav-badge" hidden></i>`; return n[3] === 'admin' && S.user && S.user.moderation_pending ? html`<i class="badge">${S.user.moderation_pending}</i>` : ''; }
+  if (n[3] === 'minigames' || n[3] === 'games') return html`<i class="mg-nav-badge" hidden></i>`;
+  return n[3] === 'admin' && S.user && S.user.moderation_pending ? html`<i class="badge">${S.user.moderation_pending}</i>` : '';
+}
+function navLink(n, active, bottom) {
+  const on = n[4] ? navGroup(active) === n[3] : active === n[3];   // «Игры» горят на любой странице игр
+  const inner = bottom ? html`<span>${n[1]}${navBadge(n)}</span>${n[2]}` : html`${n[1]} ${n[2]}${navBadge(n)}`;
+  return html`<a href="${n[0]}" class="${on ? 'on' : ''}">${inner}</a>`;
+}
+/** Полоса переключения внутри раздела (как «Лапа удачи / MEME SLOTS» в слотах): показывается на страницах игр и профиля. */
+function subNav(active) {
+  const g = navGroup(active); if (!g) return '';
+  return html`<nav class="sub-nav" aria-label="${NAV_MENUS[g][1]}">${NAV_MENUS[g][2].map(n => html`<a href="${n[0]}" class="${active === n[3] ? 'on' : ''}" ${active === n[3] ? raw('aria-current="page"') : ''}>${n[1]} ${n[2]}${navBadge(n)}</a>`)}</nav>`;
+}
 function shell(active, inner) {
+  S.active = active;
   const nav = navItems();
   return html`<header class="topbar"><div class="topbar-in">
       <a class="logo" href="#/"><span>🦉</span><span>Learn<b>Quest</b></span></a>
-      <nav class="nav">${nav.map(n => html`<a href="${n[0]}" class="${active === n[3] ? 'on' : ''}">${n[1]} ${n[2]}${navBadge(n)}</a>`)}</nav>
+      <nav class="nav">${nav.map(n => navLink(n, active, false))}</nav>
       <div id="hud">${hud()}</div></div></header>
-    <main>${inner}</main>
-    <nav class="bottom-nav n${nav.length}">${nav.map(n => html`<a href="${n[0]}" class="${active === n[3] ? 'on' : ''}"><span>${n[1]}${navBadge(n)}</span>${n[2]}</a>`)}</nav>`;
+    <main>${subNav(active)}${inner}</main>
+    <nav class="bottom-nav n${nav.length}">${nav.map(n => navLink(n, active, true))}</nav>`;
 }
+
 function refreshHud() { const h = $('#hud'); if (h) h.innerHTML = unraw(hud()); }
 async function refreshMe() { try { S.user = await api('/me'); refreshHud(); } catch (e) { /* ignore */ } }
 

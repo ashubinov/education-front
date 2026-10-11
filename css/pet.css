@@ -51,24 +51,3 @@
   .pet-foods { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (prefers-reduced-motion: reduce) { .pet-body, .pet-eyes { animation: none; } }
-
-/* Меню стало длиннее (до 9 пунктов с «Админ»): ужимаем шапку на ноутбуках и даём нижней панели телефона прокручиваться. */
-.nav a { white-space: nowrap; }
-/* девять пунктов на ноутбуке: ужимаем шапку */
-@media (min-width: 1191px) and (max-width: 1330px) { .topbar-in { gap: 8px; } .nav { gap: 2px; margin-left: 5px; } .nav a { padding: 7px 9px; font-size: 13px; gap: 5px; } .hud-level { display: none; } }
-/* у админа 10 пунктов: на 1191–1330 px в шапку они не влезают — там меню, как на планшете, уезжает вниз */
-@media (min-width: 1191px) and (max-width: 1330px) {
-  body:has(.bottom-nav.n10) .topbar .nav { display: none; }
-  .bottom-nav.n10 { display: flex; position: fixed; bottom: 0; left: 0; right: 0; z-index: 20; background: var(--bg2); border-top: 2px solid var(--line); padding: 6px 6px calc(6px + env(safe-area-inset-bottom)); }
-  .bottom-nav.n10 a { flex: 1 1 0; min-width: 0; text-align: center; color: var(--muted); padding: 6px 2px; border-radius: 12px; font-size: 11px; display: flex; flex-direction: column; font-weight: 800; }
-  .bottom-nav.n10 a span { font-size: 21px; } .bottom-nav.n10 a.on { color: var(--accent); background: var(--accent-l); }
-  main:has(~ .bottom-nav.n10) { padding-bottom: 90px; }
-}
-@media (min-width: 1331px) and (max-width: 1480px) {
-  .topbar-in { gap: 8px; } .nav { gap: 2px; margin-left: 5px; } .nav a { padding: 7px 9px; font-size: 13px; gap: 5px; } .hud-level { display: none; }
-}
-@media (max-width: 760px) {
-  .bottom-nav.n9, .bottom-nav.n10 { overflow-x: auto; scrollbar-width: thin; justify-content: flex-start; }
-  .bottom-nav.n9 a, .bottom-nav.n10 a { flex: 0 0 69px; min-width: 69px; font-size: 10px; padding: 6px 2px; }
-  .bottom-nav.n9 a span, .bottom-nav.n10 a span { font-size: 20px; }
-}

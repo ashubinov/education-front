@@ -91,4 +91,3 @@
 
 .lq-chat-list .lq-chat-message.command .lq-chat-bubble { border-color: var(--accent); background: var(--accent-l); }
 .lq-chat-command-tag { display: inline-flex; align-items: center; font-size: 9px; padding: 2px 5px; border-radius: 5px; background: var(--accent); color: var(--accent-ink); font-weight: 900; letter-spacing: .025em; }
-/* CHAT_COMMAND_BUBBLE_20261011_V4 */

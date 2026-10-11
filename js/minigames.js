@@ -105,12 +105,12 @@ async function mgRender() {
           <button class="btn mg-steal" id="mgSteal" data-act="mgSteal" ${locked || !data.friends.length ? 'disabled' : ''}>🍓 Отклубничить</button>
           <p id="mgCooldown" class="small muted" aria-live="polite">${data.has_active_theft ? 'Замороженные жетоны ждут исхода предыдущей кражи.' : data.cooldown_remaining > 0 ? 'Следующая попытка через ' + mgDuration(data.cooldown_remaining) : 'Готово к краже!'}</p>
           ${!data.friends.length ? html`<p class="small muted">Пока нет друзей. Добавь друга во вкладке «Друзья».</p>` : ''}
-          <p class="small muted">Укажи целое количество жетонов, не больше 30% доступного баланса друга. Твои собственные жетоны не требуются. Между попытками — ${mgDuration(data.cooldown_seconds)}.</p>
+          <p class="small muted">Укажи целое количество жетонов, не больше 30% доступного баланса друга. Для кражи твои жетоны не нужны, но если друг угадает вора, тот платит штраф ${data.catch_penalty_percent} % от украденного (не больше своего баланса). Между попытками — ${mgDuration(data.cooldown_seconds)}.</p>
         </section>
         <aside class="card mg-alerts"><h2>🔔 Твои уведомления</h2>
           ${data.pending.length ? data.pending.map(t => html`<div class="mg-pending"><b>🍓 У тебя украли ${mgFmt(t.amount)} жетонов</b><span>Есть одна попытка угадать. Осталось примерно ${mgDuration(Math.max(0, t.expires_ts - Math.floor(Date.now() / 1000)))}.</span>
             <button class="btn sm" data-act="mgGuessOpen" data-id="${t.id}">Угадать вора</button></div>`) : html`<p class="muted">Неразгаданных краж нет.</p>`}
-          <p class="small muted">Угадаешь — вернёшь ровно украденное. Не угадаешь или не ответишь за 24 часа — вор получит добычу. Компенсаций нет.</p>
+          <p class="small muted">Угадаешь — вернёшь украденное и получишь штраф ${data.catch_penalty_percent} % с вора. Не угадаешь или не ответишь за 24 часа — вор получит добычу.</p>
         </aside>
       </div>
     </div>`));
@@ -230,7 +230,7 @@ async function mgSubmitGuess(theft, modal) {
     MG.awaitingGuess.delete(theft.id);
     closeModal();
     toast(data.caught
-      ? `Угадал! Возвращено ${mgFmt(data.amount)} жетонов.`
+      ? `Угадал! Возвращено ${mgFmt(data.amount)} жетонов${data.compensation ? ' и штраф с вора ' + mgFmt(data.compensation) : ''}.`
       : data.timed_out ? '24 часа прошли: жетоны получил вор.' : 'Не угадал! Украденные жетоны достались вору.', { ms: 7000 });
     MG.lastCheck = 0;
     await mgRender();
@@ -242,5 +242,3 @@ async function mgSubmitGuess(theft, modal) {
     // A rerun of an uncertain request must use the same candidate and id.
   } finally { MG.busy = false; }
 }
-
-// STRAWBERRY_RULES_20261011_V4

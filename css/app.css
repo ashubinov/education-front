@@ -444,3 +444,16 @@ html[data-motion="reduced"] *:not(.reel-strip):not(.spinner):not(.spinner *) { a
 .bet-val[data-len="4"] { font-size: clamp(14px, 4vw, 21px); } .bet-val[data-len="5"] { font-size: clamp(12px, 3.3vw, 17px); letter-spacing: -.02em; }
 @media (max-width: 560px) { .bet-row { gap: 3px; } .bet-b { width: 30px; height: 30px; } }
 .bet-val[data-len="6"] { font-size: clamp(11px, 2.9vw, 15px); letter-spacing: -.03em; }
+
+/* ---------- навигация: Курсы · Слоты · (Админ) · Игры; аватар — профиль ---------- */
+.nav a { white-space: nowrap; }
+.avatar.on { border-color: var(--accent); background: var(--accent-l); }
+.mg-nav-badge { margin-left: 4px; }
+@media (max-width: 1000px) { .hud-level { display: none; } }
+@media (max-width: 760px) {
+  .bottom-nav a span .mg-nav-badge { position: absolute; top: -2px; right: -10px; margin: 0; }
+}
+.sub-nav { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.sub-nav a { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 8px 14px; border: 2px solid var(--line); border-radius: 14px; background: var(--bg2); color: var(--text); font-weight: 800; font-size: 14px; }
+.sub-nav a:hover { background: var(--bg3); } .sub-nav a.on { border-color: var(--accent); background: var(--accent-l); color: var(--accent); }
+@media (max-width: 480px) { .sub-nav { gap: 5px; } .sub-nav a { flex: 1 1 auto; justify-content: center; padding: 8px 8px; gap: 4px; font-size: 13px; border-radius: 12px; } }

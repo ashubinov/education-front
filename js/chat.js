@@ -300,5 +300,3 @@ async function chatSend(generation) {
 
 // Старый адрес чата ведёт на главную страницу, где чат теперь встроен.
 route(/^#\/chat$/, () => { location.hash = '#/'; });
-
-// CHAT_COMMAND_BUBBLE_20261011_V4
