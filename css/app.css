@@ -445,28 +445,15 @@ html[data-motion="reduced"] *:not(.reel-strip):not(.spinner):not(.spinner *) { a
 @media (max-width: 560px) { .bet-row { gap: 3px; } .bet-b { width: 30px; height: 30px; } }
 .bet-val[data-len="6"] { font-size: clamp(11px, 2.9vw, 15px); letter-spacing: -.03em; }
 
-/* ---------- навигация: Курсы · Слоты · (Админ) · Игры ▾ + меню профиля ---------- */
-.nav button, .bottom-nav button { font: inherit; border: 0; background: transparent; cursor: pointer; }
-.nav a, .nav button { white-space: nowrap; }
-.nav button { color: var(--muted); padding: 8px 14px; border-radius: 12px; font-weight: 800; display: flex; gap: 8px; align-items: center; }
-.nav button:hover { background: var(--bg3); } .nav button.on { background: var(--accent-l); color: var(--accent); }
-.nav .caret { font-style: normal; font-size: 11px; opacity: .7; margin-left: -2px; }
-button.avatar { padding: 0; color: inherit; font-size: 22px; }
-button.avatar.on, button.avatar[aria-expanded="true"] { border-color: var(--accent); background: var(--accent-l); }
+/* ---------- навигация: Курсы · Слоты · (Админ) · Игры; аватар — профиль ---------- */
+.nav a { white-space: nowrap; }
+.avatar.on { border-color: var(--accent); background: var(--accent-l); }
 .mg-nav-badge { margin-left: 4px; }
 @media (max-width: 1000px) { .hud-level { display: none; } }
 @media (max-width: 760px) {
-  .bottom-nav button { flex: 1; text-align: center; color: var(--muted); padding: 6px; border-radius: 12px; font-size: 12px; display: flex; flex-direction: column; align-items: stretch; font-weight: 800; min-width: 0; }
-  .bottom-nav button span { font-size: 22px; position: relative; } .bottom-nav button.on, .bottom-nav button[aria-expanded="true"] { color: var(--accent); background: var(--accent-l); }
-  .bottom-nav a span .mg-nav-badge, .bottom-nav button span .mg-nav-badge { position: absolute; top: -2px; right: -10px; margin: 0; }
+  .bottom-nav a span .mg-nav-badge { position: absolute; top: -2px; right: -10px; margin: 0; }
 }
 .sub-nav { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
 .sub-nav a { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 8px 14px; border: 2px solid var(--line); border-radius: 14px; background: var(--bg2); color: var(--text); font-weight: 800; font-size: 14px; }
 .sub-nav a:hover { background: var(--bg3); } .sub-nav a.on { border-color: var(--accent); background: var(--accent-l); color: var(--accent); }
 @media (max-width: 480px) { .sub-nav { gap: 5px; } .sub-nav a { flex: 1 1 auto; justify-content: center; padding: 8px 8px; gap: 4px; font-size: 13px; border-radius: 12px; } }
-.menu-pop { position: fixed; z-index: 60; min-width: 200px; max-width: calc(100vw - 16px); background: var(--bg2); border: 2px solid var(--line); border-radius: 16px; padding: 6px; box-shadow: 0 12px 32px rgba(0, 0, 0, .35); display: flex; flex-direction: column; gap: 2px; animation: fadein .15s ease; }
-.menu-pop a { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-radius: 12px; font-weight: 800; font-size: 15px; color: var(--text); }
-.menu-pop a span { flex: 1; } .menu-pop a:hover { background: var(--bg3); } .menu-pop a.on { background: var(--accent-l); color: var(--accent); }
-.menu-head { display: flex; align-items: center; gap: 10px; padding: 8px 14px 10px; margin-bottom: 4px; border-bottom: 1px solid var(--line); font-size: 14px; }
-.menu-head .av-img { width: 32px; height: 32px; border-radius: 10px; object-fit: cover; }
-.menu-head b { overflow-wrap: anywhere; }
