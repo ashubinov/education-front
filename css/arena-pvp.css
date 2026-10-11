@@ -140,3 +140,45 @@
  .pvp-critical-flash,.pvp-critical-sprite,.pvp-critical-sparks,.pvp-critical-shock{display:none}
  .pvp-critical-label{top:22%;opacity:1}.pvp-critical-number{opacity:1;transform:translate(-50%,-90%)}
  .pvp-qte::before{display:none}}
+
+
+/* PvP v7: Negotiation room and distinct combat ring; moving pet sprites. */
+.pvp-stage{position:relative;isolation:isolate;min-height:340px;overflow:hidden;transition:background .3s,border-color .3s}
+.pvp-stage>.pvp-status,.pvp-stage>.pvp-fighters,.pvp-stage>.pvp-contributions{position:relative;z-index:2}
+.pvp-room-decor{position:absolute;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.pvp-betting-scene{background:radial-gradient(ellipse at 50% 13%,rgba(181,123,54,.18),transparent 65%),linear-gradient(180deg,#211e29 0%,#262b31 100%);border-color:rgba(212,159,90,.4)}
+.pvp-betting-scene .pvp-fighters{min-height:245px;grid-template-columns:minmax(0,1fr) minmax(120px,220px) minmax(0,1fr)}
+.pvp-betting-scene .pvp-fighter-art{height:138px;width:min(75%,165px);filter:drop-shadow(0 9px 4px rgba(0,0,0,.3));transition:none}
+.pvp-betting-scene .pvp-fighter{justify-content:flex-start;padding-top:0}
+.pvp-betting-scene .pvp-middle{z-index:3;margin-top:20px;padding:12px 6px;color:#ffe5af;text-shadow:0 2px 9px #171118}
+.pvp-betting-scene .pvp-status{color:#ffe0a4}
+.pvp-tournament-sign{position:absolute;top:45px;left:50%;transform:translateX(-50%);padding:7px 30px;white-space:nowrap;font-size:13px;letter-spacing:.24em;font-weight:900;color:#ffe3b5;background:rgba(46,27,18,.6);border:1px solid rgba(252,206,124,.32);border-radius:30px}
+.pvp-poker-table{position:absolute;width:78%;height:165px;top:38%;left:11%;border-radius:50%;border:16px solid #573923;background:radial-gradient(ellipse,#286c57 30%,#124339 85%);box-shadow:0 0 0 4px #a2773d,0 20px 55px #080707,inset 0 0 0 5px rgba(230,197,109,.25);transform:perspective(400px) rotateX(58deg)}
+.pvp-table-chips{position:absolute;top:71%;left:50%;transform:translateX(-50%);font-size:17px;opacity:.7}
+.pvp-battle-scene{background:radial-gradient(ellipse at 50% 0%,rgba(118,76,198,.3),transparent 60%),linear-gradient(180deg,#101225 0%,#202844 56%,#1b1425 100%);border-color:rgba(139,115,252,.65)}
+.pvp-battle-scene .pvp-fighters{min-height:245px;grid-template-columns:minmax(0,1fr) minmax(75px,130px) minmax(0,1fr)}
+.pvp-battle-scene .pvp-fighter-art{height:218px;width:min(100%,240px);filter:drop-shadow(0 15px 16px rgba(0,0,0,.52))}
+.pvp-battle-scene .pvp-fighter:first-child .pvp-fighter-art{transform:translateX(16px)}
+.pvp-battle-scene .pvp-fighter:last-child .pvp-fighter-art{transform:translateX(-16px)}
+.pvp-battle-scene .pvp-status{color:#dbdcff}
+.pvp-ring-lights{position:absolute;inset:-100px -10% 0;background:radial-gradient(ellipse at 24% 3%,rgba(184,140,255,.25),transparent 45%),radial-gradient(ellipse at 76% 3%,rgba(107,170,255,.27),transparent 45%)}
+.pvp-ring-ground{position:absolute;left:6%;right:6%;top:53%;height:46%;border-radius:50%;transform:perspective(450px) rotateX(57deg);border:10px solid #695e9a;background:radial-gradient(ellipse,#595578 10%,#222840 75%);box-shadow:0 0 0 5px #232339,0 25px 45px #090b1a}
+.pvp-ring-rope{position:absolute;left:4%;right:4%;height:2px;top:54%;background:linear-gradient(90deg,#8386bc,#d1a4ee,#898eb9);box-shadow:0 20px 0 #676a9c,0 40px 0 #595c88;opacity:.38}
+.pvp-rope-front{top:86%;opacity:.65}
+.pvp-battle-scene .pvp-middle{color:#efebff;text-shadow:0 0 18px rgba(165,140,255,.5)}
+.pvp-betting-scene .pvp-contributions{color:#ffe3aa}
+.pvp-transfer-target .pvp-fighter-art{visibility:hidden!important}
+.pvp-transfer-layer{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:150}
+.pvp-transfer-pet{position:fixed;transform-origin:top left;display:grid;place-items:center;filter:drop-shadow(0 0 22px #fdd58c) drop-shadow(0 10px 18px #070515);will-change:transform}
+.pvp-transfer-pet svg{width:100%;height:100%;max-height:none}
+.pvp-transfer-title{position:absolute;top:15%;left:50%;transform:translateX(-50%);border:2px solid #fff0bd;background:linear-gradient(120deg,#e8b55d,#a15e9f);padding:12px 26px;border-radius:20px;font-size:clamp(16px,3.6vw,33px);font-weight:1000;letter-spacing:.055em;color:#161326;white-space:nowrap;box-shadow:0 0 55px rgba(251,205,130,.65);animation:pvpTransferBanner .85s both}
+@keyframes pvpTransferBanner{0%{opacity:0;transform:translate(-50%,25px) scale(.8)}23%{opacity:1;transform:translate(-50%,0) scale(1.03)}65%{opacity:1}100%{opacity:0;transform:translate(-50%,-20px)}}
+@media(max-width:620px){.pvp-stage{min-height:270px}.pvp-betting-scene .pvp-fighters{min-height:190px;grid-template-columns:minmax(0,1fr) 85px minmax(0,1fr)}.pvp-battle-scene .pvp-fighters{min-height:190px;grid-template-columns:minmax(0,1fr) 65px minmax(0,1fr)}.pvp-betting-scene .pvp-fighter-art{height:92px;width:95px}.pvp-battle-scene .pvp-fighter-art{height:133px;width:130px}.pvp-tournament-sign{top:60px;font-size:10px;letter-spacing:.12em}.pvp-poker-table{top:35%;width:90%;left:5%;height:120px}.pvp-betting-scene .pvp-middle{margin-top:10px}}
+@media(prefers-reduced-motion:reduce){.pvp-transfer-layer{display:none}.pvp-transfer-target .pvp-fighter-art{visibility:visible!important}.pvp-stage{transition:none}}
+
+/* Readability on top of the stage props */
+.pvp-betting-scene .pvp-poker-table{opacity:.6;top:45%;height:135px}
+.pvp-betting-scene .pvp-fighter,.pvp-battle-scene .pvp-fighter{text-shadow:0 1px 5px rgba(0,0,0,.75)}
+.pvp-betting-scene .pvp-hp,.pvp-battle-scene .pvp-hp{background:rgba(16,17,29,.55);border-radius:8px;padding:5px}
+.pvp-battle-scene .pvp-ring-rope{opacity:.18}
+@media(max-width:620px){.pvp-betting-scene .pvp-poker-table{height:90px;top:46%}}

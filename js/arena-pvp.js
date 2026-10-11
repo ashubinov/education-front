@@ -6,7 +6,7 @@ const PVP = {
   beat: null, ticker: null, raise: 20, busy: false, skew: 0, result: null, nextConnect: 0,
   combatBusy: false, lastCombat: 0, qteBusy: false, qteTyped: '', qteNonce: 0,
   lastEventMatch: 0, lastEventSeq: 0, keyBound: false, helpOpen: false,
-  criticalHoldUntil: 0, lastCritical: '',
+  criticalHoldUntil: 0, lastCritical: '', sceneTransitionUntil: 0,
 };
 function pvpRequestId() {
   const a = new Uint8Array(16); crypto.getRandomValues(a);
@@ -246,14 +246,70 @@ route(/^#\/pet\/pvp$/, async () => {
   pvpConnect(); await pvpRefresh();
   if (!PVP.state) pvpPaint();
 });
+/* Two physically different rooms. Capture old screen coordinates before re-render,
+   then fly copies of the SAME pet art into the destination room (FLIP).
+   The authoritative server status triggers both clients, not their local clocks. */
+function pvpSceneCapture(stage) {
+  if (!stage || !stage.dataset || !stage.dataset.pvpScene) return null;
+  const pets = {};
+  for (const id of ['pvpMine', 'pvpEnemy']) {
+    const art = document.getElementById(id)?.querySelector('.pvp-fighter-art');
+    if (art) pets[id] = {rect: art.getBoundingClientRect(), content: art.innerHTML};
+  }
+  return {scene: stage.dataset.pvpScene, match: stage.dataset.pvpMatch, pets};
+}
+function pvpSceneTransfer(snapshot, toScene, matchId) {
+  const newStage = document.getElementById('pvpStage');
+  if (!newStage || !snapshot || snapshot.match !== String(matchId) ||
+      !((snapshot.scene === 'betting' && toScene === 'reveal') ||
+        (snapshot.scene === 'reveal' && toScene === 'betting'))) return;
+  const destinations = {};
+  for (const id of ['pvpMine', 'pvpEnemy']) {
+    const art = document.getElementById(id)?.querySelector('.pvp-fighter-art');
+    if (art && snapshot.pets[id]) destinations[id] = art.getBoundingClientRect();
+  }
+  if (Object.keys(destinations).length !== 2) return;
+  const duration = 850;
+  const layer = document.createElement('div'); layer.className='pvp-transfer-layer';
+  layer.setAttribute('aria-hidden','true');
+  const title = document.createElement('div'); title.className='pvp-transfer-title';
+  title.textContent = toScene === 'reveal' ? '⚔️ НА ПОЛЕ БОЯ!' : '🪙 ОБРАТНО К ТОРГАМ!';
+  layer.append(title); document.body.append(layer);
+  PVP.sceneTransitionUntil = Date.now() + duration;
+  newStage.classList.add('pvp-transfer-target');
+  for (const id of ['pvpMine','pvpEnemy']) {
+    const source = snapshot.pets[id], target=destinations[id], r=source.rect;
+    if (!r.width || !r.height) continue;
+    const pet = document.createElement('div');pet.className='pvp-transfer-pet';
+    pet.style.left=r.left+'px';pet.style.top=r.top+'px';
+    pet.style.width=r.width+'px';pet.style.height=r.height+'px';
+    pet.innerHTML=source.content; layer.append(pet);
+    const dx=target.left-r.left, dy=target.top-r.top;
+    const scale=target.width/r.width;
+    if (typeof pet.animate === 'function') pet.animate([
+      {transform:'translate(0,0) scale(1)',offset:0,opacity:1},
+      {transform:`translate(${dx*.5}px,${dy*.5-42}px) scale(${Math.max(1.15,scale*1.15)})`,offset:.5,opacity:1},
+      {transform:`translate(${dx}px,${dy}px) scale(${scale})`,offset:1,opacity:1}
+    ],{duration,easing:'cubic-bezier(.3,.1,.25,1)',fill:'forwards'});
+    else pet.style.transform=`translate(${dx}px,${dy}px) scale(${scale})`;
+  }
+  setTimeout(()=>{
+    layer.remove();
+    if (document.getElementById('pvpStage')?.dataset.pvpMatch === String(matchId))
+      document.getElementById('pvpStage')?.classList.remove('pvp-transfer-target');
+    PVP.sceneTransitionUntil = 0;
+  },duration+45);
+}
+
 function pvpPaint() {
   if (!pvpOnPage() || Date.now() < PVP.criticalHoldUntil) return;
   const host = document.getElementById('pvpHost'); if (!host) return;
   if (!PVP.state) { host.innerHTML = '<div class="card">Нет связи с сервером PvP</div>'; return; }
   const s = PVP.state, m = s.active, previousY = window.scrollY;
+  const previousScene = pvpSceneCapture(document.getElementById('pvpStage'));
   host.innerHTML = unraw(html`
     <header class="pvp-head"><div><h2>⚔️ Арена питомцев · Live PvP</h2>
-    <p class="muted small">Живой бой до 0 HP. HP между раундами не восстанавливается. Торги между раундами.</p></div>
+    <p class="muted small">Торги в зале ставок → 15 секунд боя на ринге → обратно к торгам. HP не восстанавливается.</p></div>
     <div class="row gap-s wrap"><button class="btn ghost sm" data-act="pvpGuide" type="button">❔ Как играть?</button><a class="btn ghost sm" href="#/pet">← Питомец</a><a class="btn ghost sm" href="#/pet/arena">Тренировка с ботами</a>
     <span class="px-bal">🪙 <b>${pvpCash(s.balance)}</b></span></div></header>
     ${!s.pet ? html`<div class="card center"><h3>Для арены нужен питомец</h3><p class="muted">Заведи любое животное в разделе «Питомец».</p><a class="btn" href="#/pet">Выбрать питомца</a></div>` :
@@ -262,6 +318,12 @@ function pvpPaint() {
     ${s.recent?.length ? html`<section class="card pvp-history"><h3>История PvP</h3>${s.recent.map(x => html`<div class="pvp-history-row"><span>${x.status === 'cancelled' ? 'Отменён' : x.winner_id === x.me ? 'Победа' : 'Поражение'} · ${x.other_name}${x.reason ? ' · ' + x.reason : ''}</span><b>${x.status === 'cancelled' ? '' : x.winner_id === x.me ? '+'+pvpCash(x.pot-x.my_total) : '−'+pvpCash(x.my_total)} 🪙</b></div>`)}</section>` : ''}
   `);
   window.scrollTo(0, previousY);
+  if (m && (m.status === 'betting' || m.status === 'reveal'))
+    pvpSceneTransfer(previousScene, m.status, m.id);
+  // State may re-render while an existing move is in progress; keep the target
+  // sprite hidden until the overlay actually arrives.
+  if (Date.now() < PVP.sceneTransitionUntil)
+    document.getElementById('pvpStage')?.classList.add('pvp-transfer-target');
 }
 function pvpFinished(m) {
   return html`<div class="card pvp-final"><h2>${m.winner_id === m.me ? '🏆 Победа!' : 'Поражение'}</h2>
@@ -295,16 +357,17 @@ function pvpMatch(m, s) {
   const fighting = m.status === 'reveal';
   const pv1 = m.pet_me || s.pet;
   const combat = m.combat;
-  const status = fighting ? 'ЖИВОЙ БОЙ · раунд '+m.round_no : m.status === 'betting' ? 'ТОРГИ · раунд '+m.round_no : 'ОЖИДАНИЕ ВЫЗОВА';
-  return html`<section class="pvp-match"><div class="card pvp-stage ${fighting?'pvp-fighting pvp-click-arena':''}" id="pvpStage" title="${fighting?'ЛКМ по арене — удар питомцем':''}">
-    <div class="pvp-status"><b>${status}</b><span class="muted">До следующего этапа: <b id="pvpTimer">${pvpTimeLeft(m.deadline)} с</b></span></div>
+  const status = fighting ? '⚔️ ПОЛЕ БОЯ · раунд '+m.round_no : m.status === 'betting' ? '🪙 СТОЛ ТОРГОВ · раунд '+m.round_no : 'ОЖИДАНИЕ ВЫЗОВА';
+  return html`<section class="pvp-match"><div class="card pvp-stage ${fighting?'pvp-fighting pvp-click-arena pvp-battle-scene':'pvp-betting-scene'}" id="pvpStage" data-pvp-scene="${m.status}" data-pvp-match="${m.id}" title="${fighting?'ЛКМ по арене — удар питомцем':''}">
+    <div class="pvp-room-decor" aria-hidden="true">${fighting ? html`<div class="pvp-ring-lights"></div><div class="pvp-ring-rope pvp-rope-back"></div><div class="pvp-ring-ground"></div><div class="pvp-ring-rope pvp-rope-front"></div>` : html`<div class="pvp-tournament-sign">ЗАЛ ТОРГОВ</div><div class="pvp-poker-table"></div><div class="pvp-table-chips">🪙 🪙 🪙</div>`}</div>
+    <div class="pvp-status"><b>${status}</b><span class="muted">${fighting?'До конца 15-секундного боя:':'До следующего этапа:'} <b id="pvpTimer">${pvpTimeLeft(m.deadline)} с</b></span></div>
     <div class="pvp-fighters">
       <div class="pvp-fighter" id="pvpMine">
         <div class="pvp-fighter-art">${raw(pvpPhoto(pv1))}</div><b>${pv1?.name||'Твой питомец'}</b>
         <span class="muted small">${m.me_name}</span><span class="small">Сила ${m.power_me?.toFixed(2)||'—'}</span>
         ${combat?pvpHealth({hp:combat.hp_me,max:combat.hp_max}):''}
       </div>
-      <div class="pvp-middle"><span>VS</span><b>🪙 ${pvpCash(m.pot)}</b><small>Общий банк</small>
+      <div class="pvp-middle"><span>${fighting?'VS':'🃏'}</span><b>🪙 ${pvpCash(m.pot)}</b><small>${fighting?'Банк матча':'На столе'}</small>
         <div class="pvp-score">Раунд ${m.round_no}</div><small>До нокаута · без лечения</small></div>
       <div class="pvp-fighter" id="pvpEnemy"><div class="pvp-fighter-art">${m.pet_other?raw(pvpPhoto(m.pet_other)):html`<span class="pvp-question">?</span>`}</div>
         <b>${m.pet_other?.name||'Питомец соперника'}</b><span class="muted small">${m.other_name} · ${m.other_online?'онлайн':'не в сети'}</span>
@@ -397,10 +460,10 @@ setTimeout(pvpBoot, 0);
 const PVP_GUIDE = html`<div class="pvp-guide">
   <h2 id="pvpGuideTitle">Как играть в Live PvP</h2>
   <p><b>1. Вызов.</b> Выбери друга и стартовую ставку. Жетоны сразу резервируются. Если друг отклонит приглашение или не ответит вовремя, они вернутся.</p>
-  <p><b>2. Торги.</b> Повышай ставку, уравнивай ставку противника или сдавайся. После уравнивания или двух пропусков начинается боевой раунд. При сдаче уже вложенные жетоны получает соперник.</p>
+  <p><b>2. Торги.</b> Повышай ставку, уравнивай ставку противника или сдавайся. После уравнивания или двух пропусков питомцы перемещаются со стола торгов на отдельное поле боя на 15 секунд. При сдаче уже вложенные жетоны получает соперник.</p>
   <p><b>3. Удары.</b> Обычные удары наносятся <b>только по нажатию ЛКМ</b> по арене или кнопке «УДАР» (на телефоне — касанием). Питомцы самостоятельно не атакуют. K или кнопка «БЛОК» включают защиту. Каждый удар расходует энергию.</p>
   <p><b>4. Критический удар.</b> Обоим игрокам внезапно появляются разные комбинации из <b>1–3 английских букв</b>. Набери их до истечения времени: питомец сделает стремительный рывок с мощным эффектом попадания и большим уроном. Ошибка сбрасывает ввод. Критический удар совершается только при успешном вводе.</p>
-  <p><b>5. Здоровье и победа.</b> Точный урон и HP видны в бою. После очередного боевого раунда открываются новые торги, но <b>HP не восстанавливается</b>. Бой заканчивается, когда один питомец теряет все HP (0 HP) или игрок сдаётся. Победитель получает весь банк.</p>
+  <p><b>5. Здоровье и победа.</b> Точный урон и HP видны в бою. После <b>15 секунд</b> питомцы возвращаются с поля боя к торгам, но <b>HP не восстанавливается</b>. Бой заканчивается, когда один питомец теряет все HP (0 HP) или игрок сдаётся. Победитель получает весь банк.</p>
   <p class="muted small">Вид питомца не даёт бонусов. На урон влияют сила, небольшой случайный разброс и действия игроков. Проигрыш в бою не удаляет питомца из аккаунта.</p>
   <button class="btn" data-act="pvpGuideClose" type="button">Понятно</button>
 </div>`;
@@ -451,7 +514,7 @@ function pvpCombatAcceptState(data) {
 }
 function pvpSendCombat(move) {
   const m=PVP.state?.active;
-  if (!m || m.status!=='reveal' || PVP.combatBusy) return;
+  if (!m || m.status!=='reveal' || PVP.combatBusy || Date.now() < PVP.sceneTransitionUntil) return;
   if (Date.now()-PVP.lastCombat < (move==='attack'?320:900)) return;
   PVP.lastCombat=Date.now(); PVP.combatBusy=true;
   api('/pet/pvp/combat',{json:{match_id:m.id,move,request_id:pvpRequestId()}})
