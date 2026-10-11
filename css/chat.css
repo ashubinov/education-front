@@ -88,3 +88,6 @@
 .lq-chat-mod-btn { border: 0; background: transparent; cursor: pointer; font-size: 12px; line-height: 1; padding: 2px 3px; border-radius: 6px; }
 .lq-chat-mod-btn:hover { background: var(--bad-l); }
 @media (hover: none) { .lq-chat-mod { opacity: .85; } }
+
+.lq-chat-list .lq-chat-message.command .lq-chat-bubble { border-color: var(--accent); background: var(--accent-l); }
+.lq-chat-command-tag { display: inline-flex; align-items: center; font-size: 9px; padding: 2px 5px; border-radius: 5px; background: var(--accent); color: var(--accent-ink); font-weight: 900; letter-spacing: .025em; }

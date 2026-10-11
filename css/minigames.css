@@ -32,3 +32,6 @@
 .lq-chat-list .lq-chat-message.system .lq-chat-text {font-size:12px;font-weight:900;overflow-wrap:anywhere;}
 @media (max-width: 900px) {.mg-layout{grid-template-columns:minmax(0,1fr);} }
 @media (max-width: 420px) { .mg-berry{font-size:42px;} .mg-hero{gap:10px;} .mg-hero h1{font-size:24px;} .mg-layout{gap:12px;} .mg-guess-buttons{flex-direction:column-reverse;} .mg-guess-buttons .btn{width:100%;} }
+.mg-amount-input { margin-bottom: 5px; }
+.mg-max-hint { margin: 1px 0 10px; overflow-wrap: anywhere; }
+.mg-amount-input:disabled { opacity: .6; }
