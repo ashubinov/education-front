@@ -201,7 +201,7 @@ function hud() {
 }
 
 /* ---------- навигация: Курсы · Слоты · (Админ) · Игры; аватар ведёт в профиль. Внутри раздела — полоса переключения ---------- */
-const NAV_GAMES = [['#/pixels', '🎨', 'Пикселы', 'pixels'], ['#/pet', '🐾', 'Питомец', 'pet'], ['#/farm', '🚜', 'Ферма', 'farm'], ['#/minigames', '🍓', 'Мини-игры', 'minigames']];
+const NAV_GAMES = [['#/pixels', '🎨', 'Пикселы', 'pixels'], ['#/pet', '🐾', 'Питомец', 'pet'], ['#/pet/pvp', '⚔️', 'PvP', 'pvp'], ['#/farm', '🚜', 'Ферма', 'farm'], ['#/minigames', '🍓', 'Мини-игры', 'minigames']];
 const NAV_PROFILE = [['#/settings', '⚙️', 'Настройки', 'settings'], ['#/friends', '👥', 'Друзья', 'friends'], ['#/stats', '📊', 'Статистика', 'stats']];
 const NAV_PLAN = [['#/today', '☀️', 'Сегодня', 'today'], ['#/tasks', '✅', 'Задачи', 'tasks'], ['#/calendar', '📅', 'Календарь', 'calendar']];
 const NAV_MENUS = { plan: ['📅', 'План', NAV_PLAN], games: ['🎮', 'Игры', NAV_GAMES], profile: ['👤', 'Профиль', NAV_PROFILE] };
