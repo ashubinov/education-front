@@ -453,7 +453,8 @@ html[data-motion="reduced"] *:not(.reel-strip):not(.spinner):not(.spinner *) { a
 @media (max-width: 760px) {
   .bottom-nav a span .mg-nav-badge { position: absolute; top: -2px; right: -10px; margin: 0; }
 }
-.sub-nav { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.sub-nav { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-bottom: 16px; }
+.page-narrow { max-width: 760px; margin: 0 auto; }
 .sub-nav a { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 8px 14px; border: 2px solid var(--line); border-radius: 14px; background: var(--bg2); color: var(--text); font-weight: 800; font-size: 14px; }
 .sub-nav a:hover { background: var(--bg3); } .sub-nav a.on { border-color: var(--accent); background: var(--accent-l); color: var(--accent); }
 @media (max-width: 480px) { .sub-nav { gap: 5px; } .sub-nav a { flex: 1 1 auto; justify-content: center; padding: 8px 8px; gap: 4px; font-size: 13px; border-radius: 12px; } }

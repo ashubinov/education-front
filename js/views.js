@@ -285,7 +285,7 @@ async function drawSettings() {
   const keepY = window.scrollY;
   const [set, tg] = await Promise.all([api('/settings'), api('/telegram/status')]);
   S.settings = set; const u = S.user;
-  render(app(), shell('settings', html`<h1>Настройки</h1><div class="col" style="max-width:760px">
+  render(app(), shell('settings', html`<div class="page-narrow"><h1>Настройки</h1><div class="col">
     <div class="card"><h3>👤 Профиль</h3>
       <div class="row mb"><div class="pav xl">${av(u)}</div><div class="grow pname"><b style="font-size:20px">${u.display_name}</b><div class="small muted">@${u.username}</div></div></div>
       <div class="field"><label>Имя</label><div class="row"><input type="text" id="dname" value="${u.display_name}" maxlength="40"><button class="btn sm" data-act="saveName">Сохранить</button></div></div>
@@ -336,7 +336,7 @@ async function drawSettings() {
       <div class="row wrap gap-s"><button class="btn sm ghost" data-act="exportCatalog">⬇ Экспорт каталога (JSON)</button><button class="btn sm ghost" data-act="importCatalog">⬆ Импорт каталога</button><input type="file" id="catfile" accept=".json,application/json" class="hidden"></div><div id="catres" class="small mt"></div></div>
     <div class="card" id="bkcard"><h3>💾 Резервные копии базы</h3><p class="small muted">Раз в сутки сервер сохраняет снимок базы (пользователи, курсы, прогресс, ключи) и хранит несколько последних. Копии лежат на том же сервере, поэтому время от времени скачивай свежую к себе. Файл содержит секреты — храни его как пароли.</p>
       <div class="row wrap gap-s mb"><button class="btn sm" data-act="backupNow">Сделать копию сейчас</button><button class="btn sm ghost" data-act="backupFresh">⬇ Скачать свежую копию</button></div><div id="bklist" class="small col" style="gap:6px"><span class="muted">загружаю…</span></div></div>` : ''}
-    <div class="row wrap"><button class="btn ghost" data-act="logout">Выйти из аккаунта</button><button class="btn ghost" data-act="logoutAll">Выйти на всех устройствах</button></div></div>`));
+    <div class="row wrap"><button class="btn ghost" data-act="logout">Выйти из аккаунта</button><button class="btn ghost" data-act="logoutAll">Выйти на всех устройствах</button></div></div></div>`));
   window.scrollTo(0, keepY);
   if (set.is_admin) loadBackups();
   const avf = $('#avfile'); if (avf) avf.onchange = () => uploadAvatar(avf.files[0]);
