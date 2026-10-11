@@ -27,8 +27,8 @@ function arFighter(p, cls, opts = {}) {
 }
 
 function arenaPage(s) {
-  const head = html`<div class="pet-top"><div><h2>⚔️ Арена</h2><p class="muted small" style="margin:0">Петушиные бои до двух раундов. Сила зависит от возраста петуха и от сытости: голодный бьёт слабее.</p></div>
-    <div class="row gap-s wrap"><a class="btn ghost sm" href="#/pet">← К питомцу</a><div class="px-bal" title="Общие жетоны">🪙 <b>${slFmt(s.balance)}</b></div></div></div>`;
+  const head = html`<div class="pet-top"><div><h2>⚔️ Арена</h2><p class="muted small" style="margin:0">Тренировка с ботами до двух выигранных раундов. Сила зависит от возраста петуха и от сытости: голодный бьёт слабее.</p></div>
+    <div class="row gap-s wrap"><a class="btn ghost sm" href="#/pet">← К питомцу</a><a class="btn sm" href="#/pet/pvp">⚔️ Live PvP</a><div class="px-bal" title="Общие жетоны">🪙 <b>${slFmt(s.balance)}</b></div></div></div>`;
   if (!s.rooster) {
     return html`<div class="ar-page">${head}<div class="card ar-gate"><div class="ar-gate-ic">🐓</div>
       <h3 style="margin:0">Для боёв нужен петух</h3>
@@ -49,7 +49,7 @@ function arenaPage(s) {
         ${r.fullness < s.min_fullness ? html`<p class="small" style="color:var(--bad);margin:8px 0 0">Слишком голоден для боя. <a href="#/pet">Покорми его</a>.</p>` : html`<p class="muted small" style="margin:8px 0 0">Каждый бой отнимает ${s.fullness_cost}% сытости. Победа даёт петуху +15 роста, поражение +5.</p>`}
         <div class="mt-s"><span class="small muted">Ставка:</span><div class="ar-bets">${s.bets.map(b => html`<button class="ar-bet ${b === AR.bet ? 'on' : ''}" data-act="arBet" data-v="${b}" ${b > s.balance ? 'disabled' : ''}>${b ? '🪙 ' + b : 'Без ставки'}</button>`)}</div>
           <p class="muted small" style="margin:6px 0 0">Победил — получаешь ставку сверху. Проиграл против друга — ставка достаётся ему, против бота — сгорает.</p></div></div>
-      <div class="ar-opps"><h3 style="margin:0 0 8px">Соперники</h3>${s.opponents.map(o => arOpp(o, r, ready))}
+      <div class="ar-opps"><h3 style="margin:0 0 8px">Соперники</h3>${s.opponents.filter(o => o.kind === 'npc').map(o => arOpp(o, r, ready))}
         ${s.opponents.some(o => o.kind === 'user') ? '' : html`<p class="muted small">У друзей пока нет петухов. Позови кого-нибудь завести петуха — будет с кем драться по-настоящему.</p>`}</div>
     </div>
     <div class="card"><h3 style="margin:0 0 8px">Последние бои</h3>${s.recent.length ? html`<div class="ar-recent">${s.recent.map(f => html`<div class="ar-rec ${f.won ? 'win' : 'lose'}">

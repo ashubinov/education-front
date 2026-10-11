@@ -87,7 +87,7 @@ function petMain(s) {
             ${p.age_days ? html`<span class="chip">🎂 ${p.age_days} ${plural(p.age_days, 'день', 'дня', 'дней')}</span>` : ''}</div>
           <div id="petBars">${petBars(p)}</div>
           <p class="muted small" style="margin:6px 0 0">Накормлен ${p.fed_total} ${plural(p.fed_total, 'раз', 'раза', 'раз')} · друзья погладили ${p.pats_total} ${plural(p.pats_total, 'раз', 'раза', 'раз')}${p.next_stage ? ` · дальше: ${p.next_stage}` : ''}</p>
-          <div class="row gap-s mt"><a class="btn sm" href="#/pet/arena" title="Петушиные бои">⚔️ Арена</a><button class="btn ghost sm" data-act="petRename">✏️ Имя</button><button class="btn ghost sm" data-act="petRelease">👋 Отпустить</button></div></div>
+          <div class="row gap-s mt"><a class="btn sm" href="#/pet/pvp" title="Бои с настоящими игроками">⚔️ Live PvP</a><a class="btn ghost sm" href="#/pet/arena" title="Бои с ботами">Тренировка</a><button class="btn ghost sm" data-act="petRename">✏️ Имя</button><button class="btn ghost sm" data-act="petRelease">👋 Отпустить</button></div></div>
       </div>
       <div class="pet-shop">
         <h3 style="margin:0 0 8px">🍽 Еда</h3>
