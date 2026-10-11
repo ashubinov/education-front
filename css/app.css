@@ -449,7 +449,19 @@ html[data-motion="reduced"] *:not(.reel-strip):not(.spinner):not(.spinner *) { a
 .nav a { white-space: nowrap; }
 .avatar.on { border-color: var(--accent); background: var(--accent-l); }
 .mg-nav-badge { margin-left: 4px; }
-@media (max-width: 1000px) { .hud-level { display: none; } }
+@media (max-width: 1100px) { .hud-level { display: none; } }
+/* шапка на компьютере: логотип слева, меню строго по центру, уровень и аватар справа */
+@media (min-width: 761px) {
+  .topbar-in { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); }
+  .topbar-in .nav { margin: 0; justify-self: center; }
+  .topbar-in #hud { justify-self: end; }
+  .hud { margin-left: 0; }
+  .hud-level { min-width: 0; } .hud-level span.xp { display: none; }
+}
+@media (min-width: 761px) and (max-width: 900px) { .nav a { padding: 8px 10px; gap: 6px; } .logo { font-size: 19px; } }
+/* переключатели («вкладки») по центру */
+.tabs { width: 100%; margin-left: auto; margin-right: auto; }
+.slot-machine-nav, .mm-game-switch { justify-content: center; }
 @media (max-width: 760px) {
   .bottom-nav a span .mg-nav-badge { position: absolute; top: -2px; right: -10px; margin: 0; }
 }
