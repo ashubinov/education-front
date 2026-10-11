@@ -36,6 +36,7 @@ async function drawSlots() {
   const last = st.history[0];
   SL.grid = last ? last.reels : SL_START;
   render(app(), shell('slots', html`${raw(SLOT_DEFS)}
+    <nav class="slot-machine-nav" aria-label="Выбор автомата"><a class="current" aria-current="page" href="#/slots">🐾 Лапа удачи</a><a href="#/slots/meme">🎬 MEME SLOTS</a></nav>
     <div class="slots-page">
       <div class="slot-machine" id="machine">
         <div class="slot-head"><div class="mini-dog">${raw(slotSvg('pug'))}</div>
