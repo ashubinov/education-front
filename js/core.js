@@ -196,25 +196,81 @@ function hud() {
   return html`<div class="hud">
     <div class="hud-streak ${st.current ? '' : 'off'}" title="Серия: ${st.current} дн. (рекорд ${st.best})"><span class="flame">🔥</span>${st.current}</div>
     <div class="hud-level" title="${lv.xp} XP"><span class="lvl-badge">Ур. ${lv.level}</span><div class="bar thin grow" style="width:90px"><i style="width:${lv.pct}%"></i></div><span class="xp small muted">${lv.into}/${lv.span}</span></div>
-    <a href="#/settings" class="avatar" title="${u.display_name}">${av(u)}</a>
+    <button type="button" class="avatar ${navGroup(S.active) === 'profile' ? 'on' : ''}" data-act="menu" data-menu="profile" aria-haspopup="menu" aria-expanded="false" title="${u.display_name}">${av(u)}</button>
   </div>`;
 }
+
+/* ---------- навигация: основные пункты + два меню («Игры» и профиль) ---------- */
+const NAV_GAMES = [['#/pixels', '🎨', 'Пикселы', 'pixels'], ['#/pet', '🐾', 'Питомец', 'pet'], ['#/farm', '🚜', 'Ферма', 'farm'], ['#/minigames', '🍓', 'Мини-игры', 'minigames']];
+const NAV_PROFILE = [['#/friends', '👥', 'Друзья', 'friends'], ['#/stats', '📊', 'Статистика', 'stats'], ['#/settings', '⚙️', 'Настройки', 'settings']];
+const NAV_MENUS = { games: ['🎮', 'Игры', NAV_GAMES], profile: ['👤', 'Профиль', NAV_PROFILE] };
+function navGroup(active) {
+  if (NAV_GAMES.some(n => n[3] === active)) return 'games';
+  if (NAV_PROFILE.some(n => n[3] === active)) return 'profile';
+  return '';
+}
 function navItems() {
-  const nav = [['#/', '🏠', 'Курсы', 'home'], ['#/friends', '👥', 'Друзья', 'friends'], ['#/slots', '🎰', 'Слоты', 'slots'], ['#/pixels', '🎨', 'Пикселы', 'pixels'], ['#/pet', '🐾', 'Питомец', 'pet'], ['#/farm', '🚜', 'Ферма', 'farm'], ['#/minigames', '🍓', 'Мини-игры', 'minigames'], ['#/stats', '📊', 'Статистика', 'stats'], ['#/settings', '⚙️', 'Настройки', 'settings']];
-  if (S.user && S.user.is_admin) nav.splice(3, 0, ['#/admin', '🛡️', 'Админ', 'admin']);
+  const nav = [['#/', '🏠', 'Курсы', 'home'], ['#/slots', '🎰', 'Слоты', 'slots']];
+  if (S.user && S.user.is_admin) nav.push(['#/admin', '🛡️', 'Админ', 'admin']);
+  nav.push(['', '🎮', 'Игры', 'games', 'menu']);
   return nav;
 }
 function navBadge(n) {
-  if (n[3] === 'minigames') return html`<i class="mg-nav-badge" hidden></i>`; return n[3] === 'admin' && S.user && S.user.moderation_pending ? html`<i class="badge">${S.user.moderation_pending}</i>` : ''; }
+  if (n[3] === 'minigames' || n[3] === 'games') return html`<i class="mg-nav-badge" hidden></i>`;
+  return n[3] === 'admin' && S.user && S.user.moderation_pending ? html`<i class="badge">${S.user.moderation_pending}</i>` : '';
+}
+function navLink(n, active, bottom) {
+  const on = n[4] ? navGroup(active) === n[3] : active === n[3];
+  const inner = bottom ? html`<span>${n[1]}${navBadge(n)}</span>${n[2]}` : html`${n[1]} ${n[2]}${navBadge(n)}`;
+  return n[4]
+    ? html`<button type="button" class="${on ? 'on' : ''}" data-act="menu" data-menu="${n[3]}" aria-haspopup="menu" aria-expanded="false">${inner}${bottom ? '' : html`<i class="caret">▾</i>`}</button>`
+    : html`<a href="${n[0]}" class="${on ? 'on' : ''}">${inner}</a>`;
+}
+/** Полоса переключения внутри раздела (как «Лапа удачи / MEME SLOTS» в слотах): показывается на страницах игр и профиля. */
+function subNav(active) {
+  const g = navGroup(active); if (!g) return '';
+  return html`<nav class="sub-nav" aria-label="${NAV_MENUS[g][1]}">${NAV_MENUS[g][2].map(n => html`<a href="${n[0]}" class="${active === n[3] ? 'on' : ''}" ${active === n[3] ? raw('aria-current="page"') : ''}>${n[1]} ${n[2]}${navBadge(n)}</a>`)}</nav>`;
+}
 function shell(active, inner) {
+  S.active = active; closeMenu();
   const nav = navItems();
   return html`<header class="topbar"><div class="topbar-in">
       <a class="logo" href="#/"><span>🦉</span><span>Learn<b>Quest</b></span></a>
-      <nav class="nav">${nav.map(n => html`<a href="${n[0]}" class="${active === n[3] ? 'on' : ''}">${n[1]} ${n[2]}${navBadge(n)}</a>`)}</nav>
+      <nav class="nav">${nav.map(n => navLink(n, active, false))}</nav>
       <div id="hud">${hud()}</div></div></header>
-    <main>${inner}</main>
-    <nav class="bottom-nav n${nav.length}">${nav.map(n => html`<a href="${n[0]}" class="${active === n[3] ? 'on' : ''}"><span>${n[1]}${navBadge(n)}</span>${n[2]}</a>`)}</nav>`;
+    <main>${subNav(active)}${inner}</main>
+    <nav class="bottom-nav n${nav.length}">${nav.map(n => navLink(n, active, true))}</nav>`;
 }
+
+/* выпадающее меню: под кнопкой в шапке, над кнопкой в нижней панели (телефон) */
+function closeMenu() {
+  const m = $('#menuPop'); if (m) m.remove();
+  document.querySelectorAll('[data-act="menu"][aria-expanded="true"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+}
+actions.menu = (btn) => {
+  const open = btn.getAttribute('aria-expanded') === 'true';
+  closeMenu(); if (open) return;
+  const key = btn.dataset.menu, def = NAV_MENUS[key]; if (!def) return;
+  const head = key === 'profile' && S.user ? html`<div class="menu-head">${av(S.user)}<b>${S.user.display_name}</b></div>` : '';
+  const pop = document.createElement('div');
+  pop.id = 'menuPop'; pop.className = 'menu-pop'; pop.setAttribute('role', 'menu');
+  pop.innerHTML = unraw(html`${head}${def[2].map(n => html`<a role="menuitem" href="${n[0]}" class="${S.active === n[3] ? 'on' : ''}">${n[1]} <span>${n[2]}</span>${navBadge(n)}</a>`)}`);
+  document.body.appendChild(pop);
+  btn.setAttribute('aria-expanded', 'true');
+  const r = btn.getBoundingClientRect(), w = pop.offsetWidth, h = pop.offsetHeight;
+  const left = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2));
+  pop.style.left = left + 'px';
+  if (r.top > innerHeight / 2) pop.style.bottom = Math.max(8, innerHeight - r.top + 8) + 'px';   // кнопка в нижней панели: открываем вверх
+  else pop.style.top = (r.bottom + 8) + 'px';
+  if (typeof mgNotificationBadge === 'function') mgNotificationBadge();
+};
+document.addEventListener('click', e => {
+  if (!$('#menuPop')) return;
+  if (e.target.closest('#menuPop a') || !e.target.closest('#menuPop, [data-act="menu"]')) closeMenu();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMenu(); });
+let _menuW = innerWidth;   // на телефоне resize приходит и при скрытии адресной строки — закрываем только при смене ширины
+window.addEventListener('resize', () => { if (innerWidth !== _menuW) { _menuW = innerWidth; closeMenu(); } });
 function refreshHud() { const h = $('#hud'); if (h) h.innerHTML = unraw(hud()); }
 async function refreshMe() { try { S.user = await api('/me'); refreshHud(); } catch (e) { /* ignore */ } }
 
@@ -222,7 +278,7 @@ async function refreshMe() { try { S.user = await api('/me'); refreshHud(); } ca
 const routes = [];
 function route(re, fn) { routes.push([re, fn]); }
 async function router() {
-  clearTimers(); closeModal();
+  clearTimers(); closeModal(); closeMenu();
   const h = location.hash || '#/';
   if (!S.user) {
     try { S.user = await api('/me'); applyTheme(S.user.theme_color, S.user.theme_mode); startReminders(); }
