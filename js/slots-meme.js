@@ -5,7 +5,7 @@ const MM = {
   st: null, board: [], bet: 20, spinning: false, busy: false,
   generation: 0, pendingId: null, pendingBet: null, grid: [],
   intervals: [], timeouts: [], video: null, reactionActive: false,
-  voice: true, voiceQueue: [], lastClip: null,
+  voice: true, effects: true, voiceQueue: [], lastClip: null,
 };
 const MM_SYMBOLS = ['rage', 'hype', 'shocked', 'smile', 'suspicious', 'quiet',
   'facepalm', 'risky', 'laugh', 'wild', 'scatter', 'bonus'];
@@ -14,6 +14,17 @@ const MM_SYMBOLS = ['rage', 'hype', 'shocked', 'smile', 'suspicious', 'quiet',
 const MM_WIN_CLIPS = Object.freeze([
   'win_01', 'win_02', 'win_03', 'big_win_01', 'big_win_02',
 ]);
+/* MEME SPIN SFX v3: synthesized reel sounds, independent of outcome and voice reactions.
+   Uses the existing LearnQuest sound engine: play() respects S.user.sound.
+   There is no failure sound; only the sounds of physical reels moving and stopping. */
+Object.assign(SFX, {
+  memeSpinStart: () => tone([294, 392, 494], .055, 'triangle', .042),
+  memeSpinTick: () => tone([210], .022, 'square', .015),
+  memeReelStop: () => tone([523, 784], .040, 'triangle', .045),
+});
+function mmSpinSfx(name) {
+  if (MM.effects && MM.spinning && mmAlive(MM.generation)) play(name);
+}
 const MM_ASSET = 'assets/slots/meme/';
 const mmPoster = id => MM_ASSET + 'symbols/' + encodeURIComponent(id) + '.webp';
 const mmVideo = id => MM_ASSET + 'reactions/' + encodeURIComponent(id) + '.webm';
@@ -38,6 +49,7 @@ async function mmDraw() {
   const g = ++MM.generation;
   mmStop();
   try { MM.voice = localStorage.getItem('lq_meme_voice') !== '0'; } catch (e) { MM.voice = true; }
+  try { MM.effects = localStorage.getItem('lq_meme_spin_sfx') !== '0'; } catch (e) { MM.effects = true; }
   MM.spinning = false;
   render(app(), shell('slots', html`<div class="center mt-l"><span class="spinner"></span></div>`));
   let state, board;
@@ -72,7 +84,7 @@ async function mmDraw() {
             <button class="mm-spin" type="button" id="mmSpin" data-act="memeSpin" aria-label="Крутить барабаны">SPIN<span id="mmSpinSub">−${mmFmt(MM.bet)}</span></button>
             <div class="mm-stake"><small>СТАВКА</small><div class="mm-stake-row"><button class="mm-bet-btn" data-act="memeBet" data-step="-1" aria-label="Уменьшить ставку">−</button><button id="mmBet" class="mm-bet-val" data-act="memeEditBet" title="Задать свою ставку">${mmFmt(MM.bet)}</button><button class="mm-bet-btn" data-act="memeBet" data-step="1" aria-label="Увеличить ставку">+</button></div></div>
           </div>
-          <div class="mm-footer"><label><input id="mmVoice" type="checkbox" ${MM.voice ? 'checked' : ''}> Голосовые реакции</label><span>Монеты не являются деньгами</span></div>
+          <div class="mm-footer"><label><input id="mmVoice" type="checkbox" ${MM.voice ? 'checked' : ''}> Голосовые реакции</label><label><input id="mmSpinSfx" type="checkbox" ${MM.effects ? 'checked' : ''}> Звуки барабанов</label><span>Монеты не являются деньгами</span></div>
           <div class="mm-reaction" id="mmReaction" hidden aria-live="off"></div>
         </section>
         <aside class="mm-side" id="mmSide"></aside>
@@ -83,6 +95,10 @@ async function mmDraw() {
     MM.voice = e.target.checked;
     try { localStorage.setItem('lq_meme_voice', MM.voice ? '1' : '0'); } catch (x) { /* ignore */ }
     if (MM.video) MM.video.muted = !MM.voice || !S.user?.sound;
+  });
+  $('#mmSpinSfx').addEventListener('change', e => {
+    MM.effects = e.target.checked;
+    try { localStorage.setItem('lq_meme_spin_sfx', MM.effects ? '1' : '0'); } catch (x) { /* ignore */ }
   });
   const onKey = e => { if (e.code === 'Space' && !e.repeat && !/INPUT|TEXTAREA|SELECT|BUTTON|A/.test(document.activeElement?.tagName || '')) { e.preventDefault(); actions.memeSpin(); } };
   document.addEventListener('keydown', onKey);
@@ -195,9 +211,14 @@ function mmAnimate(grid, g) {
   if (reduce) { mmPaintGrid(grid); return Promise.resolve(); }
   return new Promise(resolve => {
     const starts = performance.now(); const stopped = Array(5).fill(false);
+    let lastTickAt = -Infinity;
     const timer = setInterval(() => {
       if (!mmAlive(g)) { clearInterval(timer); resolve(); return; }
       const elapsed = performance.now() - starts;
+      if (elapsed - lastTickAt >= 170 && elapsed < 1480) {
+        mmSpinSfx('memeSpinTick');
+        lastTickAt = elapsed;
+      }
       const reels = $$('#mmGrid .mm-reel');
       for (let i=0;i<5;i++) {
         if (stopped[i]) continue;
@@ -205,6 +226,7 @@ function mmAnimate(grid, g) {
           reels[i].innerHTML = grid[i].map(mmCell).join('');
           reels[i].classList.remove('rolling'); reels[i].classList.add('settle');
           stopped[i] = true;
+          mmSpinSfx('memeReelStop');
         } else {
           reels[i].classList.add('rolling');
           reels[i].innerHTML = [mmRandom(),mmRandom(),mmRandom()].map(mmCell).join('');
@@ -231,6 +253,9 @@ actions.memeSpin = async () => {
   const g = MM.generation;
   MM.spinning = true; mmRefreshControls();
   mmMsg('Крутим барабаны…');
+  // The first sound is triggered inside the user's click/keydown event.
+  // This unlocks Web Audio before waiting for the server response.
+  mmSpinSfx('memeSpinStart');
   $$('#mmGrid .mm-cell.lit').forEach(x => x.classList.remove('lit'));
   if (MM.pendingBet !== MM.bet) MM.pendingId = null;
   MM.pendingId ||= mmNewId(); MM.pendingBet = MM.bet;
