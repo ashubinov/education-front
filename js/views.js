@@ -243,6 +243,27 @@ route(/^#\/stats$/, async () => {
   S.statCourse = S.statCourse || '';
   await drawStats();
 });
+/** Награда за достижение: кнопка «Забрать», отметка «получено» или подсказка, сколько жетонов дадут. */
+function achReward(a) {
+  if (!a.reward) return '';
+  if (a.claimable) return html`<button class="btn sm ach-claim" data-act="claimAch" data-key="${a.key}">🎁 Забрать ${a.reward} жетонов</button>`;
+  if (a.claimed) return html`<i class="ach-rw got">✓ Награда получена · ${a.reward} жетонов</i>`;
+  return html`<i class="ach-rw">🎁 Награда: ${a.reward} жетонов</i>`;
+}
+function achClaimAll(list) {
+  const items = list.filter(a => a.claimable), total = items.reduce((n, a) => n + a.reward, 0);
+  return items.length ? html`<button class="btn" data-act="claimAllAch">🎁 Забрать всё: ${total} жетонов</button>` : '';
+}
+actions.claimAch = async b => {
+  busy(b, true);
+  try { const r = await api(`/achievements/${b.dataset.key}/claim`, { method: 'POST' }); toast(`+${r.chips} жетонов. Баланс: ${r.balance}`, { icon: '🎁', title: 'Награда получена' }); play('ok'); drawStats(); }
+  catch (e) { busy(b, false); toast(e.message, { icon: '⚠️' }); }
+};
+actions.claimAllAch = async b => {
+  busy(b, true);
+  try { const r = await api('/achievements/claim', { method: 'POST' }); toast(`+${r.chips} жетонов за ${r.claimed.length} ${plural(r.claimed.length, 'достижение', 'достижения', 'достижений')}. Баланс: ${r.balance}`, { icon: '🎁', title: 'Награды получены' }); play('level'); confetti(80); drawStats(); }
+  catch (e) { busy(b, false); toast(e.message, { icon: '⚠️' }); }
+};
 async function drawStats() {
   const st = await api('/stats' + (S.statCourse ? '?course_id=' + S.statCourse : ''));
   S.statMetric = S.statMetric || 'xp';
@@ -270,8 +291,8 @@ async function drawStats() {
         <div class="mt">${barChart(st.week, S.statMetric, S.statMetric)}</div></div>
       <div class="card"><h3>Уровень ${st.level.level}</h3><div class="bar"><i style="width:${st.level.pct}%"></i></div><p class="muted small mt">${st.level.into} / ${st.level.span} XP до уровня ${st.level.level + 1}</p>
         <h3 class="mt">Опыт по курсам</h3>${st.courses.length ? st.courses.map(c => html`<div class="row spread small mb" style="margin-bottom:6px"><span>${c.icon} ${c.title}</span><b>⭐ ${c.xp}</b></div>`) : html`<p class="muted small">Курсов пока нет.</p>`}</div></div>
-    <h2>Достижения <span class="muted small">${st.achievements.filter(a => a.unlocked).length}/${st.achievements.length}</span></h2>
-    <div class="ach-grid">${st.achievements.map(a => html`<div class="ach ${a.unlocked ? '' : 'locked'}"><div class="ic">${a.icon}</div><div><b>${a.title}</b><span>${a.desc}</span></div></div>`)}</div>`));
+    <div class="row spread wrap"><h2 style="margin:0">Достижения <span class="muted small">${st.achievements.filter(a => a.unlocked).length}/${st.achievements.length}</span></h2>${achClaimAll(st.achievements)}</div>
+    <div class="ach-grid mt">${st.achievements.map(a => html`<div class="ach ${a.unlocked ? '' : 'locked'} ${a.claimable ? 'claimable' : ''}"><div class="ic">${a.icon}</div><div class="grow"><b>${a.title}</b><span>${a.desc}</span>${achReward(a)}</div></div>`)}</div>`));
   $('#statcourse').onchange = e => { S.statCourse = e.target.value; drawStats(); };
   const hs = $('.heat-scroll'); if (hs) hs.scrollLeft = hs.scrollWidth;  // сразу показываем свежие недели
   S.lastStats = st;

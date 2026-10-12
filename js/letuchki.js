@@ -21,7 +21,7 @@ route(/^#\/letuchki$/, async () => {
   const subs = await api('/letuchki/subjects');
   render(app(), shell('home', html`${ltTabs('letuchki')}
     <h2 class="lt-h">Летучки</h2>
-    <p class="muted lt-sub">Выбери предмет. Летучки открыты все — решай любую и сколько угодно раз. Опыт дают только за первое прорешивание.</p>
+    <p class="muted lt-sub">Выбери предмет. Летучки открыты все — решай любую и сколько угодно раз. Опыт дают только за первое прорешивание, а каждое засчитанное прохождение (и повторное тоже) идёт в достижения, за которые можно забрать жетоны.</p>
     <div class="grid lt-grid">${subs.length ? subs.map(s => html`<a class="card lt-card" href="#/letuchki/s/${s.id}">
         <div class="lt-ico">${LT_ICON[s.title] || '📝'}</div><div class="grow"><b>${s.title}</b>
         <div class="small muted">${s.topics} ${plural(s.topics, 'тема', 'темы', 'тем')} · ${s.sets} ${plural(s.sets, 'вариант', 'варианта', 'вариантов')}</div>
@@ -88,7 +88,7 @@ route(/^#\/letuchki\/set\/(\d+)$/, async id => {
   render(app(), shell('home', html`${ltTabs('letuchki')}
     <a class="lt-back" href="#/letuchki/s/${s.subject_id}">← ${s.subject}</a>
     <div class="lt-head"><h2 class="lt-h">Летучка ${s.topic_no}. ${s.topic_title}</h2><span class="chip accent">Вариант ${s.variant}</span>${s.best ? html`<span class="chip ${LT_BADGE[s.best][2]}">${LT_BADGE[s.best][0]} лучший: ${LT_BADGE[s.best][1]}</span>` : ''}</div>
-    <p class="muted lt-sub">${s.attempts ? 'Опыт за этот вариант уже получен — решай для практики.' : 'За первое прорешивание дают опыт.'} Отвечай своими словами, как на занятии.</p>
+    <p class="muted lt-sub">${s.attempts ? 'Опыт за этот вариант уже получен, но каждое прохождение идёт в достижения с наградами.' : 'За первое прорешивание дают опыт.'} Отвечай своими словами, как на занятии.</p>
     <div id="lt-form">${s.questions.map((q, i) => html`<div class="card lt-q"><div class="lt-qn">Вопрос ${i + 1}</div><h3 class="lt-qt">${q.draw ? '✏️ ' : ''}${q.title}</h3>
       ${q.draw ? html`<div class="small muted">Рисунок здесь не нужен: опиши схему словами — какие блоки, какие стрелки и что они означают.</div>` : ''}
       <textarea class="lt-ans" id="lta${i}" rows="6" maxlength="6000" placeholder="Твой ответ…" spellcheck="true"></textarea></div>`)}
@@ -111,7 +111,7 @@ actions.ltCheck = async b => {
     b.closest('.lt-actions').remove();
     ltShowResult(r);
     if (r.xp) { toast(`+${r.xp} опыта за первое прорешивание`, { icon: '⭐' }); refreshMe(); }
-    else if (!r.first) toast('Опыт дают только за первое прорешивание', { icon: 'ℹ️' });
+    (r.achievements || []).forEach((a, i) => setTimeout(() => { toast(`${a.desc}. Награду можно забрать в «Статистике».`, { icon: a.icon, title: 'Достижение: ' + a.title, cls: 'ach-t', ms: 7000 }); play('level'); }, 1500 + i * 600));
   } catch (e) { busy(b, false); toast(e.message, { icon: '⚠️' }); }
 };
 function ltButtons(r) {
@@ -124,6 +124,8 @@ function ltShowResult(r) {
     ${r.items.map((it, i) => html`<div class="lt-item"><div class="lt-item-h"><b>Вопрос ${i + 1}: ${LT_VERDICT[it.verdict][0]} ${LT_VERDICT[it.verdict][1]}</b></div>
       <details ${it.verdict === 'correct' ? '' : raw('open')}><summary>Эталонный ответ</summary><div class="lt-ref">${ltMd(it.reference)}</div></details></div>`)}
     ${r.first ? html`<div class="small muted">Опыт за это прорешивание: <b>${r.xp}</b></div>` : html`<div class="small muted">Это повторное решение — опыт не начисляется.</div>`}
+    <div class="small lt-count">${r.counted ? html`✅ Прохождение засчитано в достижения. Всего засчитано: <b>${r.passed_total}</b>${r.next_goal ? html` · до следующей награды: <b>${r.next_goal - r.passed_total}</b>` : ''}` : r.overall === 'fail' ? 'Неверное решение в достижения не засчитывается.' : html`⏳ Один и тот же вариант засчитывается в достижения не чаще раза в 30 секунд. Всего засчитано: <b>${r.passed_total}</b>`}</div>
+    <a class="small lt-link" href="#/stats">🏆 Достижения и награды</a>
     ${ltButtons(r)}</div>`);
   if (r.overall === 'ok') droneSuccess();
   else if (r.overall === 'partial') droneAway();
