@@ -49,7 +49,7 @@ function showBanned(detail) {
   const m = String(detail).match(/Причина:\s*([\s\S]*)$/), reason = m ? m[1].trim() : '';
   const box = document.createElement('div');
   box.id = 'ban-overlay'; box.className = 'ban-overlay'; box.setAttribute('role', 'alertdialog'); box.setAttribute('aria-modal', 'true'); box.setAttribute('aria-labelledby', 'ban-title');
-  box.innerHTML = '<div class="ban-card"><h1 id="ban-title">🚫 Вы заблокированы</h1><img src="assets/banned.jpg" alt="" width="320"><div class="ban-label">Сообщение администратора</div><div class="ban-msg"></div><button type="button" class="btn lg bad" data-act="banLogout">Выйти из аккаунта</button></div>';
+  box.innerHTML = '<div class="ban-card"><h1 id="ban-title">ОТПЕТУНИН</h1><img src="assets/banned.jpg" alt="" width="320"><div class="ban-label">Сообщение администратора</div><div class="ban-msg"></div><button type="button" class="btn lg bad" data-act="banLogout">Выйти из аккаунта</button></div>';
   box.querySelector('.ban-msg').textContent = reason || 'Администратор не оставил сообщения.';
   document.body.appendChild(box);
   document.documentElement.classList.add('is-banned');
