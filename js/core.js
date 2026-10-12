@@ -70,6 +70,9 @@ async function api(path, opts = {}) {
   catch (e) { throw new Error('Нет связи с сервером. Проверьте интернет или адрес бэкенда (config.js).'); }
   let data = null;
   try { data = await r.json(); } catch (e) { /* пусто */ }
+  // «Отпетунивание»: GET /me сообщает о минуте блокировки (поле petun); сервер отвечает 423 на всё, кроме курсов, пока она идёт
+  if (path === '/me' && r.ok && (!o.method || o.method === 'GET') && data && typeof petunSet === 'function') petunSet(data.petun || null);
+  if (r.status === 423 && data && typeof data.detail === 'string' && data.detail.startsWith('ОТПЕТУНИН')) { if (typeof petunSync === 'function') petunSync(); throw new Error('Нужно войти'); }
   if (r.status === 403 && data && typeof data.detail === 'string' && data.detail.startsWith(BAN_PREFIX) && !path.startsWith('/auth/register')) {
     showBanned(data.detail);
     if (!path.startsWith('/auth/')) throw new Error('Нужно войти');   // внутри сайта: экран блокировки уже показан, ошибку страницам не отдаём
@@ -282,6 +285,7 @@ async function router() {
   // администратор сбросил пароль: пока пользователь не задал свой, доступен только экран смены пароля
   if (S.user && S.user.must_change_password && h !== '#/newpass') { location.hash = '#/newpass'; return; }
   if (S.user && !S.user.must_change_password && h === '#/newpass') { location.hash = '#/'; return; }
+  if (S.user && typeof PET_LOCK !== 'undefined' && PET_LOCK.on && !petunAllowed(h)) { location.hash = '#/'; return; }   // «отпетунен»: открыты только курсы
   if (S.user && typeof maybePrank === 'function') maybePrank();
   window.scrollTo(0, 0);
   for (const [re, fn] of routes) {

@@ -21,8 +21,9 @@ function mgDuration(n) {
 }
 function mgNotificationBadge() {
   document.querySelectorAll('.mg-nav-badge').forEach(el => {
-    el.hidden = !MG.pendingCount;
-    el.textContent = MG.pendingCount || '';
+    const n = MG.pendingCount + (typeof PTN !== 'undefined' ? PTN.pendingCount : 0);
+    el.hidden = !n;
+    el.textContent = n || '';
   });
 }
 
@@ -41,6 +42,7 @@ async function mgCheck() {
   if (MG.lastCheck && Date.now() - MG.lastCheck < 1300) return;
   MG.lastCheck = Date.now();
   try {
+    if (typeof petunCheck === 'function') petunCheck();   // «Отпетунивание»: свои уведомления
     const data = await api('/minigames/strawberry/status');
     if (!S.user || MG.userId !== S.user.id) return;
     MG.pendingCount = data.pending_count;
@@ -88,7 +90,7 @@ async function mgRender() {
   render(app(), shell('minigames', html`
     <div class="mg-page">
       <header class="mg-hero"><span class="mg-berry">🍓</span><div>
-        <h1>Мини-игры</h1><p>Первая игра — <b>«Клубничный вор»</b>. Откуси немного чужой удачи.</p>
+        <h1>Мини-игры</h1><p>Игры с друзьями: <b>«Клубничный вор»</b> и <b>«ОТПЕТУНИВАНИЕ»</b>.</p>
       </div></header>
       <div class="mg-layout">
         <section class="card mg-game">
@@ -113,7 +115,10 @@ async function mgRender() {
           <p class="small muted">Угадаешь — вернёшь украденное и получишь штраф ${data.catch_penalty_percent} % с вора. Не угадаешь или не ответишь за 24 часа — вор получит добычу.</p>
         </aside>
       </div>
+      <div id="petunHost"></div>
     </div>`));
+  if (typeof petunPaint === 'function') petunPaint();
+  every(() => { if (location.hash === '#/minigames' && !MG.busy && !document.querySelector('.modal') && typeof petunPaint === 'function') petunPaint(false); }, 8000);
   document.querySelector('#mgVictim')?.addEventListener('change', () => mgUpdateAmount(true));
   document.querySelector('#mgAmount')?.addEventListener('input', () => mgUpdateAmount(false));
   mgUpdateAmount(true);

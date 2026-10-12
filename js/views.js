@@ -34,13 +34,13 @@ function drawAuth() {
     const fd = Object.fromEntries(new FormData(e.target)), btn = $('button[type=submit]', e.target);
     busy(btn, true);
     try {
-      const r = await api(reg ? '/auth/register' : '/auth/login', { json: fd }); Token.set(r.token); S.user = r.user; S.authNote = '';
+      const r = await api(reg ? '/auth/register' : '/auth/login', { json: fd }); Token.set(r.token); S.user = r.user; S.authNote = ''; await refreshMe();   // свежий профиль: в нём может быть минута «ОТПЕТУНИН»
       applyTheme(S.user.theme_color, S.user.theme_mode); startReminders(); if (reg) prankArm(); location.hash = '#/'; if (reg) maybePrank();
     } catch (err) { $('#autherr').textContent = err.message; busy(btn, false); }
   });
 }
 actions.authTab = b => { S.authTab = b.dataset.tab; drawAuth(); };
-actions.logout = async () => { Token.clear(); S.user = null; clearInterval(S.reminderTimer); S.reminderTimer = null; location.hash = '#/auth'; };
+actions.logout = async () => { if (typeof petunReset === 'function') petunReset(); Token.clear(); S.user = null; clearInterval(S.reminderTimer); S.reminderTimer = null; location.hash = '#/auth'; };
 
 /* =============================== дашборд =============================== */
 function courseCard(c) {
