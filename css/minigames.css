@@ -35,3 +35,13 @@
 .mg-amount-input { margin-bottom: 5px; }
 .mg-max-hint { margin: 1px 0 10px; overflow-wrap: anywhere; }
 .mg-amount-input:disabled { opacity: .6; }
+
+/* переключатель игр (как полосы «Игры» и «Профиль»): клубничный вор / ОТПЕТУНИВАНИЕ */
+[data-game][hidden] { display: none !important; }
+.mg-tabs { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin: 0 0 16px; }
+.mg-tabs button { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 8px 14px; border: 2px solid var(--line); border-radius: 14px; background: var(--bg2); color: var(--text); font: inherit; font-weight: 800; font-size: 14px; cursor: pointer; }
+.mg-tabs button:hover { background: var(--bg3); }
+.mg-tabs button.on { border-color: var(--accent); background: var(--accent-l); color: var(--accent); }
+.mg-tab-badge { background: var(--bad); color: #fff; border-radius: 100px; min-width: 17px; height: 17px; padding: 1px 5px; font-size: 10px; font-weight: 900; font-style: normal; display: inline-flex; justify-content: center; align-items: center; }
+.mg-tab-badge[hidden] { display: none !important; }
+@media (max-width: 480px) { .mg-tabs { gap: 5px; } .mg-tabs button { flex: 1 1 auto; justify-content: center; padding: 8px 8px; font-size: 13px; border-radius: 12px; } }

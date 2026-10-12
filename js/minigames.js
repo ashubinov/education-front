@@ -19,7 +19,21 @@ function mgDuration(n) {
   const h = Math.floor(n / 3600), m = Math.floor(n % 3600 / 60), s = Math.ceil(n % 60);
   return h ? `${h} ч ${m} мин` : m ? `${m} мин ${s} сек` : `${s} сек`;
 }
+/* Переключатель игр на странице «Мини-игры»: клубничный вор / ОТПЕТУНИВАНИЕ (выбор запоминается). */
+function mgSetTab(tab) {
+  MG.tab = tab === 'petun' ? 'petun' : 'strawberry';
+  try { localStorage.setItem('lq_mg_tab', MG.tab); } catch (e) { /* ignore */ }
+  mgApplyTab();
+}
+function mgApplyTab() {
+  if (!MG.tab) { try { MG.tab = localStorage.getItem('lq_mg_tab') === 'petun' ? 'petun' : 'strawberry'; } catch (e) { MG.tab = 'strawberry'; } }
+  document.querySelectorAll('.mg-tabs button').forEach(b => { const on = b.dataset.tab === MG.tab; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
+  document.querySelectorAll('[data-game]').forEach(el => { el.hidden = el.dataset.game !== MG.tab; });
+}
+actions.mgTab = b => mgSetTab(b.dataset.tab);
 function mgNotificationBadge() {
+  const tabs = { strawberry: MG.pendingCount, petun: typeof PTN !== 'undefined' ? PTN.pendingCount : 0 };
+  document.querySelectorAll('.mg-tab-badge').forEach(el => { const n = tabs[el.dataset.tab] || 0; el.hidden = !n; el.textContent = n || ''; });
   document.querySelectorAll('.mg-nav-badge').forEach(el => {
     const n = MG.pendingCount + (typeof PTN !== 'undefined' ? PTN.pendingCount : 0);
     el.hidden = !n;
@@ -66,7 +80,7 @@ function mgNotify(id) {
   const btn = document.createElement('button');
   btn.className = 'btn sm'; btn.type = 'button'; btn.textContent = 'Угадать вора';
   btn.onclick = () => {
-    note.remove(); MG.openedFromNotice = id;
+    note.remove(); MG.openedFromNotice = id; mgSetTab('strawberry');
     if (location.hash === '#/minigames') mgOpenPending(id);
     else location.hash = '#/minigames';
   };
@@ -89,10 +103,11 @@ async function mgRender() {
   const initialFriend = data.friends[0];
   render(app(), shell('minigames', html`
     <div class="mg-page">
-      <header class="mg-hero"><span class="mg-berry">🍓</span><div>
+      <header class="mg-hero"><span class="mg-berry">🎲</span><div>
         <h1>Мини-игры</h1><p>Игры с друзьями: <b>«Клубничный вор»</b> и <b>«ОТПЕТУНИВАНИЕ»</b>.</p>
       </div></header>
-      <div class="mg-layout">
+      <nav class="mg-tabs" aria-label="Выбор игры"><button type="button" data-act="mgTab" data-tab="strawberry">🍓 Клубничный вор<i class="mg-tab-badge" data-tab="strawberry" hidden></i></button><button type="button" data-act="mgTab" data-tab="petun">🐓 ОТПЕТУНИВАНИЕ<i class="mg-tab-badge" data-tab="petun" hidden></i></button></nav>
+      <div class="mg-layout" data-game="strawberry">
         <section class="card mg-game">
           <h2>🍓 Клубничный вор</h2>
           <p class="muted">Выбери друга и нажми «Отклубничить». Часть его жетонов будет заморожена у тебя до разгадки. Друг может угадать вора в течение 24 часов.</p>
@@ -115,8 +130,10 @@ async function mgRender() {
           <p class="small muted">Угадаешь — вернёшь украденное и получишь штраф ${data.catch_penalty_percent} % с вора. Не угадаешь или не ответишь за 24 часа — вор получит добычу.</p>
         </aside>
       </div>
-      <div id="petunHost"></div>
+      <div id="petunHost" data-game="petun" hidden></div>
     </div>`));
+  mgApplyTab();
+  mgNotificationBadge();
   if (typeof petunPaint === 'function') petunPaint();
   every(() => { if (location.hash === '#/minigames' && !MG.busy && !document.querySelector('.modal') && typeof petunPaint === 'function') petunPaint(false); }, 8000);
   document.querySelector('#mgVictim')?.addEventListener('change', () => mgUpdateAmount(true));

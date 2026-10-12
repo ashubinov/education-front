@@ -102,7 +102,7 @@ function petunNotify(id) {
   const h = document.createElement('b'); h.textContent = '🐓 Тебя отпетунили!';
   const sub = document.createElement('span'); sub.textContent = 'Угадай, кто это сделал, иначе на минуту останутся только курсы.';
   const btn = document.createElement('button'); btn.className = 'btn sm'; btn.type = 'button'; btn.textContent = 'Угадать';
-  btn.onclick = () => { note.remove(); PTN.openId = id; if (location.hash === '#/minigames') petunOpenGuess(id); else location.hash = '#/minigames'; };
+  btn.onclick = () => { note.remove(); PTN.openId = id; if (typeof mgSetTab === 'function') mgSetTab('petun'); if (location.hash === '#/minigames') petunOpenGuess(id); else location.hash = '#/minigames'; };
   note.append(h, sub, btn); root.appendChild(note); setTimeout(() => note.remove(), 16000);
 }
 
