@@ -4,6 +4,13 @@
 
 const LT_ICON = { 'Операционные системы': '💻' };
 const LT_BADGE = { ok: ['🏆', 'верно', 'good'], partial: ['🟡', 'частично', 'warn'], fail: ['✖', 'неверно', 'bad'] };
+const LT_REASON = {
+  fail: 'Неверное решение в достижения не засчитывается.',
+  fast: '⏳ Не засчитано: летучку решили слишком быстро. Чтобы прохождение шло в достижения, пройди её заново — открыв заново страницу и спокойно написав ответы.',
+  too_often: '⏳ Не засчитано: в достижения идёт не чаще одного прохождения в минуту.',
+  same_set: '⏳ Не засчитано: один и тот же вариант идёт в достижения не чаще раза в 30 секунд.',
+  daily_cap: '⏳ Не засчитано: в сутки в достижения идёт не больше 40 прохождений. Приходи завтра!',
+};
 const LT_VERDICT = { correct: ['✅', 'верно'], partial: ['🟡', 'частично'], wrong: ['❌', 'неверно'] };
 
 /** Переключатель «Курсы / Летучки» (показывается сверху на главной и на страницах летучек). */
@@ -91,7 +98,7 @@ route(/^#\/letuchki\/set\/(\d+)$/, async id => {
     <p class="muted lt-sub">${s.attempts ? 'Опыт за этот вариант уже получен, но каждое прохождение идёт в достижения с наградами.' : 'За первое прорешивание дают опыт.'} Отвечай своими словами, как на занятии.</p>
     <div id="lt-form">${s.questions.map((q, i) => html`<div class="card lt-q"><div class="lt-qn">Вопрос ${i + 1}</div><h3 class="lt-qt">${q.draw ? '✏️ ' : ''}${q.title}</h3>
       ${q.draw ? html`<div class="small muted">Рисунок здесь не нужен: опиши схему словами — какие блоки, какие стрелки и что они означают.</div>` : ''}
-      <textarea class="lt-ans" id="lta${i}" rows="6" maxlength="6000" placeholder="Твой ответ…" spellcheck="true"></textarea></div>`)}
+      <textarea class="lt-ans" id="lta${i}" rows="6" maxlength="${q.max_len}" placeholder="Твой ответ… (до ${q.max_len} символов)" spellcheck="true"></textarea></div>`)}
       <div class="row lt-actions"><button class="btn lg" id="ltcheck" data-act="ltCheck">Проверить</button></div></div>
     <div id="lt-result"></div>`));
   S.onLeave = droneStop;
@@ -124,7 +131,7 @@ function ltShowResult(r) {
     ${r.items.map((it, i) => html`<div class="lt-item"><div class="lt-item-h"><b>Вопрос ${i + 1}: ${LT_VERDICT[it.verdict][0]} ${LT_VERDICT[it.verdict][1]}</b></div>
       <details ${it.verdict === 'correct' ? '' : raw('open')}><summary>Эталонный ответ</summary><div class="lt-ref">${ltMd(it.reference)}</div></details></div>`)}
     ${r.first ? html`<div class="small muted">Опыт за это прорешивание: <b>${r.xp}</b></div>` : html`<div class="small muted">Это повторное решение — опыт не начисляется.</div>`}
-    <div class="small lt-count">${r.counted ? html`✅ Прохождение засчитано в достижения. Всего засчитано: <b>${r.passed_total}</b>${r.next_goal ? html` · до следующей награды: <b>${r.next_goal - r.passed_total}</b>` : ''}` : r.overall === 'fail' ? 'Неверное решение в достижения не засчитывается.' : html`⏳ Один и тот же вариант засчитывается в достижения не чаще раза в 30 секунд. Всего засчитано: <b>${r.passed_total}</b>`}</div>
+    <div class="small lt-count">${r.counted ? html`✅ Прохождение засчитано в достижения. Всего засчитано: <b>${r.passed_total}</b>${r.next_goal ? html` · до следующей награды: <b>${r.next_goal - r.passed_total}</b>` : ''}` : html`${LT_REASON[r.reason] || ''} Всего засчитано: <b>${r.passed_total}</b>`}</div>
     <a class="small lt-link" href="#/stats">🏆 Достижения и награды</a>
     ${ltButtons(r)}</div>`);
   if (r.overall === 'ok') droneSuccess();
