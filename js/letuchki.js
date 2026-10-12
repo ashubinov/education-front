@@ -144,14 +144,42 @@ function ltFailVideo(r) {
   ltFailClose();
   const box = document.createElement('div');
   box.id = 'lt-fail'; box.className = 'lt-fail';
-  box.innerHTML = `<video class="lt-fail-video" src="assets/drone_fail.mp4" playsinline preload="auto"></video><div class="lt-fail-frame"></div>
+  // видео снято на зелёном фоне: сами кадры рисуем на canvas и «вырезаем» зелёный (хромакей), а звук идёт от скрытого video
+  box.innerHTML = `<canvas class="lt-fail-canvas"></canvas><video class="lt-fail-video" src="assets/drone_fail.mp4" playsinline preload="auto"></video><div class="lt-fail-frame"></div>
     <div class="lt-fail-title">НЕВЕРНО</div><div class="lt-fail-btns">${unraw(ltButtons(r))}</div>`;
   document.body.appendChild(box);
   const v = box.querySelector('video');
   v.volume = 0.3;                                          // звук видео оставлен, но тише
   v.muted = !(S.user && S.user.sound);
+  ltChroma(box, v);
   v.play().catch(() => { v.muted = true; v.play().catch(() => { /* видео недоступно — остаются надпись и кнопки */ }); });
   droneHide();
+}
+/** Хромакей: пока играет видео, перерисовываем кадр на canvas, делая зелёные пиксели прозрачными. */
+function ltChroma(box, v) {
+  const cv = box.querySelector('canvas'), ctx = cv.getContext('2d', { willReadFrequently: true });
+  let stop = false;
+  const draw = () => {
+    if (stop || !box.isConnected) return;
+    if (v.videoWidth && !v.paused || v.ended) {
+      if (cv.width !== v.videoWidth) { cv.width = v.videoWidth; cv.height = v.videoHeight; }
+      ctx.drawImage(v, 0, 0, cv.width, cv.height);
+      try {
+        const f = ctx.getImageData(0, 0, cv.width, cv.height), d = f.data;
+        for (let i = 0; i < d.length; i += 4) {
+          const r = d[i], g = d[i + 1], b = d[i + 2], k = g - Math.max(r, b);   // насколько пиксель «зеленее» остальных
+          if (k > 70) d[i + 3] = 0;                                              // чистый фон
+          else if (k > 25) { d[i + 3] = Math.round(255 * (70 - k) / 45); d[i + 1] = Math.max(r, b); }   // кромка: полупрозрачная, без зелёной каймы
+          else if (k > 8) d[i + 1] = Math.max(r, b) + (k >> 1);                  // лёгкий зелёный отсвет на предметах убираем
+        }
+        ctx.putImageData(f, 0, 0);
+      } catch (e) { box.classList.add('raw'); stop = true; return; }          // кадры недоступны (другой домен): показываем видео как есть
+    }
+    if (v.ended) { stop = true; return; }
+    if (v.requestVideoFrameCallback) v.requestVideoFrameCallback(draw); else requestAnimationFrame(draw);
+  };
+  v.addEventListener('playing', () => { if (v.requestVideoFrameCallback) v.requestVideoFrameCallback(draw); else requestAnimationFrame(draw); }, { once: true });
+  v.addEventListener('ended', () => { stop = false; draw(); }, { once: true });
 }
 function ltFailClose() { const b = document.getElementById('lt-fail'); if (b) { const v = b.querySelector('video'); if (v) v.pause(); b.remove(); } }
 

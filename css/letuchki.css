@@ -59,8 +59,12 @@
 .lt-spark { position: absolute; left: 0; top: 0; width: 10px; height: 10px; border-radius: 50%; background: #ffb02e; box-shadow: 0 0 8px #ff6a00; }
 
 /* «Неверно»: видео на весь экран, красная обводка, надпись сверху и кнопки снизу */
-.lt-fail { position: fixed; inset: 0; z-index: 9500; background: #000; display: flex; align-items: flex-end; justify-content: center; }
-.lt-fail-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.lt-fail { position: fixed; inset: 0; z-index: 9500; display: flex; align-items: flex-end; justify-content: center;
+  background: radial-gradient(ellipse at 50% 40%, #3a0d12 0%, #12060a 55%, #050306 100%); }
+.lt-fail-canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.lt-fail-video { position: absolute; left: 0; top: 0; width: 2px; height: 2px; opacity: 0; pointer-events: none; }
+.lt-fail.raw .lt-fail-canvas { display: none; }
+.lt-fail.raw .lt-fail-video { inset: 0; width: 100%; height: 100%; opacity: 1; object-fit: cover; }
 .lt-fail-frame { position: absolute; inset: 0; border: 8px solid #e02424; box-shadow: inset 0 0 40px rgba(224, 36, 36, .6); pointer-events: none; }
 .lt-fail-title { position: absolute; top: 5vh; left: 0; right: 0; text-align: center; color: #ff2b2b; font-size: clamp(40px, 9vw, 96px); font-weight: 900; letter-spacing: .08em; text-shadow: 0 3px 0 #000, 0 0 24px rgba(255, 0, 0, .7); pointer-events: none; }
 .lt-fail-btns { position: relative; width: 100%; padding: 60px 16px 28px; background: linear-gradient(transparent, rgba(0, 0, 0, .78)); }

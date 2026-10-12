@@ -515,7 +515,7 @@ actions.supplementCatalog = () => {
       const fd = new FormData(); fd.append('file', f);
       $('#catres').textContent = 'Загружаю…';
       const r = await api(`/admin/catalog/${n}/supplement`, { method: 'POST', body: fd });
-      $('#catres').innerHTML = r.template === 'skipped' && !r.copies_added ? `ℹ️ Этот файл уже добавлен в курс №${n} — ничего не изменилось.` : `✅ Курс №${n} дополнен. Копий обновлено: ${r.copies_added}, уже было: ${r.copies_skipped}.`;
+      $('#catres').innerHTML = r.template === 'skipped' && !r.copies_added ? `ℹ️ Этот файл уже добавлен в курс №${n} — ничего не изменилось.` : `✅ Курс №${n} дополнен. Курсов пользователей обновлено: ${r.copies_added}${r.relinked ? ` (из них найдено по материалам: ${r.relinked})` : ''}, уже было: ${r.copies_skipped}.${r.copies_added + r.copies_skipped ? '' : ' ⚠️ Ни один курс пользователей не найден — у них другой набор материалов.'}`;
     } catch (e) { $('#catres').innerHTML = `<span class="err">${esc(e.message)}</span>`; }
   }; inp.click();
 };
