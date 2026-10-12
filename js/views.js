@@ -66,6 +66,7 @@ route(/^#\/$/, async () => {
   const todayLessons = stats.week.find(d => d.today)?.lessons || 0;
   const pct = goals.length ? Math.min(100, Math.round(spent / Math.max(need, 1) * 100)) : (todayLessons ? 100 : 0);
   render(app(), shell('home', html`
+    ${typeof ltTabs === 'function' ? ltTabs('courses') : ''}
     <div class="lq-home-layout">
     <div class="lq-home-intro">
     <div id="reminder-banner" class="banner ${S.reminder && S.reminder.due ? '' : 'hidden'}"><span style="font-size:30px">🔔</span><div class="grow"><b>${S.reminder ? S.reminder.title : ''}</b><div class="small">${S.reminder ? S.reminder.body : ''}</div></div></div>
@@ -79,7 +80,6 @@ route(/^#\/$/, async () => {
     </div>
     <aside class="lq-home-chat" id="homeChatSlot" aria-label="Общий чат"></aside>
     <section class="lq-home-courses">
-    ${typeof ltTabs === 'function' ? ltTabs('courses') : ''}
     <div class="row spread mb"><h2 style="margin:0">Мои курсы</h2><div class="row gap-s wrap"><button class="btn sm ghost" data-act="openCatalog">📚 Каталог курсов</button><button class="btn sm" data-act="addCourse">＋ Добавить курс</button></div></div>
     <div class="grid" id="course-grid">${gridInner(courses)}</div>
     </section>
