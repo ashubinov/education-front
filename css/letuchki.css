@@ -1,0 +1,76 @@
+/* Летучки: переключатель «Курсы / Летучки», список предметов и тем, сама летучка, дрон и экран «Неверно». */
+.lt-tabs { display: flex; gap: 8px; justify-content: center; margin: 0 0 16px; }
+.lt-tabs a { display: inline-flex; align-items: center; gap: 6px; min-height: 42px; padding: 8px 20px; border: 2px solid var(--line); border-radius: 14px; background: var(--bg2); color: var(--text); font-weight: 800; font-size: 15px; text-decoration: none; }
+.lt-tabs a:hover { background: var(--bg3); }
+.lt-tabs a.on { border-color: var(--accent); background: var(--accent-l); color: var(--accent); }
+.lt-h { margin: 6px 0 4px; }
+.lt-sub { margin: 0 0 14px; }
+.lt-back { display: inline-block; margin: 0 0 8px; color: var(--muted); font-weight: 800; text-decoration: none; }
+.lt-back:hover { color: var(--accent); }
+.lt-grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+.lt-card { display: flex; align-items: center; gap: 14px; text-decoration: none; color: inherit; transition: transform .12s; }
+.lt-card:hover { transform: translateY(-2px); border-color: var(--accent); }
+.lt-ico { font-size: 38px; }
+.lt-card b { font-size: 18px; }
+.lt-done { margin-top: 4px; color: var(--accent); font-weight: 800; }
+.lt-go { font-size: 28px; color: var(--muted); }
+
+.lt-topics { display: flex; flex-direction: column; gap: 10px; }
+.lt-topic { padding: 0; overflow: hidden; }
+.lt-topic-head { display: flex; align-items: center; gap: 12px; width: 100%; padding: 14px 16px; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.lt-topic-head:hover { background: var(--bg3); }
+.lt-no { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 12px; background: var(--accent-l); color: var(--accent); font-weight: 900; }
+.lt-mini { display: block; font-weight: 700; }
+.lt-chev { color: var(--muted); transition: transform .15s; }
+.lt-topic.open .lt-chev { transform: rotate(180deg); }
+.lt-variants { display: none; gap: 10px; padding: 0 16px 16px; flex-wrap: wrap; }
+.lt-topic.open .lt-variants { display: flex; }
+.lt-variant { flex: 1 1 200px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 12px 14px; border: 2px solid var(--line); border-radius: 14px; background: var(--bg3); color: inherit; text-decoration: none; font-weight: 800; }
+.lt-variant:hover { border-color: var(--accent); background: var(--accent-l); }
+.lt-vn { margin-right: auto; }
+
+.lt-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.lt-head .lt-h { margin-right: 4px; }
+.lt-q { margin-bottom: 14px; }
+.lt-qn { color: var(--accent); font-weight: 900; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }
+.lt-qt { margin: 4px 0 8px; font-size: 19px; }
+.lt-ans { width: 100%; margin-top: 10px; min-height: 130px; resize: vertical; padding: 12px 14px; border: 2px solid var(--line); border-radius: 14px; background: var(--bg); color: var(--text); font: inherit; font-weight: 600; line-height: 1.5; }
+.lt-ans:focus { outline: none; border-color: var(--accent); }
+.lt-ans:disabled { opacity: .75; }
+.lt-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin: 14px 0; }
+.lt-res { border-color: var(--line); margin-bottom: 24px; }
+.lt-res.ok { border-color: var(--good); } .lt-res.partial { border-color: var(--warn); } .lt-res.fail { border-color: var(--bad); }
+.lt-res-t { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.lt-res-t h2 { margin: 0; }
+.lt-res-i { font-size: 34px; }
+.lt-item { margin: 10px 0; padding: 10px 12px; border-radius: 14px; background: var(--bg3); }
+.lt-item summary { cursor: pointer; color: var(--accent); font-weight: 800; margin-top: 6px; }
+.lt-ref { margin-top: 8px; line-height: 1.55; font-weight: 600; overflow-wrap: anywhere; }
+
+/* дрон: летает поверх страницы, мышь не перехватывает */
+#drone-layer { position: fixed; inset: 0; z-index: 60; pointer-events: none; overflow: hidden; }
+.drone-pos { position: absolute; top: 16vh; right: 4vw; width: clamp(88px, 14vw, 170px); will-change: transform; }
+.drone-img { display: block; width: 100%; height: auto; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, .55)) drop-shadow(0 0 14px rgba(124, 92, 255, .45)); user-select: none; }
+.drone-pos.idle .drone-img { animation: drone-bob 2.6s ease-in-out infinite; }
+@keyframes drone-bob { 0%, 100% { transform: translateY(0) rotate(-1.5deg); } 50% { transform: translateY(-9px) rotate(1.5deg); } }
+@media (prefers-reduced-motion: reduce) { .drone-pos.idle .drone-img { animation: none; } }
+.lt-boom { position: fixed; z-index: 9400; width: 0; height: 0; pointer-events: none; }
+.lt-flash { position: absolute; left: 0; top: 0; width: 220px; height: 220px; border-radius: 50%; background: radial-gradient(circle, #fff 0%, #ffd34d 28%, #ff7a1a 55%, rgba(255, 60, 0, 0) 72%); }
+.lt-spark { position: absolute; left: 0; top: 0; width: 10px; height: 10px; border-radius: 50%; background: #ffb02e; box-shadow: 0 0 8px #ff6a00; }
+
+/* «Неверно»: видео на весь экран, красная обводка, надпись сверху и кнопки снизу */
+.lt-fail { position: fixed; inset: 0; z-index: 9500; background: #000; display: flex; align-items: flex-end; justify-content: center; }
+.lt-fail-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.lt-fail-frame { position: absolute; inset: 0; border: 8px solid #e02424; box-shadow: inset 0 0 40px rgba(224, 36, 36, .6); pointer-events: none; }
+.lt-fail-title { position: absolute; top: 5vh; left: 0; right: 0; text-align: center; color: #ff2b2b; font-size: clamp(40px, 9vw, 96px); font-weight: 900; letter-spacing: .08em; text-shadow: 0 3px 0 #000, 0 0 24px rgba(255, 0, 0, .7); pointer-events: none; }
+.lt-fail-btns { position: relative; width: 100%; padding: 60px 16px 28px; background: linear-gradient(transparent, rgba(0, 0, 0, .78)); }
+.lt-fail-btns .lt-actions { margin: 0; }
+.lt-fail-btns .btn.ghost { background: rgba(0, 0, 0, .55); color: #fff; border-color: rgba(255, 255, 255, .6); }
+
+@media (max-width: 480px) {
+  .lt-tabs a { flex: 1; justify-content: center; padding: 8px 10px; }
+  .lt-qt { font-size: 17px; }
+  .lt-actions .btn { flex: 1 1 100%; }
+  .lt-fail-frame { border-width: 6px; }
+  .lt-fail-btns { padding-bottom: 20px; }
+}

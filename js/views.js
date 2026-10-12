@@ -79,6 +79,7 @@ route(/^#\/$/, async () => {
     </div>
     <aside class="lq-home-chat" id="homeChatSlot" aria-label="Общий чат"></aside>
     <section class="lq-home-courses">
+    ${typeof ltTabs === 'function' ? ltTabs('courses') : ''}
     <div class="row spread mb"><h2 style="margin:0">Мои курсы</h2><div class="row gap-s wrap"><button class="btn sm ghost" data-act="openCatalog">📚 Каталог курсов</button><button class="btn sm" data-act="addCourse">＋ Добавить курс</button></div></div>
     <div class="grid" id="course-grid">${gridInner(courses)}</div>
     </section>
