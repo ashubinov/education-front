@@ -40,6 +40,31 @@ const Token = {
   set(t) { try { localStorage.setItem('lq_token', t); } catch (e) { /* приватный режим */ } },
   clear() { try { localStorage.removeItem('lq_token'); } catch (e) { /* ignore */ } },
 };
+/* ---------- музыка экранов ОТПЕТУНИН (блокировка админом и минута «отпетунивания») ---------- */
+const PETUN_MUSIC = { audio: null, want: false, armed: false };
+/** Зациклить assets/petun.mp3, пока экран открыт. Если браузер не разрешает автозапуск звука, музыка включится при первом касании. */
+function petunMusicStart() {
+  if (S.user && !S.user.sound) return;                 // «Звуковые эффекты» выключены в настройках
+  PETUN_MUSIC.want = true;
+  let a = PETUN_MUSIC.audio;
+  if (!a) { a = PETUN_MUSIC.audio = new Audio('assets/petun.mp3'); a.loop = true; a.preload = 'auto'; a.volume = 0.8; }
+  if (!a.paused) return;
+  const p = a.play();
+  if (p && p.catch) p.catch(() => petunMusicArm());
+}
+function petunMusicArm() {
+  if (PETUN_MUSIC.armed) return;
+  PETUN_MUSIC.armed = true;
+  const evs = ['pointerdown', 'keydown', 'touchstart'];
+  const go = () => { evs.forEach(e => document.removeEventListener(e, go, true)); PETUN_MUSIC.armed = false; if (PETUN_MUSIC.want) petunMusicStart(); };
+  evs.forEach(e => document.addEventListener(e, go, true));
+}
+function petunMusicStop() {
+  PETUN_MUSIC.want = false;
+  const a = PETUN_MUSIC.audio;
+  if (a) { a.pause(); try { a.currentTime = 0; } catch (e) { /* ignore */ } }
+}
+
 /* ---------- экран «Вы заблокированы» ---------- */
 const BAN_PREFIX = 'Аккаунт заблокирован';   // начало текста, который сервер присылает заблокированному (ответ 403)
 function showBanned(detail) {
@@ -53,9 +78,11 @@ function showBanned(detail) {
   box.querySelector('.ban-msg').textContent = reason || 'Администратор не оставил сообщения.';
   document.body.appendChild(box);
   document.documentElement.classList.add('is-banned');
+  petunMusicStart();                           // музыка играет по кругу, пока человек не нажмёт «Выйти из аккаунта»
 }
 actions.banLogout = () => {
   const loggedIn = !!Token.get();
+  petunMusicStop();
   document.getElementById('ban-overlay')?.remove(); document.documentElement.classList.remove('is-banned'); S.banned = false;
   if (loggedIn) actions.logout();              // выход: токен стирается, открывается форма входа
 };

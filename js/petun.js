@@ -22,6 +22,7 @@ function petunSet(lock) {
   PET_LOCK.on = true;
   document.documentElement.classList.add('petun-locked');
   petunBar();
+  petunMusicStart();                           // музыка по кругу всю минуту (и после «К курсам», и после перезагрузки)
   if (!petunSeen()) petunOverlay();
   if (!petunAllowed(location.hash)) location.hash = '#/';
   petunTick();
@@ -54,6 +55,7 @@ function petunTick() {
 }
 function petunClear() {
   clearInterval(PET_LOCK.timer); PET_LOCK.timer = null; PET_LOCK.on = false;
+  petunMusicStop();
   document.getElementById('petun-overlay')?.remove(); document.getElementById('petun-bar')?.remove();
   document.documentElement.classList.remove('petun-locked');
   if (!document.getElementById('ban-overlay')) document.documentElement.classList.remove('is-banned');
