@@ -333,7 +333,7 @@ async function drawSettings() {
       <div class="field"><label>Токен Telegram-бота (от @BotFather)</label><input type="password" id="tgtoken" placeholder="${set.telegram.configured ? 'токен задан — оставь пустым, чтобы не менять' : '123456:ABC…'}" autocomplete="off"></div>
       <div class="row"><button class="btn" data-act="saveAdmin">Сохранить</button><button class="btn ghost" data-act="testLLM">Проверить модель</button></div><div id="llmres" class="small mt"></div></div>
     <div class="card"><h3>📚 Каталог готовых курсов</h3><p class="small muted">Готовые курсы получают номер; друзья находят их по номеру и добавляют себе. Свой курс можно опубликовать кнопкой «В каталог» на его странице.</p>
-      <div class="row wrap gap-s"><button class="btn sm ghost" data-act="exportCatalog">⬇ Экспорт каталога (JSON)</button><button class="btn sm ghost" data-act="importCatalog">⬆ Импорт каталога</button><input type="file" id="catfile" accept=".json,application/json" class="hidden"></div><div id="catres" class="small mt"></div></div>
+      <div class="row wrap gap-s"><button class="btn sm ghost" data-act="exportCatalog">⬇ Экспорт каталога (JSON)</button><button class="btn sm ghost" data-act="importCatalog">⬆ Импорт каталога</button><input type="file" id="catfile" accept=".json,application/json" class="hidden"><button class="btn sm ghost" data-act="supplementCatalog">➕ Дополнить курс файлом</button><input type="file" id="supfile" accept=".json,application/json" class="hidden"></div><div class="small muted mt">«Дополнить курс»: загрузи файл дополнения (новая лекция) — модули добавятся в конец курса каталога и у всех, кто уже его добавил; прогресс сохранится.</div><div id="catres" class="small mt"></div></div>
     <div class="card" id="bkcard"><h3>💾 Резервные копии базы</h3><p class="small muted">Раз в сутки сервер сохраняет снимок базы (пользователи, курсы, прогресс, ключи) и хранит несколько последних. Копии лежат на том же сервере, поэтому время от времени скачивай свежую к себе. Файл содержит секреты — храни его как пароли.</p>
       <div class="row wrap gap-s mb"><button class="btn sm" data-act="backupNow">Сделать копию сейчас</button><button class="btn sm ghost" data-act="backupFresh">⬇ Скачать свежую копию</button></div><div id="bklist" class="small col" style="gap:6px"><span class="muted">загружаю…</span></div></div>` : ''}
     <div class="row wrap"><button class="btn ghost" data-act="logout">Выйти из аккаунта</button><button class="btn ghost" data-act="logoutAll">Выйти на всех устройствах</button></div></div></div>`));
@@ -503,6 +503,21 @@ actions.logoutAll = async () => {
   actions.logout();
 };
 actions.exportCatalog = async () => { try { await downloadApi('/admin/catalog/export', 'catalog_seed.json'); } catch (e) { toast(e.message, { icon: '⚠️' }); } };
+actions.supplementCatalog = () => {
+  const inp = $('#supfile'); inp.onchange = async () => {
+    const f = inp.files[0]; inp.value = ''; if (!f) return;
+    try {
+      let n = 0; try { n = Number(JSON.parse(await f.text()).catalog_no) || 0; } catch (e) { throw new Error('Это не JSON-файл дополнения'); }
+      if (!n) n = Number(prompt('Номер курса в каталоге, к которому относится дополнение (101, 102…)', '102')) || 0;
+      if (!n) return;
+      if (!confirm(`Добавить новые модули в курс №${n} и всем, кто его уже добавил? Прогресс сохранится.`)) return;
+      const fd = new FormData(); fd.append('file', f);
+      $('#catres').textContent = 'Загружаю…';
+      const r = await api(`/admin/catalog/${n}/supplement`, { method: 'POST', body: fd });
+      $('#catres').innerHTML = r.template === 'skipped' && !r.copies_added ? `ℹ️ Этот файл уже добавлен в курс №${n} — ничего не изменилось.` : `✅ Курс №${n} дополнен. Копий обновлено: ${r.copies_added}, уже было: ${r.copies_skipped}.`;
+    } catch (e) { $('#catres').innerHTML = `<span class="err">${esc(e.message)}</span>`; }
+  }; inp.click();
+};
 actions.importCatalog = () => {
   const inp = $('#catfile'); inp.onchange = async () => {
     const fd = new FormData(); fd.append('file', inp.files[0]);
