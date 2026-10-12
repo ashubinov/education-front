@@ -45,3 +45,4 @@
 .mg-tab-badge { background: var(--bad); color: #fff; border-radius: 100px; min-width: 17px; height: 17px; padding: 1px 5px; font-size: 10px; font-weight: 900; font-style: normal; display: inline-flex; justify-content: center; align-items: center; }
 .mg-tab-badge[hidden] { display: none !important; }
 @media (max-width: 480px) { .mg-tabs { gap: 5px; } .mg-tabs button { flex: 1 1 auto; justify-content: center; padding: 8px 8px; font-size: 13px; border-radius: 12px; } }
+.pt-waiting { margin: 0 0 10px; color: var(--warn); font-weight: 800; }

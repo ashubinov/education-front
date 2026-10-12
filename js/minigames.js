@@ -99,7 +99,7 @@ async function mgRender() {
   MG.state = data;
   MG.pendingCount = data.pending.length;
   mgNotificationBadge();
-  const locked = data.cooldown_remaining > 0 || data.has_active_theft;
+  const locked = data.cooldown_remaining > 0;
   const initialFriend = data.friends[0];
   render(app(), shell('minigames', html`
     <div class="mg-page">
@@ -120,7 +120,7 @@ async function mgRender() {
             max="${initialFriend?.max_steal || 0}" value="${initialFriend?.max_steal ? Math.min(10, initialFriend.max_steal) : ''}" aria-describedby="mgAmountHint">
           <p class="small muted mg-max-hint" id="mgAmountHint">Максимум для выбранного друга: ${mgFmt(initialFriend?.max_steal || 0)} 🪙 (30% доступного баланса).</p>
           <button class="btn mg-steal" id="mgSteal" data-act="mgSteal" ${locked || !data.friends.length ? 'disabled' : ''}>🍓 Отклубничить</button>
-          <p id="mgCooldown" class="small muted" aria-live="polite">${data.has_active_theft ? 'Замороженные жетоны ждут исхода предыдущей кражи.' : data.cooldown_remaining > 0 ? 'Следующая попытка через ' + mgDuration(data.cooldown_remaining) : 'Готово к краже!'}</p>
+          <p id="mgCooldown" class="small muted" aria-live="polite">${data.cooldown_remaining > 0 ? 'Следующая попытка через ' + mgDuration(data.cooldown_remaining) : 'Готово к краже!'}</p>
           ${!data.friends.length ? html`<p class="small muted">Пока нет друзей. Добавь друга во вкладке «Друзья».</p>` : ''}
           <p class="small muted">Укажи целое количество жетонов, не больше 30% доступного баланса друга. Для кражи твои жетоны не нужны, но если друг угадает вора, тот платит штраф ${data.catch_penalty_percent} % от украденного (не больше своего баланса). Между попытками — ${mgDuration(data.cooldown_seconds)}.</p>
         </section>
@@ -154,9 +154,9 @@ async function mgRender() {
     const left = Math.max(0, data.cooldown_remaining - Math.floor((Date.now() - initial) / 1000));
     MG.cooldownReady = left === 0;
     const cd = document.querySelector('#mgCooldown');
-    if (cd) cd.textContent = data.has_active_theft ? 'Дождись завершения текущей кражи.' : left ? 'Следующая попытка через ' + mgDuration(left) : 'Готово к краже!';
+    if (cd) cd.textContent = left ? 'Следующая попытка через ' + mgDuration(left) : 'Готово к краже!';
     const btn = document.querySelector('#mgSteal');
-    if (btn && !MG.busy) btn.disabled = left > 0 || data.has_active_theft || !mgValidAmount();
+    if (btn && !MG.busy) btn.disabled = left > 0 || !mgValidAmount();
   }, 1000);
   every(async () => {
     if (MG.state === data && location.hash === '#/minigames' && !MG.busy) {
@@ -185,8 +185,7 @@ function mgUpdateAmount(changeFriend = false) {
   if (changeFriend) input.value = maximum < 1 ? '' : String(Math.min(10, maximum));
   const note = document.querySelector('#mgAmountHint');
   if (note) note.textContent = 'Максимум для выбранного друга: ' + mgFmt(maximum) + ' 🪙 (30% доступного баланса).';
-  if (button && !MG.busy) button.disabled = MG.state.has_active_theft ||
-    MG.state.cooldown_remaining > 0 && !MG.cooldownReady || !mgValidAmount();
+  if (button && !MG.busy) button.disabled = MG.state.cooldown_remaining > 0 && !MG.cooldownReady || !mgValidAmount();
 }
 
 actions.mgSteal = async () => {

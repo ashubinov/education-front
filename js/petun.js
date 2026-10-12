@@ -116,7 +116,7 @@ async function petunPaint(force = true) {
   if (!document.getElementById('petunHost') || location.hash !== '#/minigames') return;
   PTN.state = d; PTN.pendingCount = d.pending.length;
   if (typeof mgNotificationBadge === 'function') mgNotificationBadge();
-  const sig = JSON.stringify([d.pending.map(t => t.id), d.has_active, d.balance, d.frozen, d.friends.map(f => [f.id, f.busy, f.locked, f.wait > 0, f.max_steal])]);
+  const sig = JSON.stringify([d.pending.map(t => t.id), d.my_attacks.map(a => a.id), d.balance, d.frozen, d.friends.map(f => [f.id, f.busy, f.locked, f.wait > 0, f.max_steal])]);
   if (!force && PTN.sig === sig && document.getElementById('ptVictim')) return;   // ничего не изменилось: не сбиваем выбор в списке и сумму
   PTN.sig = sig;
   const keep = Number(document.getElementById('ptVictim')?.value) || 0;
@@ -129,16 +129,14 @@ async function petunPaint(force = true) {
       <h2>🐓 ОТПЕТУНИВАНИЕ</h2>
       <p class="muted">Выбери друга и нажми «Отпетунить». Он получит уведомление и должен угадать, кто это сделал. Не угадал (или не ответил за час) — на минуту ему останутся только курсы и выход из аккаунта. Можно ещё и украсть у него жетоны, как в «Клубничном воре».</p>
       <div class="mg-chips">Доступно: <strong>${petunFmt(d.balance)} 🪙</strong><span>Заморожено: <b>${petunFmt(d.frozen)} 🪙</b></span></div>
-      ${d.has_active ? html`<div class="pt-wait"><b>⏳ Ждём ответа: ${d.my_attack.victim}</b>
-        <span>Пока он не выберет, кто его отпетунил${d.my_attack.amount ? ' (у него заморожено ' + petunFmt(d.my_attack.amount) + ' 🪙 для тебя)' : ''}, следующего отпетунить нельзя. Осталось ждать не больше ${mgDuration(Math.max(0, d.my_attack.expires_ts - d.server_now))}. Не отвечает? Можно отменить.</span>
-        <button class="btn sm ghost" data-act="ptCancel" data-id="${d.my_attack.id}">Отменить отпетунивание</button></div>` : ''}
+      ${d.my_attacks.length ? html`<p class="small pt-waiting">⏳ Ждём ответа: ${d.my_attacks.map(a => a.victim + (a.amount ? ' (' + petunFmt(a.amount) + ' 🪙)' : '')).join(', ')}. Это не мешает отпетунить других.</p>` : ''}
       <label class="mg-label" for="ptVictim">Кого отпетунить?</label>
-      <select id="ptVictim" ${d.friends.length && !d.has_active ? '' : 'disabled'}>${d.friends.map(f => html`<option value="${f.id}" ${usable(f) ? '' : 'disabled'} ${first && f.id === first.id ? 'selected' : ''}>${label(f)}</option>`)}</select>
+      <select id="ptVictim" ${d.friends.length ? '' : 'disabled'}>${d.friends.map(f => html`<option value="${f.id}" ${usable(f) ? '' : 'disabled'} ${first && f.id === first.id ? 'selected' : ''}>${label(f)}</option>`)}</select>
       <label class="mg-label" for="ptAmount">Сколько жетонов украсть? <span class="muted">(необязательно)</span></label>
-      <input id="ptAmount" class="mg-amount-input" type="number" inputmode="numeric" step="1" min="0" value="${keepAmount !== undefined ? keepAmount : '0'}" aria-describedby="ptAmountHint" ${d.has_active ? 'disabled' : ''}>
+      <input id="ptAmount" class="mg-amount-input" type="number" inputmode="numeric" step="1" min="0" value="${keepAmount !== undefined ? keepAmount : '0'}" aria-describedby="ptAmountHint">
       <p class="small muted mg-max-hint" id="ptAmountHint"></p>
-      <button class="btn mg-steal" id="ptAttack" data-act="ptAttack" ${d.has_active || !first ? 'disabled' : ''}>🐓 Отпетунить</button>
-      <p class="small muted" id="ptHint">${d.has_active ? 'Сначала дождись ответа или отмени текущее отпетунивание.' : !d.friends.length ? 'Пока нет друзей. Добавь друга во вкладке «Друзья».' : !first ? 'Сейчас отпетунить некого: все друзья заняты или отдыхают.' : 'Готово!'}</p>
+      <button class="btn mg-steal" id="ptAttack" data-act="ptAttack" ${!first ? 'disabled' : ''}>🐓 Отпетунить</button>
+      <p class="small muted" id="ptHint">${!d.friends.length ? 'Пока нет друзей. Добавь друга во вкладке «Друзья».' : !first ? 'Сейчас отпетунить некого: все друзья заняты или отдыхают.' : 'Готово!'}</p>
       <p class="small muted">0 — просто отпетунить. Сумма: от ${d.min_steal} до ${d.max_steal_percent} % свободного баланса друга; она замораживается до его ответа. Угадает — вернёт жетоны и получит штраф ${d.catch_penalty_percent} % с тебя; не угадает или не ответит — жетоны твои. Одного и того же игрока можно отпетунить раз в ${Math.round(d.cooldown_seconds / 60)} минут, ответить другу нужно за ${Math.round(d.answer_seconds / 3600)} ч.</p>
       ${d.recent.length ? html`<div class="small muted mt-s">Недавние: ${d.recent.map(r => (r.caught ? '😬 ' + r.name + ' тебя раскусил' + (r.penalty ? ' (штраф ' + petunFmt(r.penalty) + ' 🪙)' : '') : '😈 ' + r.name + ' отпетунен' + (r.amount ? ' (+' + petunFmt(r.amount) + ' 🪙)' : ''))).join(' · ')}</div>` : ''}
     </section>
@@ -171,7 +169,7 @@ function petunUpdateAmount(friendChanged) {
   if (friendChanged && petunAmountValue() > max) input.value = String(max);
   const hint = document.getElementById('ptAmountHint');
   if (hint) hint.textContent = 'Максимум для выбранного друга: ' + petunFmt(max) + ' 🪙 (' + PTN.state.max_steal_percent + '% его свободного баланса). 0 — просто отпетунить.';
-  if (btn && !PTN.busy) btn.disabled = PTN.state.has_active || !document.getElementById('ptVictim')?.value || !petunAmountOk();
+  if (btn && !PTN.busy) btn.disabled = !document.getElementById('ptVictim')?.value || !petunAmountOk();
 }
 
 actions.ptAttack = async () => {
@@ -194,18 +192,6 @@ actions.ptAttack = async () => {
     toast(`🐓 ${f.name} отпетунен!${amount ? ' ' + petunFmt(amount) + ' 🪙 заморожено до его ответа.' : ''} Ждём, пока он угадает, кто это сделал.`, { ms: 5500 });
   } catch (e) { toast(e.message, { icon: '⚠️' }); }
   finally { PTN.busy = false; petunPaint(); }
-};
-
-actions.ptCancel = async b => {
-  if (PTN.busy) return;
-  const name = PTN.state?.my_attack?.victim || 'другу';
-  if (!await askConfirm('Отменить отпетунивание?', `Отменить отпетунивание для ${name}? Он больше не сможет его угадать` + (PTN.state?.my_attack?.amount ? ', замороженные жетоны вернутся ему' : '') + '. Отпетунить его снова получится не раньше, чем через ' + Math.round((PTN.state?.cooldown_seconds || 300) / 60) + ' мин. после первой попытки.', 'Отменить', 'Назад')) return;
-  PTN.busy = true; b.disabled = true;
-  try {
-    await api('/minigames/petun/cancel', { json: { attack_id: Number(b.dataset.id) } });
-    toast('Отпетунивание отменено: можно выбрать другого друга.', { icon: '↩️' });
-  } catch (e) { toast(e.message, { icon: '⚠️' }); }
-  finally { PTN.busy = false; await petunPaint(); }
 };
 
 actions.ptGuessOpen = b => petunOpenGuess(Number(b.dataset.id));
