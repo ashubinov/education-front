@@ -40,7 +40,27 @@ const Token = {
   set(t) { try { localStorage.setItem('lq_token', t); } catch (e) { /* приватный режим */ } },
   clear() { try { localStorage.removeItem('lq_token'); } catch (e) { /* ignore */ } },
 };
+/* ---------- экран «Вы заблокированы» ---------- */
+const BAN_PREFIX = 'Аккаунт заблокирован';   // начало текста, который сервер присылает заблокированному (ответ 403)
+function showBanned(detail) {
+  S.banned = !!Token.get();                    // залогинен: больше не опрашиваем сервер, пока не нажмёт «Выйти»
+  if (S.banned) { try { clearTimers(); if (typeof pvpDisconnect === 'function') pvpDisconnect(); } catch (e) { /* ignore */ } }
+  if (document.getElementById('ban-overlay')) return;
+  const m = String(detail).match(/Причина:\s*([\s\S]*)$/), reason = m ? m[1].trim() : '';
+  const box = document.createElement('div');
+  box.id = 'ban-overlay'; box.className = 'ban-overlay'; box.setAttribute('role', 'alertdialog'); box.setAttribute('aria-modal', 'true'); box.setAttribute('aria-labelledby', 'ban-title');
+  box.innerHTML = '<div class="ban-card"><h1 id="ban-title">🚫 Вы заблокированы</h1><img src="assets/banned.jpg" alt="" width="320"><div class="ban-label">Сообщение администратора</div><div class="ban-msg"></div><button type="button" class="btn lg bad" data-act="banLogout">Выйти из аккаунта</button></div>';
+  box.querySelector('.ban-msg').textContent = reason || 'Администратор не оставил сообщения.';
+  document.body.appendChild(box);
+  document.documentElement.classList.add('is-banned');
+}
+actions.banLogout = () => {
+  const loggedIn = !!Token.get();
+  document.getElementById('ban-overlay')?.remove(); document.documentElement.classList.remove('is-banned'); S.banned = false;
+  if (loggedIn) actions.logout();              // выход: токен стирается, открывается форма входа
+};
 async function api(path, opts = {}) {
+  if (S.banned && Token.get()) throw new Error('Нужно войти');   // экран блокировки уже показан
   const o = { ...opts, headers: { ...(opts.headers || {}) } };
   if (o.json !== undefined) { o.method = o.method || 'POST'; o.headers['Content-Type'] = 'application/json'; o.body = JSON.stringify(o.json); delete o.json; }
   const t = Token.get(); if (t) o.headers['Authorization'] = 'Bearer ' + t;
@@ -50,7 +70,10 @@ async function api(path, opts = {}) {
   catch (e) { throw new Error('Нет связи с сервером. Проверьте интернет или адрес бэкенда (config.js).'); }
   let data = null;
   try { data = await r.json(); } catch (e) { /* пусто */ }
-  if (r.status === 403 && data && typeof data.detail === 'string' && data.detail.startsWith('Аккаунт заблокирован') && !path.startsWith('/auth/')) { Token.clear(); S.user = null; S.authNote = data.detail; location.hash = '#/auth'; throw new Error('Нужно войти'); }
+  if (r.status === 403 && data && typeof data.detail === 'string' && data.detail.startsWith(BAN_PREFIX) && !path.startsWith('/auth/register')) {
+    showBanned(data.detail);
+    if (!path.startsWith('/auth/')) throw new Error('Нужно войти');   // внутри сайта: экран блокировки уже показан, ошибку страницам не отдаём
+  }
   if (r.status === 401 && !path.startsWith('/auth/login') && !path.startsWith('/auth/register') && path !== '/me') { Token.clear(); S.user = null; location.hash = '#/auth'; throw new Error('Нужно войти'); }
   if (!r.ok) { const err = new Error((data && (typeof data.detail === 'string' ? data.detail : data.detail?.[0]?.msg)) || ('Ошибка ' + r.status)); err.status = r.status; throw err; }
   return data;
