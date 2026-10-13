@@ -87,10 +87,13 @@ function tcard(p, on, act, extra) {
     <span class="tprev"><i></i><b></b><em></em><u></u></span><span class="tname"><span>${p.logo}</span><span class="tn">${p.name}</span></span></button>${extra || ''}</div>`;
 }
 
-function themeAiPanel(mine) {
-  const left = S.myThemes && S.myThemes.gen_left;
+const themesFull = () => !!S.myThemes && S.myThemes.items.length >= S.myThemes.max;
+
+function themeAiPanel() {
+  const left = S.myThemes && S.myThemes.gen_left, full = themesFull();
   return html`<div class="field"><label>✨ Тема по описанию</label><div class="tai card flat">
-    <div class="small muted">Опиши настроение, место или стиль, и ИИ подберёт цвета, значок и падающие эмодзи. Тема сразу применится к сайту как предпросмотр: понравится — оставишь, нет — попробуешь другой вариант.${mine ? ' Новая тема заменит твою сохранённую.' : ''}</div>
+    <div class="small muted">Опиши настроение, место или стиль, и ИИ подберёт цвета, значок и падающие эмодзи. Тема сразу применится к сайту как предпросмотр: понравится — оставишь, нет — попробуешь другой вариант.</div>
+    ${full ? html`<div class="small muted mt-s">Сохранено ${S.myThemes.max} тем из ${S.myThemes.max}: чтобы оставить новую, удали одну из своих.</div>` : ''}
     <div class="row wrap gap-s mt"><input type="text" id="themeprompt" maxlength="200" value="${S.themePrompt || ''}" placeholder="например: тёмная с мятным акцентом" style="flex:1;min-width:200px"><button class="btn" data-act="themeGen">✨ Придумать</button></div>
     <div class="row wrap gap-s mt">${THEME_EXAMPLES.map(x => html`<button class="chip tex" data-act="themeEx" data-v="${x}">${x}</button>`)}</div>
     ${left ? html`<div class="small muted mt">Попыток осталось: ${left.hour} в этот час, ${left.day} сегодня</div>` : ''}</div></div>`;
@@ -101,16 +104,16 @@ function themeDraftHtml(d) {
   return html`<div class="field" id="tdraft"><label>✨ Вот что получилось</label><div class="tedit card flat">
     <div class="row gap-s"><span class="tbig">${d.logo}</span><div class="grow"><b>${d.name}</b><div class="small muted">${d.mode === 'dark' ? '🌙 тёмная' : '☀️ светлая'}${d.decor.length ? ' · ' + d.decor.join(' ') : ''}</div></div>
       <span class="tsw">${['bg', 'card', 'accent', 'ok', 'bad'].map(k => html`<i style="background:${c[k]}"></i>`)}</span></div>
-    <p class="small muted mt">Тема уже применена ко всему сайту: это предпросмотр. Если не нажать «Оставить», она пропадёт.</p>
-    <div class="row wrap gap-s"><button class="btn" data-act="themeSave">✅ Оставить</button><button class="btn ghost" data-act="themeAgain">🔄 Другой вариант</button><button class="btn ghost" data-act="themeCancel">Отмена</button></div></div></div>`;
+    <p class="small muted mt">Тема уже применена ко всему сайту: это предпросмотр. Если не нажать «Оставить», она пропадёт.${themesFull() ? ' Место закончилось: удали одну из сохранённых тем.' : ''}</p>
+    <div class="row wrap gap-s"><button class="btn" data-act="themeSave" ${themesFull() ? 'disabled' : ''}>✅ Оставить</button><button class="btn ghost" data-act="themeAgain">🔄 Другой вариант</button><button class="btn ghost" data-act="themeCancel">Отмена</button></div></div></div>`;
 }
 
 function themeArea() {
-  const ex = (S.user && S.user.theme_extra) || THEME_DEFAULT, mine = S.myThemes && S.myThemes.items[0];
+  const ex = (S.user && S.user.theme_extra) || THEME_DEFAULT, mine = (S.myThemes && S.myThemes.items) || [], max = (S.myThemes && S.myThemes.max) || 6;
   const palActive = !!ex.custom || isPalettePreset(ex.preset);
   return html`<div class="field"><label>Темы</label><div class="theme-grid">${PALETTES.map(p => tcard(p, !ex.custom && ex.preset === p.id, 'themePick'))}</div></div>
-    ${mine ? html`<div class="field"><label>Моя тема</label><div class="theme-grid">${tcard(mine, ex.custom === mine.id, 'themeUse', html`<button class="tedit-btn" data-act="themeDelete" title="Удалить" aria-label="Удалить тему «${mine.name}»">🗑</button>`)}</div></div>` : ''}
-    ${themeAiPanel(mine)}${S.themeDraft ? themeDraftHtml(S.themeDraft) : ''}
+    ${mine.length ? html`<div class="field"><label>Мои темы · ${mine.length} из ${max}</label><div class="theme-grid">${mine.map(t => tcard(t, ex.custom === t.id, 'themeUse', html`<button class="tedit-btn" data-act="themeDelete" data-id="${t.id}" title="Удалить" aria-label="Удалить тему «${t.name}»">🗑</button>`))}</div></div>` : ''}
+    ${themeAiPanel()}${S.themeDraft ? themeDraftHtml(S.themeDraft) : ''}
     ${palActive ? html`<div class="field"><button class="btn sm ghost" data-act="themeOff">↺ Вернуться к обычной теме</button><div class="small muted mt-s">Вернётся выбор простого цвета, светлой или тёмной темы и фона.</div></div>` : ''}`;
 }
 function drawThemeArea() {
@@ -119,7 +122,7 @@ function drawThemeArea() {
   const lg = $('#legacy-theme'); if (lg) lg.hidden = themePaletteActive();   // у темы с палитрой цвет, режим и фон задаёт она сама
 }
 async function loadThemeArea() {
-  try { S.myThemes = await api('/themes'); } catch (e) { S.myThemes = S.myThemes || { items: [], max: 1, gen_left: null }; }
+  try { S.myThemes = await api('/themes'); } catch (e) { S.myThemes = S.myThemes || { items: [], max: 6, gen_left: null }; }
   drawThemeArea();
 }
 
@@ -153,13 +156,14 @@ actions.themeGen = b => {
 };
 actions.themeAgain = b => themeGenerate(S.themeDraft.prompt, b);
 
-/** «Оставить»: личная тема одна, новая заменяет прежнюю. */
+/** «Оставить»: тема добавляется в список (до max штук), прежние сохранённые остаются. */
 actions.themeSave = async b => {
   const d = S.themeDraft; if (!d) return;
-  const body = { name: d.name, colors: d.colors, logo: d.logo, decor: d.decor }, old = S.myThemes && S.myThemes.items[0];
+  if (themesFull()) return toast(`Уже сохранено ${S.myThemes.max} тем: удали одну из них`, { icon: '⚠️' });
+  const body = { name: d.name, colors: d.colors, logo: d.logo, decor: d.decor };
   busy(b, true);
   try {
-    const item = old ? await api('/themes/' + old.id, { method: 'PUT', json: body }) : await api('/themes', { json: body });
+    const item = await api('/themes', { json: body });
     S.themeDraft = S.themePreview = null;
     await saveMe({ theme_extra: themeExtraWith({ preset: '', custom: item.id }) }, true);
     try { S.myThemes = await api('/themes'); } catch (e) { /* список обновится при следующем заходе */ }
@@ -167,13 +171,12 @@ actions.themeSave = async b => {
     drawThemeArea();
   } catch (e) { busy(b, false); toast(e.message, { icon: '⚠️' }); }
 };
-actions.themeDelete = async () => {
-  const t = S.myThemes && S.myThemes.items[0]; if (!t) return;
+actions.themeDelete = async b => {
+  const id = Number(b.dataset.id), t = S.myThemes && S.myThemes.items.find(x => x.id === id); if (!t) return;
   if (!await askConfirm('Удалить тему?', `Тема «${t.name}» будет удалена без возможности вернуть.`, 'Удалить', 'Отмена', true)) return;
   try {
     await api('/themes/' + t.id, { method: 'DELETE' });
-    S.themeDraft = S.themePreview = null;
-    await refreshMe(); applyTheme(S.user.theme_color, S.user.theme_mode);
+    await refreshMe(); applyTheme(S.user.theme_color, S.user.theme_mode);   // если удалена активная — сервер её сбросил
     S.myThemes = await api('/themes'); drawThemeArea(); toast('Тема удалена', { icon: '🗑', ms: 1600 });
   } catch (e) { toast(e.message, { icon: '⚠️' }); }
 };
