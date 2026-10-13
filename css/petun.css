@@ -1,0 +1,18 @@
+/* ОТПЕТУНИВАНИЕ: пока человек «отпетунен», открыты только курсы и выход из аккаунта (js/petun.js). */
+.petun-bar { position: sticky; top: 0; z-index: 9000; display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; padding: 8px 14px; background: var(--bad); color: #fff; font-weight: 800; font-size: 14px; text-align: center; }
+.petun-bar .btn { background: rgba(0, 0, 0, .25); border-color: rgba(255, 255, 255, .5); color: #fff; padding: 5px 12px; min-height: 0; font-size: 12px; }
+/* закрыты все остальные разделы: меню, нижняя панель, профиль, полоса переключения, чат, мини-игры и т. д. */
+html.petun-locked .topbar .nav,
+html.petun-locked .bottom-nav,
+html.petun-locked #hud,
+html.petun-locked .sub-nav,
+html.petun-locked #homeChatSlot,
+html.petun-locked .lq-home-chat { display: none !important; }
+html.petun-locked .topbar-in { grid-template-columns: auto; }
+html.petun-locked main { padding-bottom: 24px; }
+.petun-overlay .btn { width: 100%; }
+.petun-overlay .ban-msg b { font-size: 26px; color: var(--bad); }
+html.petun-locked .topbar { position: static; }
+.petun-overlay .ban-note { margin-top: 8px; font-size: 14px; font-weight: 800; color: var(--muted); }
+.mg-game .mg-chips { margin-bottom: 4px; }
+#petunHost select:disabled, #petunHost input:disabled { opacity: .55; }

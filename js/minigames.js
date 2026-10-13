@@ -19,10 +19,25 @@ function mgDuration(n) {
   const h = Math.floor(n / 3600), m = Math.floor(n % 3600 / 60), s = Math.ceil(n % 60);
   return h ? `${h} ч ${m} мин` : m ? `${m} мин ${s} сек` : `${s} сек`;
 }
+/* Переключатель игр на странице «Мини-игры»: клубничный вор / ОТПЕТУНИВАНИЕ (выбор запоминается). */
+function mgSetTab(tab) {
+  MG.tab = tab === 'petun' ? 'petun' : 'strawberry';
+  try { localStorage.setItem('lq_mg_tab', MG.tab); } catch (e) { /* ignore */ }
+  mgApplyTab();
+}
+function mgApplyTab() {
+  if (!MG.tab) { try { MG.tab = localStorage.getItem('lq_mg_tab') === 'petun' ? 'petun' : 'strawberry'; } catch (e) { MG.tab = 'strawberry'; } }
+  document.querySelectorAll('.mg-tabs button').forEach(b => { const on = b.dataset.tab === MG.tab; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
+  document.querySelectorAll('[data-game]').forEach(el => { el.hidden = el.dataset.game !== MG.tab; });
+}
+actions.mgTab = b => mgSetTab(b.dataset.tab);
 function mgNotificationBadge() {
+  const tabs = { strawberry: MG.pendingCount, petun: typeof PTN !== 'undefined' ? PTN.pendingCount : 0 };
+  document.querySelectorAll('.mg-tab-badge').forEach(el => { const n = tabs[el.dataset.tab] || 0; el.hidden = !n; el.textContent = n || ''; });
   document.querySelectorAll('.mg-nav-badge').forEach(el => {
-    el.hidden = !MG.pendingCount;
-    el.textContent = MG.pendingCount || '';
+    const n = MG.pendingCount + (typeof PTN !== 'undefined' ? PTN.pendingCount : 0);
+    el.hidden = !n;
+    el.textContent = n || '';
   });
 }
 
@@ -41,6 +56,7 @@ async function mgCheck() {
   if (MG.lastCheck && Date.now() - MG.lastCheck < 1300) return;
   MG.lastCheck = Date.now();
   try {
+    if (typeof petunCheck === 'function') petunCheck();   // «Отпетунивание»: свои уведомления
     const data = await api('/minigames/strawberry/status');
     if (!S.user || MG.userId !== S.user.id) return;
     MG.pendingCount = data.pending_count;
@@ -64,7 +80,7 @@ function mgNotify(id) {
   const btn = document.createElement('button');
   btn.className = 'btn sm'; btn.type = 'button'; btn.textContent = 'Угадать вора';
   btn.onclick = () => {
-    note.remove(); MG.openedFromNotice = id;
+    note.remove(); MG.openedFromNotice = id; mgSetTab('strawberry');
     if (location.hash === '#/minigames') mgOpenPending(id);
     else location.hash = '#/minigames';
   };
@@ -83,14 +99,15 @@ async function mgRender() {
   MG.state = data;
   MG.pendingCount = data.pending.length;
   mgNotificationBadge();
-  const locked = data.cooldown_remaining > 0 || data.has_active_theft;
+  const locked = data.cooldown_remaining > 0;
   const initialFriend = data.friends[0];
   render(app(), shell('minigames', html`
     <div class="mg-page">
-      <header class="mg-hero"><span class="mg-berry">🍓</span><div>
-        <h1>Мини-игры</h1><p>Первая игра — <b>«Клубничный вор»</b>. Откуси немного чужой удачи.</p>
+      <header class="mg-hero"><span class="mg-berry">🎲</span><div>
+        <h1>Мини-игры</h1><p>Игры с друзьями: <b>«Клубничный вор»</b> и <b>«ОТПЕТУНИВАНИЕ»</b>.</p>
       </div></header>
-      <div class="mg-layout">
+      <nav class="mg-tabs" aria-label="Выбор игры"><button type="button" data-act="mgTab" data-tab="strawberry">🍓 Клубничный вор<i class="mg-tab-badge" data-tab="strawberry" hidden></i></button><button type="button" data-act="mgTab" data-tab="petun">🐓 ОТПЕТУНИВАНИЕ<i class="mg-tab-badge" data-tab="petun" hidden></i></button></nav>
+      <div class="mg-layout" data-game="strawberry">
         <section class="card mg-game">
           <h2>🍓 Клубничный вор</h2>
           <p class="muted">Выбери друга и нажми «Отклубничить». Часть его жетонов будет заморожена у тебя до разгадки. Друг может угадать вора в течение 24 часов.</p>
@@ -103,7 +120,7 @@ async function mgRender() {
             max="${initialFriend?.max_steal || 0}" value="${initialFriend?.max_steal ? Math.min(10, initialFriend.max_steal) : ''}" aria-describedby="mgAmountHint">
           <p class="small muted mg-max-hint" id="mgAmountHint">Максимум для выбранного друга: ${mgFmt(initialFriend?.max_steal || 0)} 🪙 (30% доступного баланса).</p>
           <button class="btn mg-steal" id="mgSteal" data-act="mgSteal" ${locked || !data.friends.length ? 'disabled' : ''}>🍓 Отклубничить</button>
-          <p id="mgCooldown" class="small muted" aria-live="polite">${data.has_active_theft ? 'Замороженные жетоны ждут исхода предыдущей кражи.' : data.cooldown_remaining > 0 ? 'Следующая попытка через ' + mgDuration(data.cooldown_remaining) : 'Готово к краже!'}</p>
+          <p id="mgCooldown" class="small muted" aria-live="polite">${data.cooldown_remaining > 0 ? 'Следующая попытка через ' + mgDuration(data.cooldown_remaining) : 'Готово к краже!'}</p>
           ${!data.friends.length ? html`<p class="small muted">Пока нет друзей. Добавь друга во вкладке «Друзья».</p>` : ''}
           <p class="small muted">Укажи целое количество жетонов, не больше 30% доступного баланса друга. Для кражи твои жетоны не нужны, но если друг угадает вора, тот платит штраф ${data.catch_penalty_percent} % от украденного (не больше своего баланса). Между попытками — ${mgDuration(data.cooldown_seconds)}.</p>
         </section>
@@ -113,7 +130,12 @@ async function mgRender() {
           <p class="small muted">Угадаешь — вернёшь украденное и получишь штраф ${data.catch_penalty_percent} % с вора. Не угадаешь или не ответишь за 24 часа — вор получит добычу.</p>
         </aside>
       </div>
+      <div id="petunHost" data-game="petun" hidden></div>
     </div>`));
+  mgApplyTab();
+  mgNotificationBadge();
+  if (typeof petunPaint === 'function') petunPaint();
+  every(() => { if (location.hash === '#/minigames' && !MG.busy && !document.querySelector('.modal') && typeof petunPaint === 'function') petunPaint(false); }, 8000);
   document.querySelector('#mgVictim')?.addEventListener('change', () => mgUpdateAmount(true));
   document.querySelector('#mgAmount')?.addEventListener('input', () => mgUpdateAmount(false));
   mgUpdateAmount(true);
@@ -132,9 +154,9 @@ async function mgRender() {
     const left = Math.max(0, data.cooldown_remaining - Math.floor((Date.now() - initial) / 1000));
     MG.cooldownReady = left === 0;
     const cd = document.querySelector('#mgCooldown');
-    if (cd) cd.textContent = data.has_active_theft ? 'Дождись завершения текущей кражи.' : left ? 'Следующая попытка через ' + mgDuration(left) : 'Готово к краже!';
+    if (cd) cd.textContent = left ? 'Следующая попытка через ' + mgDuration(left) : 'Готово к краже!';
     const btn = document.querySelector('#mgSteal');
-    if (btn && !MG.busy) btn.disabled = left > 0 || data.has_active_theft || !mgValidAmount();
+    if (btn && !MG.busy) btn.disabled = left > 0 || !mgValidAmount();
   }, 1000);
   every(async () => {
     if (MG.state === data && location.hash === '#/minigames' && !MG.busy) {
@@ -163,8 +185,7 @@ function mgUpdateAmount(changeFriend = false) {
   if (changeFriend) input.value = maximum < 1 ? '' : String(Math.min(10, maximum));
   const note = document.querySelector('#mgAmountHint');
   if (note) note.textContent = 'Максимум для выбранного друга: ' + mgFmt(maximum) + ' 🪙 (30% доступного баланса).';
-  if (button && !MG.busy) button.disabled = MG.state.has_active_theft ||
-    MG.state.cooldown_remaining > 0 && !MG.cooldownReady || !mgValidAmount();
+  if (button && !MG.busy) button.disabled = MG.state.cooldown_remaining > 0 && !MG.cooldownReady || !mgValidAmount();
 }
 
 actions.mgSteal = async () => {

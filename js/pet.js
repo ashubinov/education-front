@@ -1,6 +1,6 @@
 /* LearnQuest — «Питомец»: выбираешь животное, кормишь едой за жетоны, он растёт (малыш → подросток → взрослый).
    Всё считает сервер (/api/pet/*): сытость падает со временем, любимая еда даёт больше роста. Питомец не умирает — если забросить, просто грустит.
-   К друзьям можно «зайти погулять»: погладить их питомца (раз в день, +жетоны). Графика — pet-art.js. */
+   К друзьям можно «зайти погулять»: погулять с их питомцем (раз в день, +жетоны). Графика — pet-art.js. */
 'use strict';
 
 const PET = { st: null, busy: false, pick: 'corgi' };
@@ -86,8 +86,8 @@ function petMain(s) {
           <div class="row gap-s wrap mt-s"><span class="chip accent">${PET_STAGE_ICON[petStageI(p)]} ${p.stage_name}</span><span class="chip" id="petMood">${PET_MOOD_ICON[p.mood]} ${p.mood_name}</span>
             ${p.age_days ? html`<span class="chip">🎂 ${p.age_days} ${plural(p.age_days, 'день', 'дня', 'дней')}</span>` : ''}</div>
           <div id="petBars">${petBars(p)}</div>
-          <p class="muted small" style="margin:6px 0 0">Накормлен ${p.fed_total} ${plural(p.fed_total, 'раз', 'раза', 'раз')} · друзья погладили ${p.pats_total} ${plural(p.pats_total, 'раз', 'раза', 'раз')}${p.next_stage ? ` · дальше: ${p.next_stage}` : ''}</p>
-          <div class="row gap-s mt"><a class="btn sm" href="#/pet/arena" title="Петушиные бои">⚔️ Арена</a><button class="btn ghost sm" data-act="petRename">✏️ Имя</button><button class="btn ghost sm" data-act="petRelease">👋 Отпустить</button></div></div>
+          <p class="muted small" style="margin:6px 0 0">Накормлен ${p.fed_total} ${plural(p.fed_total, 'раз', 'раза', 'раз')} · друзья гуляли с ним ${p.pats_total} ${plural(p.pats_total, 'раз', 'раза', 'раз')}${p.next_stage ? ` · дальше: ${p.next_stage}` : ''}</p>
+          <div class="row gap-s mt"><a class="btn sm" href="#/pet/pvp" title="Бои с настоящими игроками">⚔️ Live PvP</a><a class="btn ghost sm" href="#/pet/arena" title="Бои с ботами">Тренировка</a><button class="btn ghost sm" data-act="petRename">✏️ Имя</button><button class="btn ghost sm" data-act="petRelease">👋 Отпустить</button></div></div>
       </div>
       <div class="pet-shop">
         <h3 style="margin:0 0 8px">🍽 Еда</h3>
@@ -153,8 +153,8 @@ function petFriendCard(pet, ownerId, ownerName) {
     <div class="pet-scene mini s${petStageI(pet)}"><div class="pet-art" id="petGuestArt">${raw(petSvg(pet.species, petStageI(pet), pet.mood))}</div></div>
     <div class="grow"><b>${pet.name}</b> <span class="muted small">· ${pet.species_name}</span>
       <div class="row gap-s wrap mt-s"><span class="chip accent">${PET_STAGE_ICON[petStageI(pet)]} ${pet.stage_name}</span><span class="chip">${mi} ${pet.mood_name}</span></div>
-      <p class="muted small" style="margin:6px 0 8px">Сегодня погладили: ${pet.pats_today} ${plural(pet.pats_today, 'раз', 'раза', 'раз')}</p>
-      <button class="btn sm" id="petPatBtn" data-act="petPat" data-id="${ownerId}" ${pet.patted_by_me ? 'disabled' : ''}>${pet.patted_by_me ? 'Сегодня уже гуляли' : '🤚 Погладить · +' + PET_PAT_REWARD + ' 🪙'}</button></div></div>`;
+      <p class="muted small" style="margin:6px 0 8px">Сегодня гуляли: ${pet.pats_today} ${plural(pet.pats_today, 'раз', 'раза', 'раз')}</p>
+      <button class="btn sm" id="petPatBtn" data-act="petPat" data-id="${ownerId}" ${pet.patted_by_me ? 'disabled' : ''}>${pet.patted_by_me ? 'Сегодня уже гуляли' : '🐾 Погулять · +' + PET_PAT_REWARD + ' 🪙'}</button></div></div>`;
 }
 const PET_PAT_REWARD = 3;
 actions.petPat = async b => {

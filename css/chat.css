@@ -91,3 +91,10 @@
 
 .lq-chat-list .lq-chat-message.command .lq-chat-bubble { border-color: var(--accent); background: var(--accent-l); }
 .lq-chat-command-tag { display: inline-flex; align-items: center; font-size: 9px; padding: 2px 5px; border-radius: 5px; background: var(--accent); color: var(--accent-ink); font-weight: 900; letter-spacing: .025em; }
+
+/* GIF в чате */
+.lq-chat-compose .lq-chat-gifbtn { flex: none; align-self: stretch; padding: 0 9px; min-height: 0; font-size: 12px; font-weight: 900; letter-spacing: .02em; }
+.lq-chat-gif { display: block; max-width: 100%; width: auto; max-height: 190px; margin: 3px 0 2px; border-radius: 8px; background: var(--bg); cursor: zoom-in; object-fit: contain; }
+.lq-chat-gif-gone { color: var(--muted); font-style: italic; }
+/* в окне просмотра мелкие гифки увеличиваются не больше чем до ~280 px (иначе расплываются), крупные вписываются в экран */
+.lq-chat-gif-big { display: block; width: auto; height: auto; min-width: min(100%, 280px); max-width: 100%; max-height: 70vh; object-fit: contain; margin: 0 auto; border-radius: 12px; }

@@ -1,0 +1,184 @@
+/* Live PvP arena: respects LearnQuest's existing CSS variables. */
+.pvp-page{max-width:1040px;margin:0 auto;padding:16px 0 32px;display:grid;gap:14px}
+.pvp-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.pvp-head h2{margin:0 0 5px}.pvp-head p{margin:0}.pvp-head .row{align-items:center}
+.pvp-lobby,.pvp-controls{display:grid;gap:12px}.pvp-lobby h3,.pvp-controls h3,.pvp-history h3{margin:0}
+.pvp-friends{display:grid;gap:9px}.pvp-friend{display:flex;align-items:center;gap:13px;padding:10px;border-radius:12px;background:var(--card2,rgba(120,120,120,.07));border:1px solid var(--line,rgba(120,120,120,.14))}
+.pvp-friend-art{width:68px;height:68px;display:grid;place-items:center;flex-shrink:0}.pvp-friend-art svg{width:100%;height:100%}
+.pvp-stage{padding:20px;display:grid;gap:15px}.pvp-status{display:flex;justify-content:space-between;gap:12px;align-items:center}
+.pvp-fighters{display:grid;grid-template-columns:minmax(0,1fr) minmax(105px,160px) minmax(0,1fr);gap:14px;align-items:center}
+.pvp-fighter{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;min-width:0}
+.pvp-fighter-art{height:190px;width:min(100%,215px);display:grid;place-items:center}.pvp-fighter-art svg{width:100%;max-height:185px}.pvp-fighter>b{overflow-wrap:anywhere}
+.pvp-question{font-size:80px;opacity:.4}.pvp-middle{display:grid;text-align:center;gap:5px;align-items:center}.pvp-middle>span{font-weight:900;font-size:clamp(25px,4vw,44px);opacity:.4}
+.pvp-middle>b{font-size:clamp(18px,3vw,27px)}.pvp-middle>small{opacity:.6}.pvp-score{font-size:25px;font-weight:800}
+.pvp-contributions{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:.9em}.pvp-action-row{display:flex;gap:8px;flex-wrap:wrap}
+.pvp-raise{display:grid;gap:8px;border-top:1px solid var(--line,rgba(120,120,120,.17));padding-top:12px}
+.pvp-history{display:grid;gap:9px}.pvp-history-row{display:flex;justify-content:space-between;gap:9px;padding:9px 0;border-top:1px solid var(--line,rgba(120,120,120,.16))}
+.pvp-impact .pvp-fighter-art{animation:pvpBump .55s ease}.pvp-notice{display:grid;gap:8px}
+@keyframes pvpBump{0%,100%{transform:translateY(0)}45%{transform:translateY(-13px)}65%{transform:translateY(4px)}}
+@media(max-width:620px){.pvp-stage{padding:12px}.pvp-fighters{grid-template-columns:minmax(0,1fr) 83px minmax(0,1fr);gap:3px}.pvp-fighter-art{height:110px}.pvp-fighter-art svg{max-height:110px}.pvp-fighter>b{font-size:.84em}.pvp-middle>b{font-size:15px}.pvp-score{font-size:19px}.pvp-friend-art{width:50px;height:50px}.pvp-friend{gap:8px}}
+.pvp-final{text-align:center;display:grid;gap:8px;justify-items:center;border:1px solid var(--accent, #7c5cff)}.pvp-final h2,.pvp-final p{margin:0}
+/* In-match action and complete player guide */
+.pvp-hp{width:100%;max-width:220px;margin-top:6px}
+.pvp-hp-line{display:flex;justify-content:space-between;font-size:12px;gap:5px}
+.pvp-hp-track{background:rgba(120,120,120,.22);height:11px;overflow:hidden;border-radius:10px;margin-top:3px}
+.pvp-hp-track>span{height:100%;display:block;background:linear-gradient(90deg,#f04f52,#ffca5e);transition:width .26s ease}
+.pvp-combat-controls{display:grid;gap:11px;text-align:center}
+.pvp-combat-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.pvp-energy{max-width:440px;width:100%;margin:0 auto;font-size:12px;text-align:left}
+.pvp-energy-track{height:8px;background:rgba(120,120,120,.23);border-radius:10px;overflow:hidden;margin-top:3px}
+.pvp-energy-track span{height:100%;display:block;background:#6b9aff;transition:width .2s ease}
+.pvp-attack-buttons{display:grid;grid-template-columns:2fr 1fr;gap:10px}
+.pvp-attack-buttons button{min-height:75px;font-weight:850;font-size:1.25rem;display:grid;place-content:center;gap:4px;touch-action:manipulation}
+.pvp-attack-buttons button small{font-size:.66rem;font-weight:500;opacity:.8}
+.pvp-attack:active{transform:scale(.97)}
+.pvp-qte{border:2px solid #edba4c;border-radius:15px;background:rgba(228,162,48,.1);padding:13px;display:grid;gap:10px;justify-items:center;animation:pvpGlow .9s ease infinite alternate}
+.pvp-qte p{margin:0}.pvp-qte-letters{display:flex;gap:7px}
+.pvp-qte-letters span{border-radius:10px;border:1px solid #d6b45f;background:rgba(0,0,0,.17);padding:10px 15px;font-size:1.5rem;font-weight:900;min-width:48px}
+.pvp-qte-letters span.done{background:#138951;color:white}
+.pvp-qte-buttons{display:flex;gap:8px;justify-content:center}
+.pvp-qte-done{color:#30af83;font-weight:bold}
+.pvp-fighter{position:relative}.pvp-damage{position:absolute;top:25%;left:50%;color:#fd595a;text-shadow:0 2px 6px #000;z-index:3;pointer-events:none;font-weight:900;font-size:23px;white-space:nowrap;animation:pvpFloat .95s ease forwards}
+.pvp-damage.critical{color:#f9cf49;font-size:28px}
+.pvp-hit .pvp-fighter-art{animation:pvpRecoil .3s ease}
+.pvp-fighting .pvp-fighter-art{animation:pvpIdle .9s ease-in-out infinite alternate}
+.pvp-guide{max-width:570px;max-height:min(75vh,750px);overflow-y:auto;display:grid;gap:12px;padding-right:3px}
+.pvp-guide h2,.pvp-guide p{margin:0}.pvp-guide p{line-height:1.52}.pvp-guide button{justify-self:end}
+@keyframes pvpFloat{0%{opacity:0;transform:translate(-50%,12px) scale(.6)}25%{opacity:1}100%{opacity:0;transform:translate(-50%,-65px) scale(1.4)}}
+@keyframes pvpRecoil{0%,100%{transform:translateX(0)}40%{transform:translateX(12px)}70%{transform:translateX(-6px)}}
+@keyframes pvpIdle{from{transform:translateY(0) rotate(-2deg)}to{transform:translateY(-8px) rotate(2deg)}}
+@keyframes pvpGlow{from{box-shadow:0 0 0 rgba(255,194,76,0)}to{box-shadow:0 0 19px rgba(255,194,76,.32)}}
+@media(max-width:620px){.pvp-attack-buttons button{min-height:65px;font-size:1rem}.pvp-qte-letters span{font-size:1.1rem;padding:7px 11px;min-width:38px}.pvp-fighter-art{overflow:visible}.pvp-combat-head{justify-content:center}.pvp-hp-line{font-size:10px}}
+@media(prefers-reduced-motion:reduce){.pvp-fighting .pvp-fighter-art,.pvp-qte{animation:none}}
+
+/* PvP Combat v6 — explicitly driven hits, cinematic criticals. */
+.pvp-click-arena{cursor:crosshair;user-select:none;-webkit-user-select:none;touch-action:manipulation;position:relative;
+  background-image:radial-gradient(ellipse at 50% 66%,rgba(130,82,220,.12),transparent 66%);
+  overflow:visible}
+.pvp-click-arena::after{content:'ЛКМ ПО АРЕНЕ — УДАР';position:absolute;right:14px;bottom:6px;pointer-events:none;
+  font-size:10px;letter-spacing:.15em;font-weight:850;opacity:.43}
+.pvp-attack{background:linear-gradient(135deg,#9637a0,#e2574c 70%,#f6ad4d);color:#fff;
+  box-shadow:0 6px 24px rgba(214,63,97,.25);border:1px solid rgba(255,225,225,.38);
+  transition:filter .12s,transform .12s,box-shadow .12s;cursor:crosshair}
+.pvp-attack:hover{filter:brightness(1.1);box-shadow:0 8px 30px rgba(230,75,105,.4)}
+.pvp-attack:active{transform:scale(.96);box-shadow:0 1px 9px rgba(230,75,105,.4)}
+.pvp-strike .pvp-fighter-art{animation:pvpStrike .36s cubic-bezier(.2,1,.2,1) both}
+@keyframes pvpStrike{0%{transform:translateX(0) scale(1)}45%{transform:translateX(23px) scale(1.1) rotate(-7deg)}70%{transform:translateX(10px) scale(1.06)}100%{transform:translateX(0) scale(1)}}
+.pvp-hit .pvp-fighter-art{animation:pvpRecoil .33s ease-out both}
+.pvp-qte{position:relative;isolation:isolate;overflow:hidden;border:2px solid #ffdd78;
+  background:radial-gradient(ellipse at top,rgba(241,191,83,.24),rgba(100,43,136,.23) 75%),rgba(18,15,35,.8);
+  box-shadow:0 0 0 2px rgba(245,199,100,.18),0 0 35px rgba(250,192,73,.23),inset 0 0 24px rgba(240,161,53,.18);
+  animation:pvpQteAppear .33s cubic-bezier(.1,1,.2,1) both,pvpGlow 1s ease-in-out .33s infinite alternate}
+.pvp-qte::before{content:'';position:absolute;inset:-80%;pointer-events:none;z-index:-1;
+  background:conic-gradient(from 10deg,transparent 0 24%,rgba(255,224,122,.1) 29%,transparent 37% 64%,rgba(250,99,165,.1) 68%,transparent 76%);
+  animation:pvpQteSweep 3s linear infinite}
+.pvp-qte strong{font-size:clamp(16px,2.8vw,25px);font-weight:950;letter-spacing:.03em;
+  color:#ffe28b;text-shadow:0 0 14px rgba(255,179,43,.6)}
+.pvp-qte-instruction{font-size:13px;color:#fff9e7;font-weight:650}
+.pvp-qte-letters{gap:10px}
+.pvp-qte-letters span{position:relative;display:grid;place-items:center;min-width:65px;min-height:66px;font-size:2.2rem;
+  border:2px solid rgba(255,219,133,.8);border-bottom-width:5px;border-radius:12px;color:#fff;
+  background:linear-gradient(145deg,#57334a,#231a3f);text-shadow:0 0 8px #ffd166;
+  box-shadow:0 9px 0 #241123,0 13px 16px rgba(0,0,0,.5);animation:pvpQteKeyPop .36s both}
+.pvp-qte-letters span:nth-child(2){animation-delay:.06s}.pvp-qte-letters span:nth-child(3){animation-delay:.12s}
+.pvp-qte-letters span.done{background:linear-gradient(140deg,#4df2aa,#1c9871);border-color:#afffde;
+  color:#132c25;text-shadow:none;transform:translateY(6px);box-shadow:0 3px 0 #12583e,0 0 22px rgba(42,248,168,.52);animation:none}
+.pvp-qte .pvp-qte-buttons{flex-wrap:wrap}.pvp-qte .pvp-qte-buttons button{font-weight:800;min-width:50px;border-color:#f9d888}
+.pvp-qte-error{animation:pvpQteMistake .32s ease-in-out both,pvpGlow 1s ease-in-out .32s infinite alternate}
+.pvp-qte-announce{position:fixed;z-index:140;pointer-events:none;top:18%;left:50%;white-space:nowrap;
+  transform:translateX(-50%);max-width:95vw;padding:10px 22px;border-radius:12px;
+  background:linear-gradient(100deg,#ffda6d,#ff8a55);border:2px solid #fff6ca;color:#312038;
+  box-shadow:0 0 70px rgba(250,181,84,.7);font-weight:1000;letter-spacing:.07em;
+  font-size:clamp(15px,3.6vw,30px);animation:pvpCueFlash 1s ease both}
+/* A fixed viewport overlay survives live server snapshots and last-hit settlement. */
+.pvp-critical-scene{position:fixed;inset:0;z-index:180;pointer-events:none;overflow:hidden;isolation:isolate;font-family:inherit}
+.pvp-critical-flash{position:absolute;inset:0;background:radial-gradient(circle at center,rgba(255,221,140,.48),rgba(247,79,134,.17) 34%,rgba(12,4,33,.67) 80%);
+  animation:pvpCriticalFlash 1.55s ease-out both}
+.pvp-critical-label{position:absolute;top:12%;left:50%;width:max-content;max-width:95vw;
+  transform:translateX(-50%);text-align:center;color:#fff3bc;z-index:9;
+  font-size:clamp(23px,5vw,66px);font-weight:1000;letter-spacing:.075em;
+  text-shadow:0 4px 0 #7e2455,0 0 25px #ffbd55,0 0 75px #f94b95;
+  animation:pvpCriticalTitle 1.35s cubic-bezier(.2,1,.2,1) both}
+.pvp-critical-sprite{position:absolute;width:clamp(100px,16vw,235px);height:clamp(100px,16vw,235px);
+  z-index:7;transform:translate(-50%,-50%);animation:pvpCriticalDash 1.23s cubic-bezier(.2,.7,.3,1) both;
+  filter:drop-shadow(0 0 15px #ffe08c) drop-shadow(0 0 30px #ff4c95)}
+.pvp-critical-sprite svg{width:100%;height:100%}
+.pvp-critical-shock{position:absolute;width:125px;height:125px;z-index:5;border:10px solid #fff1ae;border-radius:50%;
+  box-shadow:0 0 30px #ffb948,inset 0 0 35px #fff;animation:pvpCriticalRing 1.4s .35s ease-out both}
+.pvp-critical-shock::after{content:'';position:absolute;inset:-16px;border:8px solid #ff589d;border-radius:50%;animation:pvpCriticalRingInner .95s .3s ease-out both}
+.pvp-critical-sparks{position:absolute;width:0;height:0;z-index:8}
+.pvp-critical-sparks i{position:absolute;left:0;top:0;width:8px;height:24px;border-radius:65% 65% 20% 20%;
+  background:linear-gradient(#fff9d9,#ffbe34,#ef4f94);box-shadow:0 0 14px #ffcd5e;
+  animation:pvpCriticalSpark .9s .35s cubic-bezier(.12,.8,.25,1) both}
+.pvp-critical-number{position:absolute;z-index:10;white-space:nowrap;text-align:center;color:#fff7df;
+  -webkit-text-stroke:1px #a42b4f;font-weight:1000;font-size:clamp(38px,8vw,112px);
+  text-shadow:0 5px 0 #6e1c46,0 0 20px #ffb84e,0 0 55px #ff539a;
+  animation:pvpCriticalDamage 1.5s .09s cubic-bezier(.18,1,.25,1) both}
+.pvp-critical-shake{animation:pvpCameraShake .7s .25s cubic-bezier(.3,.8,.3,1) both}
+@keyframes pvpQteAppear{from{opacity:0;transform:scale(.9) translateY(15px)}to{opacity:1;transform:scale(1)}}
+@keyframes pvpQteSweep{to{transform:rotate(360deg)}}
+@keyframes pvpQteKeyPop{from{transform:translateY(-18px) scale(1.15);opacity:0}to{transform:translateY(0) scale(1);opacity:1}}
+@keyframes pvpQteMistake{0%,100%{transform:translateX(0)}25%{transform:translateX(-10px)}50%{transform:translateX(10px)}75%{transform:translateX(-6px)}}
+@keyframes pvpCueFlash{0%{opacity:0;transform:translate(-50%,-25px) scale(.72)}24%{opacity:1;transform:translate(-50%,0) scale(1.15)}65%{opacity:1;transform:translate(-50%,0) scale(1)}100%{opacity:0;transform:translate(-50%,-15px)}}
+@keyframes pvpCriticalFlash{0%{opacity:0}20%{opacity:.35}33%{opacity:.18}42%{opacity:1}58%{opacity:.48}100%{opacity:0}}
+@keyframes pvpCriticalTitle{0%{opacity:0;transform:translate(-50%,-30px) scale(1.8)}24%{opacity:1;transform:translate(-50%,0) scale(1.12)}56%{opacity:1;transform:translate(-50%,0) scale(1)}100%{opacity:0;transform:translate(-50%,-25px) scale(1.08)}}
+@keyframes pvpCriticalDash{0%{opacity:0;transform:translate(-50%,-50%) scale(.65) rotate(-25deg)}
+  20%{opacity:1;transform:translate(-50%,-60%) scale(1.1) rotate(-9deg)}
+  39%{opacity:1;transform:translate(-50%,-50%) translate(var(--dash-x),var(--dash-y)) scale(1.45) rotate(15deg)}
+  53%{opacity:1;transform:translate(-50%,-50%) translate(var(--dash-x),var(--dash-y)) scale(1.75) rotate(-8deg)}
+  100%{opacity:0;transform:translate(-50%,-50%) translate(var(--dash-x),var(--dash-y)) scale(1.05) rotate(0)}}
+@keyframes pvpCriticalRing{0%,32%{opacity:0;transform:translate(-50%,-50%) scale(.3)}38%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(6)}}
+@keyframes pvpCriticalRingInner{0%{opacity:1;transform:scale(.3)}100%{opacity:0;transform:scale(3)}}
+@keyframes pvpCriticalSpark{0%,25%{opacity:0;transform:rotate(var(--angle)) translateX(0) scale(.3)}40%{opacity:1}100%{opacity:0;transform:rotate(var(--angle)) translateX(var(--distance)) scale(.3)}}
+@keyframes pvpCriticalDamage{0%,8%{opacity:0;transform:translate(-50%,-15%) scale(.35) rotate(10deg)}
+  23%{opacity:1;transform:translate(-50%,-65%) scale(1.28) rotate(-6deg)}
+  64%{opacity:1;transform:translate(-50%,-68%) scale(1) rotate(0)}100%{opacity:0;transform:translate(-50%,-145%) scale(1.18)}}
+@keyframes pvpCameraShake{0%,100%{transform:none}23%{transform:translate(9px,-4px) rotate(1deg)}37%{transform:translate(-13px,6px) rotate(-1deg)}
+  49%{transform:translate(10px,3px)}67%{transform:translate(-7px,-2px)}78%{transform:translate(4px,2px)}}
+@media(max-width:620px){.pvp-qte-letters span{min-width:48px;min-height:54px;font-size:1.55rem}.pvp-critical-label{top:19%}.pvp-attack-buttons{grid-template-columns:1.5fr 1fr}.pvp-click-arena::after{font-size:8px}}
+@media(prefers-reduced-motion:reduce){.pvp-critical-scene *,.pvp-critical-scene,.pvp-qte-announce,.pvp-qte-letters span,.pvp-strike .pvp-fighter-art,.pvp-critical-shake{animation:none!important;transition:none!important}
+ .pvp-critical-flash,.pvp-critical-sprite,.pvp-critical-sparks,.pvp-critical-shock{display:none}
+ .pvp-critical-label{top:22%;opacity:1}.pvp-critical-number{opacity:1;transform:translate(-50%,-90%)}
+ .pvp-qte::before{display:none}}
+
+
+/* PvP v7: Negotiation room and distinct combat ring; moving pet sprites. */
+.pvp-stage{position:relative;isolation:isolate;min-height:340px;overflow:hidden;transition:background .3s,border-color .3s}
+.pvp-stage>.pvp-status,.pvp-stage>.pvp-fighters,.pvp-stage>.pvp-contributions{position:relative;z-index:2}
+.pvp-room-decor{position:absolute;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.pvp-betting-scene{background:radial-gradient(ellipse at 50% 13%,rgba(181,123,54,.18),transparent 65%),linear-gradient(180deg,#211e29 0%,#262b31 100%);border-color:rgba(212,159,90,.4)}
+.pvp-betting-scene .pvp-fighters{min-height:245px;grid-template-columns:minmax(0,1fr) minmax(120px,220px) minmax(0,1fr)}
+.pvp-betting-scene .pvp-fighter-art{height:138px;width:min(75%,165px);filter:drop-shadow(0 9px 4px rgba(0,0,0,.3));transition:none}
+.pvp-betting-scene .pvp-fighter{justify-content:flex-start;padding-top:0}
+.pvp-betting-scene .pvp-middle{z-index:3;margin-top:20px;padding:12px 6px;color:#ffe5af;text-shadow:0 2px 9px #171118}
+.pvp-betting-scene .pvp-status{color:#ffe0a4}
+.pvp-tournament-sign{position:absolute;top:45px;left:50%;transform:translateX(-50%);padding:7px 30px;white-space:nowrap;font-size:13px;letter-spacing:.24em;font-weight:900;color:#ffe3b5;background:rgba(46,27,18,.6);border:1px solid rgba(252,206,124,.32);border-radius:30px}
+.pvp-poker-table{position:absolute;width:78%;height:165px;top:38%;left:11%;border-radius:50%;border:16px solid #573923;background:radial-gradient(ellipse,#286c57 30%,#124339 85%);box-shadow:0 0 0 4px #a2773d,0 20px 55px #080707,inset 0 0 0 5px rgba(230,197,109,.25);transform:perspective(400px) rotateX(58deg)}
+.pvp-table-chips{position:absolute;top:71%;left:50%;transform:translateX(-50%);font-size:17px;opacity:.7}
+.pvp-battle-scene{background:radial-gradient(ellipse at 50% 0%,rgba(118,76,198,.3),transparent 60%),linear-gradient(180deg,#101225 0%,#202844 56%,#1b1425 100%);border-color:rgba(139,115,252,.65)}
+.pvp-battle-scene .pvp-fighters{min-height:245px;grid-template-columns:minmax(0,1fr) minmax(75px,130px) minmax(0,1fr)}
+.pvp-battle-scene .pvp-fighter-art{height:218px;width:min(100%,240px);filter:drop-shadow(0 15px 16px rgba(0,0,0,.52))}
+.pvp-battle-scene .pvp-fighter:first-child .pvp-fighter-art{transform:translateX(16px)}
+.pvp-battle-scene .pvp-fighter:last-child .pvp-fighter-art{transform:translateX(-16px)}
+.pvp-battle-scene .pvp-status{color:#dbdcff}
+.pvp-ring-lights{position:absolute;inset:-100px -10% 0;background:radial-gradient(ellipse at 24% 3%,rgba(184,140,255,.25),transparent 45%),radial-gradient(ellipse at 76% 3%,rgba(107,170,255,.27),transparent 45%)}
+.pvp-ring-ground{position:absolute;left:6%;right:6%;top:53%;height:46%;border-radius:50%;transform:perspective(450px) rotateX(57deg);border:10px solid #695e9a;background:radial-gradient(ellipse,#595578 10%,#222840 75%);box-shadow:0 0 0 5px #232339,0 25px 45px #090b1a}
+.pvp-ring-rope{position:absolute;left:4%;right:4%;height:2px;top:54%;background:linear-gradient(90deg,#8386bc,#d1a4ee,#898eb9);box-shadow:0 20px 0 #676a9c,0 40px 0 #595c88;opacity:.38}
+.pvp-rope-front{top:86%;opacity:.65}
+.pvp-battle-scene .pvp-middle{color:#efebff;text-shadow:0 0 18px rgba(165,140,255,.5)}
+.pvp-betting-scene .pvp-contributions{color:#ffe3aa}
+.pvp-transfer-target .pvp-fighter-art{visibility:hidden!important}
+.pvp-transfer-layer{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:150}
+.pvp-transfer-pet{position:fixed;transform-origin:top left;display:grid;place-items:center;filter:drop-shadow(0 0 22px #fdd58c) drop-shadow(0 10px 18px #070515);will-change:transform}
+.pvp-transfer-pet svg{width:100%;height:100%;max-height:none}
+.pvp-transfer-title{position:absolute;top:15%;left:50%;transform:translateX(-50%);border:2px solid #fff0bd;background:linear-gradient(120deg,#e8b55d,#a15e9f);padding:12px 26px;border-radius:20px;font-size:clamp(16px,3.6vw,33px);font-weight:1000;letter-spacing:.055em;color:#161326;white-space:nowrap;box-shadow:0 0 55px rgba(251,205,130,.65);animation:pvpTransferBanner .85s both}
+@keyframes pvpTransferBanner{0%{opacity:0;transform:translate(-50%,25px) scale(.8)}23%{opacity:1;transform:translate(-50%,0) scale(1.03)}65%{opacity:1}100%{opacity:0;transform:translate(-50%,-20px)}}
+@media(max-width:620px){.pvp-stage{min-height:270px}.pvp-betting-scene .pvp-fighters{min-height:190px;grid-template-columns:minmax(0,1fr) 85px minmax(0,1fr)}.pvp-battle-scene .pvp-fighters{min-height:190px;grid-template-columns:minmax(0,1fr) 65px minmax(0,1fr)}.pvp-betting-scene .pvp-fighter-art{height:92px;width:95px}.pvp-battle-scene .pvp-fighter-art{height:133px;width:130px}.pvp-tournament-sign{top:60px;font-size:10px;letter-spacing:.12em}.pvp-poker-table{top:35%;width:90%;left:5%;height:120px}.pvp-betting-scene .pvp-middle{margin-top:10px}}
+@media(prefers-reduced-motion:reduce){.pvp-transfer-layer{display:none}.pvp-transfer-target .pvp-fighter-art{visibility:visible!important}.pvp-stage{transition:none}}
+
+/* Readability on top of the stage props */
+.pvp-betting-scene .pvp-poker-table{opacity:.6;top:45%;height:135px}
+.pvp-betting-scene .pvp-fighter,.pvp-battle-scene .pvp-fighter{text-shadow:0 1px 5px rgba(0,0,0,.75)}
+.pvp-betting-scene .pvp-hp,.pvp-battle-scene .pvp-hp{background:rgba(16,17,29,.55);border-radius:8px;padding:5px}
+.pvp-battle-scene .pvp-ring-rope{opacity:.18}
+@media(max-width:620px){.pvp-betting-scene .pvp-poker-table{height:90px;top:46%}}

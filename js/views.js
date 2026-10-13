@@ -34,13 +34,13 @@ function drawAuth() {
     const fd = Object.fromEntries(new FormData(e.target)), btn = $('button[type=submit]', e.target);
     busy(btn, true);
     try {
-      const r = await api(reg ? '/auth/register' : '/auth/login', { json: fd }); Token.set(r.token); S.user = r.user; S.authNote = '';
+      const r = await api(reg ? '/auth/register' : '/auth/login', { json: fd }); Token.set(r.token); S.user = r.user; S.authNote = ''; await refreshMe();   // свежий профиль: в нём может быть минута «ОТПЕТУНИН»
       applyTheme(S.user.theme_color, S.user.theme_mode); startReminders(); if (reg) prankArm(); location.hash = '#/'; if (reg) maybePrank();
     } catch (err) { $('#autherr').textContent = err.message; busy(btn, false); }
   });
 }
 actions.authTab = b => { S.authTab = b.dataset.tab; drawAuth(); };
-actions.logout = async () => { Token.clear(); S.user = null; clearInterval(S.reminderTimer); S.reminderTimer = null; location.hash = '#/auth'; };
+actions.logout = async () => { if (typeof petunReset === 'function') petunReset(); Token.clear(); S.user = null; clearInterval(S.reminderTimer); S.reminderTimer = null; location.hash = '#/auth'; };
 
 /* =============================== дашборд =============================== */
 function courseCard(c) {
@@ -66,6 +66,7 @@ route(/^#\/$/, async () => {
   const todayLessons = stats.week.find(d => d.today)?.lessons || 0;
   const pct = goals.length ? Math.min(100, Math.round(spent / Math.max(need, 1) * 100)) : (todayLessons ? 100 : 0);
   render(app(), shell('home', html`
+    ${typeof ltTabs === 'function' ? ltTabs('courses') : ''}
     <div class="lq-home-layout">
     <div class="lq-home-intro">
     <div id="reminder-banner" class="banner ${S.reminder && S.reminder.due ? '' : 'hidden'}"><span style="font-size:30px">🔔</span><div class="grow"><b>${S.reminder ? S.reminder.title : ''}</b><div class="small">${S.reminder ? S.reminder.body : ''}</div></div></div>
@@ -242,6 +243,27 @@ route(/^#\/stats$/, async () => {
   S.statCourse = S.statCourse || '';
   await drawStats();
 });
+/** Награда за достижение: кнопка «Забрать», отметка «получено» или подсказка, сколько жетонов дадут. */
+function achReward(a) {
+  if (!a.reward) return '';
+  if (a.claimable) return html`<button class="btn sm ach-claim" data-act="claimAch" data-key="${a.key}">🎁 Забрать ${a.reward} жетонов</button>`;
+  if (a.claimed) return html`<i class="ach-rw got">✓ Награда получена · ${a.reward} жетонов</i>`;
+  return html`<i class="ach-rw">🎁 Награда: ${a.reward} жетонов</i>`;
+}
+function achClaimAll(list) {
+  const items = list.filter(a => a.claimable), total = items.reduce((n, a) => n + a.reward, 0);
+  return items.length ? html`<button class="btn" data-act="claimAllAch">🎁 Забрать всё: ${total} жетонов</button>` : '';
+}
+actions.claimAch = async b => {
+  busy(b, true);
+  try { const r = await api(`/achievements/${b.dataset.key}/claim`, { method: 'POST' }); toast(`+${r.chips} жетонов. Баланс: ${r.balance}`, { icon: '🎁', title: 'Награда получена' }); play('ok'); drawStats(); }
+  catch (e) { busy(b, false); toast(e.message, { icon: '⚠️' }); }
+};
+actions.claimAllAch = async b => {
+  busy(b, true);
+  try { const r = await api('/achievements/claim', { method: 'POST' }); toast(`+${r.chips} жетонов за ${r.claimed.length} ${plural(r.claimed.length, 'достижение', 'достижения', 'достижений')}. Баланс: ${r.balance}`, { icon: '🎁', title: 'Награды получены' }); play('level'); confetti(80); drawStats(); }
+  catch (e) { busy(b, false); toast(e.message, { icon: '⚠️' }); }
+};
 async function drawStats() {
   const st = await api('/stats' + (S.statCourse ? '?course_id=' + S.statCourse : ''));
   S.statMetric = S.statMetric || 'xp';
@@ -269,8 +291,8 @@ async function drawStats() {
         <div class="mt">${barChart(st.week, S.statMetric, S.statMetric)}</div></div>
       <div class="card"><h3>Уровень ${st.level.level}</h3><div class="bar"><i style="width:${st.level.pct}%"></i></div><p class="muted small mt">${st.level.into} / ${st.level.span} XP до уровня ${st.level.level + 1}</p>
         <h3 class="mt">Опыт по курсам</h3>${st.courses.length ? st.courses.map(c => html`<div class="row spread small mb" style="margin-bottom:6px"><span>${c.icon} ${c.title}</span><b>⭐ ${c.xp}</b></div>`) : html`<p class="muted small">Курсов пока нет.</p>`}</div></div>
-    <h2>Достижения <span class="muted small">${st.achievements.filter(a => a.unlocked).length}/${st.achievements.length}</span></h2>
-    <div class="ach-grid">${st.achievements.map(a => html`<div class="ach ${a.unlocked ? '' : 'locked'}"><div class="ic">${a.icon}</div><div><b>${a.title}</b><span>${a.desc}</span></div></div>`)}</div>`));
+    <div class="row spread wrap"><h2 style="margin:0">Достижения <span class="muted small">${st.achievements.filter(a => a.unlocked).length}/${st.achievements.length}</span></h2>${achClaimAll(st.achievements)}</div>
+    <div class="ach-grid mt">${st.achievements.map(a => html`<div class="ach ${a.unlocked ? '' : 'locked'} ${a.claimable ? 'claimable' : ''}"><div class="ic">${a.icon}</div><div class="grow"><b>${a.title}</b><span>${a.desc}</span>${achReward(a)}</div></div>`)}</div>`));
   $('#statcourse').onchange = e => { S.statCourse = e.target.value; drawStats(); };
   const hs = $('.heat-scroll'); if (hs) hs.scrollLeft = hs.scrollWidth;  // сразу показываем свежие недели
   S.lastStats = st;
@@ -334,7 +356,7 @@ async function drawSettings() {
       <div class="field"><label>Токен Telegram-бота (от @BotFather)</label><input type="password" id="tgtoken" placeholder="${set.telegram.configured ? 'токен задан — оставь пустым, чтобы не менять' : '123456:ABC…'}" autocomplete="off"></div>
       <div class="row"><button class="btn" data-act="saveAdmin">Сохранить</button><button class="btn ghost" data-act="testLLM">Проверить модель</button></div><div id="llmres" class="small mt"></div></div>
     <div class="card"><h3>📚 Каталог готовых курсов</h3><p class="small muted">Готовые курсы получают номер; друзья находят их по номеру и добавляют себе. Свой курс можно опубликовать кнопкой «В каталог» на его странице.</p>
-      <div class="row wrap gap-s"><button class="btn sm ghost" data-act="exportCatalog">⬇ Экспорт каталога (JSON)</button><button class="btn sm ghost" data-act="importCatalog">⬆ Импорт каталога</button><input type="file" id="catfile" accept=".json,application/json" class="hidden"></div><div id="catres" class="small mt"></div></div>
+      <div class="row wrap gap-s"><button class="btn sm ghost" data-act="exportCatalog">⬇ Экспорт каталога (JSON)</button><button class="btn sm ghost" data-act="importCatalog">⬆ Импорт каталога</button><input type="file" id="catfile" accept=".json,application/json" class="hidden"><button class="btn sm ghost" data-act="supplementCatalog">➕ Дополнить курс файлом</button><input type="file" id="supfile" accept=".json,application/json" class="hidden"></div><div class="small muted mt">«Дополнить курс»: загрузи файл дополнения (новая лекция) — модули добавятся в конец курса каталога и у всех, кто уже его добавил; прогресс сохранится.</div><div id="catres" class="small mt"></div></div>
     <div class="card" id="bkcard"><h3>💾 Резервные копии базы</h3><p class="small muted">Раз в сутки сервер сохраняет снимок базы (пользователи, курсы, прогресс, ключи) и хранит несколько последних. Копии лежат на том же сервере, поэтому время от времени скачивай свежую к себе. Файл содержит секреты — храни его как пароли.</p>
       <div class="row wrap gap-s mb"><button class="btn sm" data-act="backupNow">Сделать копию сейчас</button><button class="btn sm ghost" data-act="backupFresh">⬇ Скачать свежую копию</button></div><div id="bklist" class="small col" style="gap:6px"><span class="muted">загружаю…</span></div></div>` : ''}
     <div class="row wrap"><button class="btn ghost" data-act="logout">Выйти из аккаунта</button><button class="btn ghost" data-act="logoutAll">Выйти на всех устройствах</button></div></div></div>`));
@@ -504,6 +526,21 @@ actions.logoutAll = async () => {
   actions.logout();
 };
 actions.exportCatalog = async () => { try { await downloadApi('/admin/catalog/export', 'catalog_seed.json'); } catch (e) { toast(e.message, { icon: '⚠️' }); } };
+actions.supplementCatalog = () => {
+  const inp = $('#supfile'); inp.onchange = async () => {
+    const f = inp.files[0]; inp.value = ''; if (!f) return;
+    try {
+      let n = 0; try { n = Number(JSON.parse(await f.text()).catalog_no) || 0; } catch (e) { throw new Error('Это не JSON-файл дополнения'); }
+      if (!n) n = Number(prompt('Номер курса в каталоге, к которому относится дополнение (101, 102…)', '102')) || 0;
+      if (!n) return;
+      if (!confirm(`Добавить новые модули в курс №${n} и всем, кто его уже добавил? Прогресс сохранится.`)) return;
+      const fd = new FormData(); fd.append('file', f);
+      $('#catres').textContent = 'Загружаю…';
+      const r = await api(`/admin/catalog/${n}/supplement`, { method: 'POST', body: fd });
+      $('#catres').innerHTML = r.template === 'skipped' && !r.copies_added ? `ℹ️ Этот файл уже добавлен в курс №${n} — ничего не изменилось.` : `✅ Курс №${n} дополнен. Курсов пользователей обновлено: ${r.copies_added}${r.relinked ? ` (из них найдено по материалам: ${r.relinked})` : ''}, уже было: ${r.copies_skipped}.${r.copies_added + r.copies_skipped ? '' : ' ⚠️ Ни один курс пользователей не найден — у них другой набор материалов.'}`;
+    } catch (e) { $('#catres').innerHTML = `<span class="err">${esc(e.message)}</span>`; }
+  }; inp.click();
+};
 actions.importCatalog = () => {
   const inp = $('#catfile'); inp.onchange = async () => {
     const fd = new FormData(); fd.append('file', inp.files[0]);
