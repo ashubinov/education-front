@@ -150,7 +150,9 @@ function hexToHsl(hex) {
 }
 function hsl(h, s, l) { return `hsl(${h.toFixed(0)} ${s.toFixed(0)}% ${l.toFixed(0)}%)`; }
 function lum(hex) { const n = parseInt(hex.slice(1), 16); const f = c => { c /= 255; return c <= .03928 ? c / 12.92 : Math.pow((c + .055) / 1.055, 2.4); }; return .2126 * f(n >> 16) + .7152 * f((n >> 8) & 255) + .0722 * f(n & 255); }
-const THEME_DEFAULT = { preset: '', bg: 'glow', radius: 'normal', motion: 'full' };
+const THEME_DEFAULT = { preset: '', bg: 'glow', radius: 'normal', motion: 'full', custom: null };
+/** Значок рядом с названием: у темы с палитрой (js/themes.js) свой, иначе сова. */
+function themeLogo() { return S.themeLogo || '🦉'; }
 /** Готовые темы: цвет акцента + стиль фона (светлая/тёмная тема выбирается отдельно). */
 const THEME_PRESETS = [
   { id: 'classic', name: 'Классика', color: '#7c5cff', bg: 'glow' },
@@ -164,6 +166,10 @@ const THEME_PRESETS = [
 function applyTheme(color, mode, extra) {
   color = /^#[0-9a-f]{6}$/i.test(color) ? color : '#7c5cff';
   extra = { ...THEME_DEFAULT, ...(extra || (S.user && S.user.theme_extra) || {}) };
+  // тема с палитрой (готовая, своя или предпросмотр) задаёт все цвета сама; иначе обычное оформление: цвет, режим, фон
+  const pal = typeof currentPalette === 'function' ? currentPalette(extra) : null;
+  if (pal) return applyPalette(pal, extra);
+  if (typeof clearPalette === 'function') clearPalette();
   const [h, s, l] = hexToHsl(color), de = document.documentElement, root = de.style;
   root.setProperty('--accent', color);
   root.setProperty('--accent-d', hsl(h, Math.min(100, s + 4), Math.max(14, l - 14)));
@@ -288,7 +294,7 @@ function shell(active, inner) {
   S.active = active;
   const nav = navItems();
   return html`<header class="topbar"><div class="topbar-in">
-      <a class="logo" href="#/"><span>🦉</span><span>Learn<b>Quest</b></span></a>
+      <a class="logo" href="#/"><span>${themeLogo()}</span><span>Learn<b>Quest</b></span></a>
       <nav class="nav">${nav.map(n => navLink(n, active, false))}</nav>
       <div id="hud">${hud()}</div></div></header>
     <main>${subNav(active)}${inner}</main>
