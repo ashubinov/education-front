@@ -143,7 +143,7 @@ function chatEntry(msg) {
 }
 
 function chatIsBottom(el) {
-  return !el || el.scrollHeight - el.clientHeight - el.scrollTop < 90;
+  return !el || el.scrollHeight - el.clientHeight - el.scrollTop < 12;
 }
 
 function chatScrollBottom() {
@@ -219,9 +219,22 @@ async function chatMountHome() {
   $('#chatGifFile').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (f) chatSendGif(f, generation); });
   $('#chatOlder').addEventListener('click', () => chatOlder(generation));
   $('#chatUnread').addEventListener('click', chatScrollBottom);
+  let loadingFromTop = false;
+  const loadAtTop = () => {
+    if (!chatIsCurrent(generation) || !CHAT.hasMore || CHAT.loadingMore || loadingFromTop) return;
+    loadingFromTop = true;
+    chatOlder(generation).finally(() => { loadingFromTop = false; });
+  };
   area.addEventListener('scroll', () => {
-    if (chatIsBottom(area)) chatScrollBottom();
-  });
+    if (chatIsBottom(area)) {
+      CHAT.unread = 0;
+      $('#chatUnread')?.classList.add('hidden');
+    }
+    if (area.scrollTop <= 20) loadAtTop();
+  }, { passive: true });
+  area.addEventListener('wheel', e => {
+    if (e.deltaY < 0 && area.scrollTop <= 20) loadAtTop();
+  }, { passive: true });
 
   const onVisibility = () => {
     if (document.hidden || !chatIsCurrent(generation)) return;
