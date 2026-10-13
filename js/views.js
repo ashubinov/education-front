@@ -305,11 +305,12 @@ const AVATARS = ['🦊', '🐼', '🦉', '🐙', '🦄', '🐲', '🐱', '🐶',
 route(/^#\/settings$/, async () => { await drawSettings(); });
 async function drawSettings() {
   const keepY = window.scrollY;
-  const [set, tg] = await Promise.all([api('/settings'), api('/telegram/status')]);
+  const [set, tg, fresh] = await Promise.all([api('/settings'), api('/telegram/status'), api('/me').catch(() => null)]);
+  if (fresh) S.user = fresh;
   S.settings = set; const u = S.user;
   render(app(), shell('settings', html`<div class="page-narrow"><h1>Настройки</h1><div class="col">
     <div class="card"><h3>👤 Профиль</h3>
-      <div class="row mb"><div class="pav xl">${av(u)}</div><div class="grow pname"><b style="font-size:20px">${u.display_name}</b><div class="small muted">@${u.username}</div></div></div>
+      <div class="row mb"><div class="pav xl">${av(u)}</div><div class="grow pname"><b style="font-size:20px">${u.display_name}</b><div class="small muted">@${u.username}</div><div class="mt-s">${u.clan ? html`<a class="clan-tag" href="#/clan/${u.clan.id}" title="Клан «${u.clan.name}»">${u.clan.emoji} ${u.clan.name} · ${u.clan.tag}</a>` : html`<a class="small" href="#/clans">Вступить в клан или создать свой →</a>`}</div></div></div>
       <div class="field"><label>Имя</label><div class="row"><input type="text" id="dname" value="${u.display_name}" maxlength="40"><button class="btn sm" data-act="saveName">Сохранить</button></div></div>
       <div class="field"><label>Аватар</label>
         <div class="row wrap gap-s"><button class="btn sm" data-act="pickAvatar">📷 Загрузить своё фото</button>${u.avatar_url ? html`<button class="btn sm ghost" data-act="removeAvatar">Убрать фото</button>` : ''}<input type="file" id="avfile" accept="image/png,image/jpeg,image/webp,image/gif" class="hidden"></div>

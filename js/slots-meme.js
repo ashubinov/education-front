@@ -308,10 +308,10 @@ function mmSide() {
       <div class="mm-history">${st.history.length ? st.history.map(h => html`<div class="mm-history-row"><span>${h.net > 0 ? '🎉' : '🎬'} −${mmFmt(h.bet)}</span><b class="${h.net>=0?'positive':'negative'}">${h.net>=0?'+':''}${mmFmt(h.net)}</b></div>`) : html`<p class="small muted">Пока нет вращений.</p>`}</div>
     </div>
     <details class="card mm-info"><summary class="mm-info-title">ТАБЛИЦА ВЫПЛАТ</summary><div class="mm-paylist">
-      ${st.meta.symbols.filter(s => s.pays).map(s => html`<div class="mm-payrow"><img src="${mmPoster(s.id)}" alt=""><span>${s.name}</span><b>${s.pays.map((p,i) => `${i+3}×: ${mmFmt(Math.floor((p*MM.bet/10*3+2)/4))}`).join(' · ')}</b></div>`)}
-      <div class="mm-payrow"><span>SCATTER</span><b>3: ${mmFmt(Math.floor((MM.bet*3+2)/4))} · 4: ${mmFmt(Math.floor((MM.bet*5*3+2)/4))} · 5: ${mmFmt(Math.floor((MM.bet*25*3+2)/4))}</b></div>
+      ${st.meta.symbols.filter(s => s.pays).map(s => html`<div class="mm-payrow"><img src="${mmPoster(s.id)}" alt=""><span>${s.name}</span><b>${s.pays.map((p,i) => `${i+3}×: ${mmFmt(p*MM.bet/10)}`).join(' · ')}</b></div>`)}
+      <div class="mm-payrow"><span>SCATTER</span><b>3: ${mmFmt(MM.bet)} · 4: ${mmFmt(MM.bet*5)} · 5: ${mmFmt(MM.bet*25)}</b></div>
       <div class="mm-payrow"><span>BONUS</span><b>3+ символа — случайная награда</b></div>
-      </div><p class="small muted mt">10 линий. Мемный автомат чаще выдаёт небольшие выигрыши, поэтому коэффициенты обычных комбинаций снижены до 75% собачьего автомата. Все исходы определяет сервер.</p></details>
+      </div><p class="small muted mt">10 линий. Шансы и выплаты те же, что у собачьего автомата «Лапа удачи». Цифры — для текущей ставки. Все исходы определяет сервер.</p></details>
     <div class="card mm-info"><div class="mm-info-title">🏆 ОБЩИЙ РЕЙТИНГ СЛОТОВ</div>
       ${MM.board.slice(0,8).map((u,i) => html`<div class="mm-history-row"><span>${i+1}. ${u.display_name}</span><b>${mmFmt(u.best_win)}</b></div>`)}
     </div>`);

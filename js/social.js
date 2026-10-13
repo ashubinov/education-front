@@ -13,7 +13,7 @@ function fmtLast(iso) {
   return d <= 0 ? 'занимался сегодня' : d === 1 ? 'занимался вчера' : d < 30 ? `занимался ${d} ${plural(d, 'день', 'дня', 'дней')} назад` : 'давно не заходил';
 }
 function fmtStamp(s) { try { return new Date(s.replace(' ', 'T') + 'Z').toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' }); } catch (e) { return ''; } }
-const who = p => html`<span class="pav">${av(p)}</span><div class="grow pname"><b>${p.display_name}</b><div class="small muted">@${p.username}</div></div>`;
+const who = p => html`<span class="pav">${av(p)}</span><div class="grow pname"><b>${p.display_name}</b>${clanTag(p.clan)}<div class="small muted">@${p.username}</div></div>`;
 const goBack = (href, text) => html`<a href="${href}" class="small back">← ${text}</a>`;
 
 /* =============================== друзья =============================== */
@@ -76,7 +76,7 @@ async function drawFriend(id) {
   render(app(), shell('friends', html`${goBack('#/friends', 'Все друзья')}
     <div class="card quest mb mt-s">
       <div class="pav xl">${av(p)}</div>
-      <div class="grow"><h2 style="margin:0">${p.display_name}</h2><div class="small muted">@${p.username} · с нами с ${fmtStamp(p.member_since)} · ${fmtLast(p.last_active)}</div>
+      <div class="grow"><h2 style="margin:0">${p.display_name}${clanTag(p.clan)}</h2><div class="small muted">@${p.username} · с нами с ${fmtStamp(p.member_since)} · ${fmtLast(p.last_active)}</div>
         <div class="row wrap gap-s mt"><span class="chip accent">Уровень ${p.level_full.level}</span><span class="chip ${p.streak ? 'warn' : ''}">🔥 серия ${p.streak}</span><span class="chip">🏅 рекорд ${p.best_streak}</span></div>
         <div class="bar thin mt"><i style="width:${p.level_full.pct}%"></i></div><div class="small muted">${p.level_full.into} / ${p.level_full.span} XP до уровня ${p.level_full.level + 1}</div></div></div>
     <div class="tiles mb">
