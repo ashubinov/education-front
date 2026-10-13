@@ -1,0 +1,34 @@
+/* LearnQuest — «Кланы». */
+.clan-tag { display: inline-flex; align-items: center; gap: 4px; margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: var(--accent-l); color: var(--accent);
+  font-size: 12px; font-weight: 900; letter-spacing: .04em; line-height: 1.6; vertical-align: middle; white-space: nowrap; }
+.clan-tag.sm { margin-left: 0; padding: 0 6px; font-size: 11px; }
+a.clan-tag { text-decoration: none; margin-left: 0; }
+a.clan-tag:hover { filter: brightness(1.15); }
+
+.cl-page { display: flex; flex-direction: column; }
+.cl-page h1 { text-align: left; }
+.cl-mine { border-color: var(--accent); background: linear-gradient(135deg, var(--accent-l), transparent 70%), var(--bg2); }
+.cl-toolbar { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+.cl-tabs { margin-bottom: 0; }
+.cl-row { display: flex; align-items: center; gap: 12px; cursor: pointer; padding: 14px; transition: border-color .15s, transform .15s; }
+.cl-row:hover { border-color: var(--accent); transform: translateY(-1px); }
+.cl-rank { min-width: 36px; text-align: center; font-weight: 900; color: var(--muted); font-size: 15px; }
+.cl-rank.sm { min-width: 22px; font-size: 13px; }
+.cl-row:nth-child(-n+3) .cl-rank { color: var(--accent); }
+.cl-main { min-width: 0; }
+.cl-name { display: flex; align-items: center; flex-wrap: wrap; gap: 2px; }
+.cl-name b { overflow-wrap: anywhere; }
+.cl-act { flex: none; }
+.cl-member .pname { min-width: 0; }
+.cl-member .pname b { overflow-wrap: anywhere; }
+.cl-edit { border-top: 2px solid var(--line); padding-top: 14px; }
+.cl-head h2 { overflow-wrap: anywhere; }
+
+@media (max-width: 560px) {
+  .cl-mine .pav.xl, .cl-head .pav.xl { width: 64px; height: 64px; font-size: 38px; border-radius: 20px; }
+  .cl-mine .row > .btn { flex: 1 1 100%; }
+  .cl-row { flex-wrap: wrap; padding: 12px; }
+  .cl-rank { min-width: 28px; }
+  .cl-act { flex: 1 1 100%; } .cl-act .btn { width: 100%; }
+  .cl-member .btn { flex: 0 0 auto; }
+}
