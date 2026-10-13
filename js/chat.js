@@ -124,6 +124,14 @@ function chatEntry(msg) {
     gif.addEventListener('error', () => { const n = document.createElement('div'); n.className = 'lq-chat-text lq-chat-gif-gone'; n.textContent = '🖼 GIF больше недоступен'; gif.replaceWith(n); });
     content.append(gif);
   }
+  if (msg.image_url && /^\/api\/chat\/images\/[A-Za-z0-9_-]+$/.test(msg.image_url)) {   // фото: тот же приём, что и у GIF
+    const ph = document.createElement('img');
+    ph.className = 'lq-chat-gif lq-chat-photo'; ph.alt = 'Фото'; ph.loading = 'lazy'; ph.decoding = 'async';
+    ph.src = API_BASE + msg.image_url;
+    ph.dataset.act = 'chatImageOpen'; ph.dataset.src = ph.src;
+    ph.addEventListener('error', () => { const n = document.createElement('div'); n.className = 'lq-chat-text lq-chat-gif-gone'; n.textContent = '🖼 Фото больше недоступно'; ph.replaceWith(n); });
+    content.append(ph);
+  }
   if (msg.text) {
     const text = document.createElement('div');
     text.className = 'lq-chat-text';
@@ -194,7 +202,7 @@ async function chatMountHome() {
     <div class="lq-chat-list" id="chatMessages" role="log" aria-label="Общий чат" aria-live="off"><div id="chatEmpty" class="lq-chat-placeholder">Загрузка сообщений…</div></div>
     <form id="chatForm" class="lq-chat-form">
       <label class="lq-chat-label" for="chatText">Сообщение</label>
-      <div class="lq-chat-compose"><textarea id="chatText" maxlength="1000" rows="2" placeholder="Напиши сообщение…" aria-describedby="chatHint"></textarea><button class="btn ghost lq-chat-gifbtn" id="chatGif" type="button" title="Отправить GIF" aria-label="Отправить GIF">GIF</button><button class="btn lq-chat-send" id="chatSend" type="submit">➤</button><input type="file" id="chatGifFile" accept="image/gif" class="hidden"></div>
+      <div class="lq-chat-compose"><textarea id="chatText" maxlength="1000" rows="2" placeholder="Напиши сообщение…" aria-describedby="chatHint"></textarea><button class="btn ghost lq-chat-gifbtn" id="chatGif" type="button" title="Отправить GIF" aria-label="Отправить GIF">GIF</button><button class="btn ghost lq-chat-gifbtn" id="chatPhoto" type="button" title="Отправить фото" aria-label="Отправить фото">📷</button><button class="btn lq-chat-send" id="chatSend" type="submit">➤</button><input type="file" id="chatGifFile" accept="image/gif" class="hidden"><input type="file" id="chatPhotoFile" accept="image/jpeg,image/png,image/webp,image/*" class="hidden"></div>
       <div class="lq-chat-help"><span id="chatHint">Enter — отправить · Shift+Enter — перенос</span><span id="chatCount">0 / 1000</span></div>
     </form>
   </div>`;
@@ -206,6 +214,8 @@ async function chatMountHome() {
     if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); chatSend(generation); }
   });
   $('#chatGif').addEventListener('click', () => $('#chatGifFile').click());
+  $('#chatPhoto').addEventListener('click', () => $('#chatPhotoFile').click());
+  $('#chatPhotoFile').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (f) chatSendPhoto(f, generation); });
   $('#chatGifFile').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (f) chatSendGif(f, generation); });
   $('#chatOlder').addEventListener('click', () => chatOlder(generation));
   $('#chatUnread').addEventListener('click', chatScrollBottom);
@@ -341,6 +351,51 @@ async function chatSendGif(file, generation) {
     if (chatIsCurrent(generation)) { chatSetStatus('Не отправлено', true); toast(e.message, { icon: '⚠️' }); }
   } finally { if (chatIsCurrent(generation)) btn.disabled = false; }
 }
+const CHAT_PHOTO_SIDE = 1600, CHAT_PHOTO_MAX = 8_000_000;
+/** Уменьшить фото до CHAT_PHOTO_SIDE и перекодировать в JPEG: браузер сам учитывает поворот с камеры, метаданные (в т.ч. геометка) не передаются. */
+async function chatPreparePhoto(file) {
+  try {
+    const bmp = await createImageBitmap(file, { imageOrientation: 'from-image' });
+    const k = Math.min(1, CHAT_PHOTO_SIDE / Math.max(bmp.width, bmp.height));
+    const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(bmp.width * k)); c.height = Math.max(1, Math.round(bmp.height * k));
+    const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(bmp, 0, 0, c.width, c.height);
+    if (bmp.close) bmp.close();
+    const blob = await new Promise(res => c.toBlob(res, 'image/jpeg', 0.85));
+    if (blob) return blob;
+  } catch (e) { /* не вышло — отправим исходный файл, если он подходит */ }
+  return /^image\/(jpeg|png)$/.test(file.type) && file.size <= CHAT_PHOTO_MAX ? file : null;
+}
+/** Отправить фото в чат (с подписью из поля ввода, если она есть). Сервер заново проверяет и пересобирает файл. */
+async function chatSendPhoto(file, generation) {
+  if (!chatIsCurrent(generation)) return;
+  const input = $('#chatText'), btn = $('#chatPhoto');
+  if (file.type === 'image/gif') { toast('Для GIF есть своя кнопка', { icon: '🖼' }); return; }
+  if (!/^image\//.test(file.type)) { toast('Нужен файл-картинка (JPEG или PNG)', { icon: '🖼' }); return; }
+  const caption = input.value.trim();
+  if (caption.length > 200) { toast('Подпись к фото — не больше 200 символов', { icon: '✍️' }); return; }
+  btn.disabled = true; chatSetStatus('Готовлю фото…');
+  try {
+    const blob = await chatPreparePhoto(file);
+    if (!blob) throw new Error('Не удалось прочитать фото — попробуй другой файл');
+    if (blob.size > CHAT_PHOTO_MAX) throw new Error('Фото тяжелее 8 МБ — выбери поменьше');
+    const fd = new FormData();
+    fd.append('file', blob, 'photo.jpg'); fd.append('request_id', chatId()); fd.append('caption', caption);
+    chatSetStatus('Отправка фото…');
+    const result = await api('/chat/image', { method: 'POST', body: fd });
+    if (!chatIsCurrent(generation)) return;
+    chatMessage(result);
+    input.value = ''; $('#chatCount').textContent = '0 / 1000';
+    chatSetStatus('На связи');
+    chatPoll(generation);
+  } catch (e) {
+    if (chatIsCurrent(generation)) { chatSetStatus('Не отправлено', true); toast(e.message, { icon: '⚠️' }); }
+  } finally { if (chatIsCurrent(generation)) btn.disabled = false; }
+}
+actions.chatImageOpen = b => {
+  const src = b.dataset.src;
+  if (!src) return;
+  return openModal(html`<div class="center"><img class="lq-chat-gif-big" alt="Фото" src="${src}"></div><div class="row mt" style="justify-content:center"><button class="btn ghost" data-act="closeModal">Закрыть</button></div>`);
+};
 actions.chatGifOpen = b => {
   const src = b.dataset.src;
   if (!src) return;
