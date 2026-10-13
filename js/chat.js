@@ -99,7 +99,14 @@ function chatEntry(msg) {
   const time = document.createElement('time');
   time.dateTime = msg.created_at;
   time.textContent = chatTime(msg.created_at);
-  header.append(who, time);
+  header.append(who);
+  if (msg.clan_tag) {
+    const ct = document.createElement('span');
+    ct.className = 'clan-tag sm';
+    ct.textContent = msg.clan_tag;
+    header.append(ct);
+  }
+  header.append(time);
   if (msg.system_kind === 'command') {
     const tag = document.createElement('span');
     tag.className = 'lq-chat-command-tag';
