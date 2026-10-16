@@ -201,7 +201,7 @@ function petunOpenGuess(id) {
   const m = openModal(html`<div class="mg-guess-modal"><h2>🐓 Кто тебя отпетунил?</h2>
     <p>${a.amount ? html`У тебя украли <b>${petunFmt(a.amount)} 🪙</b>. ` : ''}Выбери одного друга. <b>Попытка только одна.</b> Не угадаешь — минуту сможешь только заниматься на курсах${a.amount ? ' и жетоны достанутся вору' : ''}.</p>
     <form id="ptGuessForm"><label class="mg-label" for="ptSuspect">Это сделал…</label>
-      <select id="ptSuspect" required>${a.candidates.map(f => html`<option value="${f.id}" class="${f.emphasis ? 'mg-choice-accent' : ''}">${f.emphasis ? '★ ' : ''}${f.name} (@${f.username})</option>`)}</select>
+      <select id="ptSuspect" required>${a.candidates.map(f => html`<option value="${f.id}">${f.name} (@${f.username})</option>`)}</select>
       <div id="ptGuessError" class="err" role="alert"></div>
       <div class="mg-guess-buttons"><button class="btn ghost" type="button" id="ptGuessCancel">Отмена</button><button class="btn" type="submit" id="ptGuessSubmit">Подтвердить</button></div></form></div>`);
   m.querySelector('#ptGuessCancel').onclick = closeModal;

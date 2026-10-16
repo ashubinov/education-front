@@ -220,7 +220,7 @@ function mgOpenPending(id) {
     <h2>🍓 Угадай клубничного вора</h2>
     <p>У тебя украли <b>${mgFmt(theft.amount)} 🪙</b>. Выбери одного друга. <b>Попытка только одна, срок — 24 часа.</b></p>
     <form id="mgGuessForm"><label class="mg-label" for="mgSuspect">Кто отклубничил тебя?</label>
-      <select id="mgSuspect" required>${theft.candidates.map(f => html`<option value="${f.id}" class="${f.emphasis ? 'mg-choice-accent' : ''}">${f.emphasis ? '★ ' : ''}${f.name} (@${f.username})</option>`)}</select>
+      <select id="mgSuspect" required>${theft.candidates.map(f => html`<option value="${f.id}">${f.name} (@${f.username})</option>`)}</select>
       <div id="mgGuessError" class="err" role="alert"></div>
       <div class="mg-guess-buttons"><button class="btn ghost" type="button" id="mgGuessCancel">Отмена</button>
         <button class="btn" type="submit" id="mgGuessSubmit">Подтвердить догадку</button></div></form>
