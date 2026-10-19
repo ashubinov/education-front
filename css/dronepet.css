@@ -38,3 +38,10 @@
   html.dp-on main > .lt-tabs a { flex: 1; justify-content: center; padding: 8px 6px; font-size: 14px; min-width: 0; }
   html.dp-on main > .sub-nav a { flex: 1 1 auto; justify-content: center; padding-left: 8px; padding-right: 8px; }
 }
+
+/* главная на компьютере: чат стоит в правой колонке, прямо под дроном, — опускаем его ниже дрона (иначе кнопки в заголовке чата не нажать) */
+@media (min-width: 921px) {
+  html.dp-on .lq-home-layout { grid-template-rows: auto 1fr; }   /* лишняя высота достаётся списку курсов, а не приветствию */
+  html.dp-on .lq-home-chat { margin-top: 168px; top: 246px; }
+  html.dp-on .lq-chat-list { height: clamp(200px, calc(100vh - 460px), 440px); }
+}
