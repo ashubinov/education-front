@@ -179,13 +179,14 @@ actions.fmSeed = b => fmDo('plant', FARM.target == null ? { crop: b.dataset.crop
 
 actions.fmExchange = () => fmShow(() => {
   const e = FARM.st.exchange;
-  openModal(html`<h2>🔁 Обмен</h2><p class="muted small">Монеты фермы 💰 и общие жетоны 🪙 (слоты, питомец, пикселы). Обратно монеты в жетоны меняются невыгодно и не больше ${e.out_daily} жетонов в сутки, чтобы ферма не ломала игру.</p>
+  openModal(html`<h2>🔁 Обмен</h2><p class="muted small">Монеты фермы 💰 и общие жетоны 🪙 (слоты, питомец, пикселы). Обмен идёт в обе стороны 1 к 1 и без лимита: выводи хоть все монеты.</p>
     <div class="fm-ex"><div><b>🪙 → 💰</b><p class="muted small" style="margin:2px 0 6px">1 жетон = ${e.in_rate} монета. У тебя ${slFmt(e.balance)} жетонов.</p>
         <div class="row gap-s"><input id="fmExIn" type="number" min="1" value="50" inputmode="numeric" style="width:110px"><button class="btn sm" data-act="fmExGo" data-dir="in">Купить монеты</button></div></div>
-      <div><b>💰 → 🪙</b><p class="muted small" style="margin:2px 0 6px">${e.out_rate} монет = 1 жетон. Сегодня ещё можно получить ${e.out_left} жетонов.</p>
-        <div class="row gap-s"><input id="fmExOut" type="number" min="1" value="10" inputmode="numeric" style="width:110px"><button class="btn sm" data-act="fmExGo" data-dir="out">Получить жетоны</button></div></div></div>
+      <div><b>💰 → 🪙</b><p class="muted small" style="margin:2px 0 6px">${e.out_rate} монета = 1 жетон. У тебя ${slFmt(FARM.st.farm.coins)} монет.</p>
+        <div class="row gap-s"><input id="fmExOut" type="number" min="1" value="10" inputmode="numeric" style="width:110px"><button class="btn sm ghost" data-act="fmExAll" title="Вывести все монеты">Все</button><button class="btn sm" data-act="fmExGo" data-dir="out">Получить жетоны</button></div></div></div>
     <div class="row mt" style="justify-content:flex-end"><button class="btn ghost" data-act="closeModal">Закрыть</button></div>`, { onClose: fmPanelClose });
 });
+actions.fmExAll = () => { const n = Math.floor(FARM.st.farm.coins / FARM.st.exchange.out_rate); if (n < 1) return toast('Нет монет для вывода', { icon: '💰' }); $('#fmExOut').value = n; };
 actions.fmExGo = b => { const dir = b.dataset.dir, n = Math.floor(+($(dir === 'in' ? '#fmExIn' : '#fmExOut').value)); if (!(n >= 1)) return toast('Введи количество', { icon: '✏️' }); fmDo('exchange', { direction: dir, amount: n }, 'fmCoin', true); };
 
 /* ---------- карточка на странице друга ---------- */
