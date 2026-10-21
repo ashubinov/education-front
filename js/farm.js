@@ -137,6 +137,10 @@ actions.fmPlot = b => {
   if (p.state === 'ready') return fmDo('harvest', { idx: p.idx }, 'fmHarvest');
   toast(`${fmCrop(p.crop).name} созреет через ${fmClock(p.left - (Date.now() - FARM.t0) / 1000)}`, { icon: fmCrop(p.crop).icon, ms: 1800 });
 };
+actions.lakeOpen = () => {
+  if (FARM.st.farm.level < 10) return toast('К озеру ведёт заросшая тропа. Подрасти ферму до 10 уровня', { icon: '🔒', ms: 2400 });
+  closeModal(); location.hash = '#/farm/lake';
+};
 actions.labOpen = () => {
   if (FARM.st.farm.level < 6) return toast('Люк заперт на старый замок. Подрасти ферму до 6 уровня', { icon: '🔒', ms: 2400 });
   closeModal(); location.hash = '#/farm/lab';

@@ -188,6 +188,16 @@ function faBuyPlot(idx, cost, coins) {
     + `<text x="${faX(X + S / 2, Y + S / 2).toFixed(1)}" y="${(faY(X + S / 2, Y + S / 2) + 15).toFixed(1)}" text-anchor="middle" font-size="12" font-weight="800" fill="${coins >= cost ? '#fff' : '#ffb3b3'}" stroke="rgba(0,0,0,.4)" stroke-width=".5">💰 ${cost}</text></g>`;
 }
 
+/** Мосток и табличка у пруда: вход на «Озеро» (рыбалка). Пока ферма ниже 10 уровня, табличка с замком. */
+function faLakeGate(st) {
+  const ok = st.farm.level >= 10, x = 1.45, y = .5;
+  let g = faPoly([[x - .32, y - .1, 5], [x + .32, y - .1, 5], [x + .32, y + .85, 5], [x - .32, y + .85, 5]], '#c89a62', 'stroke="#8a6238" stroke-width="1.6"');
+  for (let t = 0; t < .85; t += .22) g += faLine([x - .32, y + t, 5], [x + .32, y + t, 5], '#9a6c3e', 1.2);
+  g += `<g transform="translate(${faX(x + .75, y - .1).toFixed(1)} ${faY(x + .75, y - .1).toFixed(1)})"><ellipse cy="3" rx="20" ry="6" fill="rgba(0,0,0,.16)"/><rect x="-2.5" y="-50" width="5" height="52" fill="#6b4426"/>`
+    + `<path d="M-30 -56 H26 L38 -44 L26 -32 H-30Z" fill="${ok ? '#f5ead0' : '#cfc7b4'}" stroke="#7a5430" stroke-width="2.6"/><text x="-2" y="-39" text-anchor="middle" font-size="11.5" font-weight="900" fill="#3b2a1e">${ok ? '🎣 Озеро' : '🔒 ур. 10'}</text></g>`;
+  return g;
+}
+
 /* ---------------- сцена целиком ---------------- */
 function farmScene(st) {
   const N = FA.N, r = faRng(7), objs = [];
@@ -208,8 +218,8 @@ function farmScene(st) {
   stones.forEach(([x, y]) => { g += faPoly([[x, y, 0], [x + .38, y, 0], [x + .38, y + .38, 0], [x, y + .38, 0]], '#d4c6a0', 'stroke="#a8996f" stroke-width="1.5"'); });
   // пруд
   const pond = Array.from({ length: 22 }, (_, i) => { const a = i / 22 * Math.PI * 2; return [1.35 + Math.cos(a) * 1.15 + Math.sin(a * 3) * .08, 1.45 + Math.sin(a) * .85, 0]; });
-  g += faPoly(pond, '#6ec8ec', 'stroke="#3d95b8" stroke-width="3"') + faPoly(pond.map(([x, y]) => [1.35 + (x - 1.35) * .6, 1.45 + (y - 1.45) * .6 - .05, 0]), '#8fdcf5', 'opacity=".7"')
-    + `<g transform="translate(${faX(1.2, 1.4).toFixed(1)} ${faY(1.2, 1.4).toFixed(1)})"><ellipse rx="9" ry="4" fill="#4caf50"/><circle cx="3" cy="-1" r="2.4" fill="#ff9ec2"/><ellipse cx="34" cy="8" rx="7" ry="3" fill="#4caf50"/></g>`;
+  g += `<g class="fs-hit" data-act="lakeOpen" aria-label="Озеро">` + faPoly(pond, '#6ec8ec', 'stroke="#3d95b8" stroke-width="3"') + faPoly(pond.map(([x, y]) => [1.35 + (x - 1.35) * .6, 1.45 + (y - 1.45) * .6 - .05, 0]), '#8fdcf5', 'opacity=".7"')
+    + `<g transform="translate(${faX(1.2, 1.4).toFixed(1)} ${faY(1.2, 1.4).toFixed(1)})"><ellipse rx="9" ry="4" fill="#4caf50"/><circle cx="3" cy="-1" r="2.4" fill="#ff9ec2"/><ellipse cx="34" cy="8" rx="7" ry="3" fill="#4caf50"/></g>` + faLakeGate(st) + `</g>`;
 
   // предметы, отсортированные по глубине
   const add = (d, svg) => objs.push({ d, svg });

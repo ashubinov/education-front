@@ -1,0 +1,8 @@
+/* LearnQuest — «Озеро» (рыбалка у фермы): оформление. Сама сцена — js/lake-art.js; общие части (рамка, панель, кнопки, окна) — farm.css и lab.css. */
+.lk-stage { border-color: #2f86ad; box-shadow: 0 6px 0 #1f5f7d, var(--shadow); background: #8fd3ff; }
+.lk-world { min-width: 760px; }
+.lk-ripple { transform-box: fill-box; transform-origin: 50% 50%; animation: lkRipple 2.6s ease-out infinite; opacity: 0; }
+@keyframes lkRipple { 0% { transform: scale(.4); opacity: .85; } 100% { transform: scale(1.5); opacity: 0; } }
+.lk-bait.t2 { border-color: #7aa9d6; } .lk-bait.t3 { border-color: #d6b24a; } .lk-bait small { display: block; }
+.lk-bait .no { color: var(--bad); }
+@media (prefers-reduced-motion: reduce) { .lk-ripple { animation: none; opacity: .5; } }
