@@ -1,0 +1,24 @@
+/* LearnQuest — новые локации фермы: пасека, шахта, торговый тракт и карта мира. Рамка, панель и кнопки — farm.css, окна — lab.css. */
+.ap-stage { border-color: #c8962a; box-shadow: 0 6px 0 #8a6618, var(--shadow); background: #8fd3ff; }
+.mn-stage { border-color: #6c6f82; box-shadow: 0 6px 0 #484a5a, var(--shadow); background: #b8d8f0; }
+.cv-stage { border-color: #a98a54; box-shadow: 0 6px 0 #7a6238, var(--shadow); background: #8fd3ff; }
+.wd-stage { border-color: #2f86ad; box-shadow: 0 6px 0 #1f5f7d, var(--shadow); background: #2f86ad; }
+.ap-world, .mn-world, .cv-world { min-width: 760px; } .wd-world { min-width: 720px; }
+.ap-flower .no, .mn-tier .no { color: var(--bad); } .mn-tier.t2 { border-color: #7aa9d6; } .mn-tier.t3 { border-color: #d6b24a; } .mn-tier.t4 { border-color: #c79bff; }
+/* торговый тракт: окно отправки */
+.cv-towns { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin-bottom: 10px; }
+.cv-town { background: var(--bg3); border: 2px solid var(--line); border-radius: 14px; padding: 8px 6px; display: flex; flex-direction: column; align-items: center; gap: 1px; text-align: center; cursor: pointer; font: inherit; color: inherit; }
+.cv-town.on { border-color: var(--accent); background: var(--accent-l); } .cv-town:disabled { opacity: .45; cursor: default; } .cv-t-ic { font-size: 26px; } .cv-town .no { color: var(--bad); }
+.cv-list { display: flex; flex-direction: column; gap: 6px; max-height: 46vh; overflow-y: auto; padding-right: 2px; }
+.cv-row { display: flex; align-items: center; gap: 8px; background: var(--bg3); border: 2px solid var(--line); border-radius: 12px; padding: 6px 10px; } .cv-row.want { border-color: var(--warn); }
+.cv-ic { font-size: 26px; } .cv-star { color: var(--warn); }
+.cv-row .grow { min-width: 0; } .cv-row .cv-qty { width: 76px; flex: none; text-align: center; padding: 6px; font-weight: 800; } .cv-row .btn { flex: none; }
+.cv-sum { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 10px; padding: 8px 10px; border-radius: 12px; background: var(--bg3); } .cv-sum .no { color: var(--bad); }
+.cv-bd { background: var(--bg3); border: 2px solid var(--line); border-radius: 14px; padding: 8px 12px; margin-bottom: 8px; } .cv-bd.locked { opacity: .5; }
+.cv-bd-h { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; } .cv-want { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+/* карта мира */
+.wd-loc { transition: transform .15s, filter .12s; transform-box: fill-box; transform-origin: 50% 60%; } .wd-loc:hover { transform: scale(1.04); } .wd-loc.locked { filter: saturate(.55) brightness(.9); }
+@media (max-width: 560px) { .cv-row .cv-qty { width: 60px; } .cv-row { gap: 6px; padding: 6px 8px; } .cv-towns { grid-template-columns: repeat(2, 1fr); } }
+/* итог рейса и кнопка «Отправить» всегда видны внизу окна */
+.cv-sum { position: sticky; bottom: -2px; z-index: 2; border: 2px solid var(--line); background: var(--bg2); }
+@media (max-width: 560px) { .cv-list { max-height: 34vh; } }
