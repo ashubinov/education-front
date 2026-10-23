@@ -234,7 +234,7 @@ function farmScene(st) {
   add(3.4 + 1.7, faBoard(3.4, 1.0, st));
   add(8.4 + .8, faWindmill(8.6, .5));
   add(9.0 + 1.95, faHatch(9.0, 1.9));
-  add(9.3 + 4.4, faMapSign(9.3, 4.4));
+  add(7.9 + 3.0, faMapSign(7.9, 3.0));
   st.plots.forEach(p => add(3 + p.idx % 4 + 3 + Math.floor(p.idx / 4) + 1, faPlot(p, st)));
   if (st.farm.plot_cost != null) { const i = st.plots.length; add(3 + i % 4 + 3 + Math.floor(i / 4) + 1, faBuyPlot(i, st.farm.plot_cost, st.farm.coins)); }
   st.pens.forEach(p => { const pg = FA_PENS[p.pen]; add(pg.x + pg.w / 2 + pg.y + pg.d / 2, faPen(p, st)); });
