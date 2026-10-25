@@ -64,12 +64,12 @@
 @media (max-width: 560px) { .fm-db { width: 52px; font-size: 10px; } .fm-db span { font-size: 21px; } .fm-dock { gap: 5px; padding: 6px; } .fm-hud { left: 6px; top: 6px; gap: 5px; } .fm-pill { padding: 4px 10px; font-size: 14px; } main:has(.fm-page) { padding-bottom: 96px; } }
 @media (prefers-reduced-motion: reduce) { .fs-wander, .fs-spin, .fs-bob, .fs-sway, .fs-smoke, .fs-plot.ready .fs-glow { animation: none; } }
 /* кухня: очереди */
-.fm-q-h { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.fm-kq-h { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
 .fm-qs { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; margin-bottom: 10px; }
-.fm-q { position: relative; background: var(--bg3); border: 2px solid var(--line); border-radius: 14px; padding: 8px 8px 8px; display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; min-height: 92px; justify-content: center; }
-.fm-q.ready { border-color: var(--good); background: var(--accent-l); } .fm-q-free { border-style: dashed; opacity: .7; }
-.fm-q-n { position: absolute; left: 6px; top: 4px; font-size: 11px; font-weight: 800; color: var(--muted); } .fm-q-ic { font-size: 28px; line-height: 1.1; }
-.fm-q .bar { width: 100%; } .fm-q .btn { margin-top: 2px; }
+.fm-kq { position: relative; background: var(--bg3); border: 2px solid var(--line); border-radius: 14px; padding: 8px 8px 8px; display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; min-height: 92px; justify-content: center; }
+.fm-kq.ready { border-color: var(--good); background: var(--accent-l); } .fm-kq-free { border-style: dashed; opacity: .7; }
+.fm-kq-n { position: absolute; left: 6px; top: 4px; font-size: 11px; font-weight: 800; color: var(--muted); } .fm-kq-ic { font-size: 28px; line-height: 1.1; }
+.fm-kq .bar { width: 100%; } .fm-kq .btn { margin-top: 2px; }
 .fm-qbuy { display: flex; align-items: center; gap: 10px; background: var(--bg3); border: 2px solid var(--line); border-radius: 14px; padding: 8px 12px; margin-bottom: 8px; }
 .fm-qbuy.over { border-color: var(--warn); }
 .fm-h { margin: 12px 0 8px; font-size: 16px; }

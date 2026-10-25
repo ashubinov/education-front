@@ -86,16 +86,16 @@ function fmPen(p) {
 function fmKitchen(s) {
   const k = s.kitchen, rec = s.catalog.recipes, lvl = s.farm.level, free = k.queues.some(q => q.state === 'empty');
   const cell = q => {
-    if (q.state === 'empty') return html`<div class="fm-q fm-q-free"><span class="fm-q-n">${q.slot + 1}</span><span class="muted small">свободна</span></div>`;
+    if (q.state === 'empty') return html`<div class="fm-kq fm-kq-free"><span class="fm-kq-n">${q.slot + 1}</span><span class="muted small">свободна</span></div>`;
     const r = rec.find(x => x.id === q.recipe);
-    return html`<div class="fm-q ${q.state}"><span class="fm-q-n">${q.slot + 1}</span><span class="fm-q-ic">${r.icon}</span><b class="small">${r.name}${r.qty > 1 ? ' ×' + r.qty : ''}</b>
+    return html`<div class="fm-kq ${q.state}"><span class="fm-kq-n">${q.slot + 1}</span><span class="fm-kq-ic">${r.icon}</span><b class="small">${r.name}${r.qty > 1 ? ' ×' + r.qty : ''}</b>
       ${q.state === 'ready' ? html`<button class="btn sm" data-act="fmCookCollect" data-slot="${q.slot}">Забрать</button>` : html`<span class="small muted">${fmTimer(q.left)}</span>${fmBar(q.left, q.total)}`}</div>`;
   };
   const over = k.next_cost != null && k.count >= k.normal;
   const buy = k.next_cost == null ? html`<p class="muted small" style="margin:8px 0 0">Куплены все ${k.max} очередей — больше кухня не вмещает.</p>`
     : html`<div class="fm-qbuy ${over ? 'over' : ''}"><div class="grow"><b>Очередь №${k.count + 1}</b><div class="small muted">${over ? '⚠ оверпрайс: очереди после ' + k.normal + '-й стоят от 50 000, каждая следующая на 50 000 дороже' : 'обычная цена'}</div></div>
       <button class="btn sm ${over ? '' : 'ghost'}" data-act="fmKitchenBuy" ${s.farm.coins >= k.next_cost ? '' : 'disabled'}>＋ 💰 ${slFmt(k.next_cost)}</button></div>`;
-  return html`<div class="fm-q-h"><span>Очередей <b>${k.count}/${k.max}</b>${k.working ? html` · готовится <b>${k.working}</b>` : ''}</span>${k.ready > 1 ? html`<button class="btn sm" data-act="fmCookCollect">Забрать всё (${k.ready})</button>` : ''}</div>
+  return html`<div class="fm-kq-h"><span>Очередей <b>${k.count}/${k.max}</b>${k.working ? html` · готовится <b>${k.working}</b>` : ''}</span>${k.ready > 1 ? html`<button class="btn sm" data-act="fmCookCollect">Забрать всё (${k.ready})</button>` : ''}</div>
     <div class="fm-qs">${k.queues.map(cell)}</div>${buy}
     <h3 class="fm-h">Что приготовить${free ? '' : html` <span class="muted small">— все очереди заняты</span>`}</h3><div class="fm-recipes">${rec.map(r => {
     const locked = lvl < r.level, enough = Object.entries(r.needs).every(([i, q]) => fmHave(i) >= q);
