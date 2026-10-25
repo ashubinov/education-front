@@ -56,7 +56,7 @@ function fmPage(s) {
     <div class="fm-hud">
       <div class="fm-lvl" title="Опыт фермы: ${f.xp_next ? f.xp - f.xp_from + ' из ' + (f.xp_next - f.xp_from) : 'максимум'}"><div class="fm-lvl-b">${f.level}</div><div class="fm-lvl-r"><small>Уровень</small><div class="bar thin"><i style="width:${pct}%"></i></div></div></div>
       <div class="fm-pill" title="Монеты фермы">💰 <b>${slFmt(f.coins)}</b></div>
-      <div class="fm-pill ${f.stock_total >= f.capacity ? 'full' : ''}" title="Склад">📦 <b>${f.stock_total}/${f.capacity}</b></div>
+      <div class="fm-pill ${f.stock_total >= f.capacity ? 'full' : ''}" title="Склад">📦 <b>${slFmt(f.stock_total)}/${slFmt(f.capacity)}</b></div>
     </div>
     <div class="fm-scroll" id="fmScroll"><svg class="fm-world" viewBox="0 -120 1120 720" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ферма">${raw(farmScene(s))}</svg></div>
     <div class="fm-dock">
@@ -64,7 +64,7 @@ function fmPage(s) {
       <button class="fm-db" data-act="fmPlantAll" ${empty ? '' : 'disabled'}><span>🌱</span>Посадить</button>
       <button class="fm-db" data-act="fmBarn"><span>📦</span>Склад</button>
       <button class="fm-db" data-act="fmOrdersOpen"><span>📋</span>Заказы${doable ? html`<i class="fm-n">${doable}</i>` : ''}</button>
-      <button class="fm-db" data-act="fmKitchenOpen"><span>🍳</span>Кухня${s.kitchen && s.kitchen.state === 'ready' ? html`<i class="fm-n">!</i>` : ''}</button>
+      <button class="fm-db" data-act="fmKitchenOpen"><span>🍳</span>Кухня${s.kitchen.ready ? html`<i class="fm-n">${s.kitchen.ready}</i>` : ''}</button>
       <button class="fm-db" data-act="fmExchange"><span>🔁</span>Обмен</button>
     </div>
   </div><p class="muted small fm-tip">Нажимай на грядки, животных, амбар, кухню и доску заказов. Всё растёт и без тебя.</p></div>`;
@@ -82,14 +82,24 @@ function fmPen(p) {
   return html`<div class="fm-pen"><div class="fm-pen-h"><b>${a.icon} ${a.name}</b><span class="muted small">${p.count}/${max} · ест ${fmIc(a.feed)}, даёт ${fmIc(a.product)}</span></div>${body}</div>`;
 }
 
+/** Кухня: до 10 очередей, в каждой своё блюдо. Рецепт кладётся в первую свободную очередь. */
 function fmKitchen(s) {
-  const k = s.kitchen, rec = s.catalog.recipes, lvl = s.farm.level;
-  const job = k ? (() => { const r = rec.find(x => x.id === k.recipe); return html`<div class="fm-job"><div class="fm-job-ic">${r.icon}</div><div class="grow"><b>${r.name}</b>
-      ${k.state === 'ready' ? html`<div class="small" style="color:var(--good)">Готово! ×${r.qty}</div>` : html`<div class="small muted">ещё ${fmTimer(k.left)}</div>${fmBar(k.left, k.total)}`}</div>
-      ${k.state === 'ready' ? html`<button class="btn sm" data-act="fmCookCollect">Забрать</button>` : ''}</div>`; })() : '';
-  return html`${job}<div class="fm-recipes">${rec.map(r => {
+  const k = s.kitchen, rec = s.catalog.recipes, lvl = s.farm.level, free = k.queues.some(q => q.state === 'empty');
+  const cell = q => {
+    if (q.state === 'empty') return html`<div class="fm-q fm-q-free"><span class="fm-q-n">${q.slot + 1}</span><span class="muted small">свободна</span></div>`;
+    const r = rec.find(x => x.id === q.recipe);
+    return html`<div class="fm-q ${q.state}"><span class="fm-q-n">${q.slot + 1}</span><span class="fm-q-ic">${r.icon}</span><b class="small">${r.name}${r.qty > 1 ? ' ×' + r.qty : ''}</b>
+      ${q.state === 'ready' ? html`<button class="btn sm" data-act="fmCookCollect" data-slot="${q.slot}">Забрать</button>` : html`<span class="small muted">${fmTimer(q.left)}</span>${fmBar(q.left, q.total)}`}</div>`;
+  };
+  const over = k.next_cost != null && k.count >= k.normal;
+  const buy = k.next_cost == null ? html`<p class="muted small" style="margin:8px 0 0">Куплены все ${k.max} очередей — больше кухня не вмещает.</p>`
+    : html`<div class="fm-qbuy ${over ? 'over' : ''}"><div class="grow"><b>Очередь №${k.count + 1}</b><div class="small muted">${over ? '⚠ оверпрайс: очереди после ' + k.normal + '-й стоят от 50 000, каждая следующая на 50 000 дороже' : 'обычная цена'}</div></div>
+      <button class="btn sm ${over ? '' : 'ghost'}" data-act="fmKitchenBuy" ${s.farm.coins >= k.next_cost ? '' : 'disabled'}>＋ 💰 ${slFmt(k.next_cost)}</button></div>`;
+  return html`<div class="fm-q-h"><span>Очередей <b>${k.count}/${k.max}</b>${k.working ? html` · готовится <b>${k.working}</b>` : ''}</span>${k.ready > 1 ? html`<button class="btn sm" data-act="fmCookCollect">Забрать всё (${k.ready})</button>` : ''}</div>
+    <div class="fm-qs">${k.queues.map(cell)}</div>${buy}
+    <h3 class="fm-h">Что приготовить${free ? '' : html` <span class="muted small">— все очереди заняты</span>`}</h3><div class="fm-recipes">${rec.map(r => {
     const locked = lvl < r.level, enough = Object.entries(r.needs).every(([i, q]) => fmHave(i) >= q);
-    return html`<button class="fm-recipe ${locked ? 'locked' : ''}" data-act="fmCook" data-recipe="${r.id}" ${locked || k || !enough ? 'disabled' : ''}>
+    return html`<button class="fm-recipe ${locked ? 'locked' : ''}" data-act="fmCook" data-recipe="${r.id}" ${locked || !free || !enough ? 'disabled' : ''}>
         <span class="fm-r-ic">${r.icon}</span><b>${r.name}${r.qty > 1 ? ' ×' + r.qty : ''}</b>
         <span class="small">${locked ? '🔒 ур. ' + r.level : Object.entries(r.needs).map(([i, q]) => html`<span class="${fmHave(i) >= q ? 'ok' : 'no'}">${fmIc(i)} ${fmHave(i)}/${q}</span>`)}</span>
         <small class="muted">⏱ ${fmClock(r.time)}</small></button>`; })}</div>`;
@@ -154,7 +164,8 @@ actions.fmBuyAnimal = b => fmDo('animal/buy', { pen: b.dataset.pen }, 'fmCoin', 
 actions.fmFeed = b => fmDo('animal/feed', { pen: b.dataset.pen }, 'fmEat', true);
 actions.fmCollect = b => fmDo('animal/collect', { pen: b.dataset.pen }, 'fmHarvest', true);
 actions.fmCook = b => fmDo('cook', { recipe: b.dataset.recipe }, 'fmPlant', true);
-actions.fmCookCollect = () => fmDo('cook/collect', undefined, 'fmHarvest', true);
+actions.fmCookCollect = b => fmDo('cook/collect', b && b.dataset.slot != null ? { slot: +b.dataset.slot } : undefined, 'fmHarvest', true);
+actions.fmKitchenBuy = () => fmDo('kitchen/buy', undefined, 'fmCoin', true);
 actions.fmSell = async b => { const r = await fmDo('sell', b.dataset.qty ? { item: b.dataset.item, qty: +b.dataset.qty } : { item: b.dataset.item }, 'fmCoin', true); if (r) toast(`+${r.sold.coins} монет`, { icon: '💰', ms: 1200 }); };
 actions.fmDeliver = b => fmDo('order/deliver', { slot: +b.dataset.slot }, 'fmCoin', true);
 actions.fmSkip = b => fmDo('order/skip', { slot: +b.dataset.slot }, undefined, true);
@@ -169,7 +180,7 @@ actions.fmPenOpen = b => fmShow(() => {
 });
 actions.fmKitchenOpen = () => fmShow(() => fmPanel('🍳 Кухня', fmKitchen(FARM.st)));
 actions.fmOrdersOpen = () => fmShow(() => fmPanel('📋 Заказы', html`<p class="muted small" style="margin-top:0">Сдай товары со склада и получи больше монет, чем на рынке.</p><div class="fm-orders">${FARM.st.orders.map(fmOrder)}</div>`));
-actions.fmBarn = () => fmShow(() => { const f = FARM.st.farm; fmPanel('📦 Склад и рынок', html`<div class="fm-barn-h"><span>Занято <b>${f.stock_total}/${f.capacity}</b></span>${f.capacity_cost != null ? html`<button class="btn ghost sm" data-act="fmUpgrade">⬆ +${f.capacity_step} мест · 💰 ${f.capacity_cost}</button>` : ''}</div>${fmStock(FARM.st)}<p class="muted small" style="margin:8px 0 0">Цены на рынке меняются каждый день: ↑ дороже обычного, ↓ дешевле.</p>`); });
+actions.fmBarn = () => fmShow(() => { const f = FARM.st.farm; fmPanel('📦 Склад и рынок', html`<div class="fm-barn-h"><span>Занято <b>${slFmt(f.stock_total)}/${slFmt(f.capacity)}</b></span>${f.capacity_cost != null ? html`<button class="btn ghost sm" data-act="fmUpgrade">⬆ +${f.capacity_next - f.capacity} мест (до ${slFmt(f.capacity_next)}) · 💰 ${slFmt(f.capacity_cost)}</button>` : html`<span class="small" style="color:var(--good);font-weight:800">Склад максимальный: ${slFmt(f.max_capacity)}</span>`}</div>${fmStock(FARM.st)}<p class="muted small" style="margin:8px 0 0">Цены на рынке меняются каждый день: ↑ дороже обычного, ↓ дешевле.</p>`); });
 
 function fmSeeds(idx) {
   FARM.target = idx; const s = FARM.st, lvl = s.farm.level, empty = s.plots.filter(p => p.state === 'empty').length;

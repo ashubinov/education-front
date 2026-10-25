@@ -72,15 +72,17 @@ function faBarn(x, y, st) {
 }
 
 function faKitchen(x, y, st) {
-  const w = 2, d = 1.8, h = 34, k = st.kitchen;
-  const smoke = k && k.state === 'working' ? [0, 1, 2].map(i => `<circle class="fs-smoke" style="animation-delay:${i * .9}s" cx="0" cy="0" r="6" fill="#fff"/>`).join('') : '';
+  const w = 2, d = 1.8, h = 34, k = st.kitchen, qs = k.queues;
+  const readyQ = qs.find(q => q.state === 'ready'), workQ = qs.filter(q => q.state === 'working').sort((a, b) => a.left - b.left)[0];
+  const smoke = k.working ? [0, 1, 2].map(i => `<circle class="fs-smoke" style="animation-delay:${i * .9}s" cx="0" cy="0" r="6" fill="#fff"/>`).join('') : '';
   return `<g class="fs-hit" data-act="fmKitchenOpen" aria-label="Кухня">` + faBox(x, y, w, d, h, '#e6d7b4')
     + faPoly([[x + w * .12, y + d, 0], [x + w * .38, y + d, 0], [x + w * .38, y + d, h * .66], [x + w * .12, y + d, h * .66]], '#8a5a34', 'stroke="#5b3a22" stroke-width="2"') + faWindow(x + w * .55, y + d, h * .35, 'L', .3) + faWindow(x + w, y + d * .35, h * .35, 'R', .3)
     + faBox(x + w * .66, y + d * .15, .3, .3, h + 24, '#a85c44')
     + `<g transform="translate(${faX(x + w * .8, y + d * .3).toFixed(1)} ${faY(x + w * .8, y + d * .3, h + 28).toFixed(1)})">${smoke}</g>`
     + faGable(x, y, w, d, h, 22, '#b4513a', '#e6d7b4')
     + `<text x="${faX(x + w * .25, y + d).toFixed(1)}" y="${(faY(x + w * .25, y + d, h + 6) - 2).toFixed(1)}" text-anchor="middle" font-size="22">🍞</text>`
-    + `</g>` + (k ? (k.state === 'ready' ? faBubble(x + w * .5, y + d * .5, h + 56, FARM.st.catalog.items[k.recipe].icon, 'ready') : faRing(x + w * .5, y + d * .5, h + 56, k.left, k.total, FARM.st.catalog.items[k.recipe].icon)) : '');
+    + `</g>` + (readyQ ? faBubble(x + w * .5, y + d * .5, h + 56, FARM.st.catalog.items[readyQ.recipe].icon + (k.ready > 1 ? '×' + k.ready : ''), 'ready')
+      : workQ ? faRing(x + w * .5, y + d * .5, h + 56, workQ.left, workQ.total, FARM.st.catalog.items[workQ.recipe].icon) : '');
 }
 
 function faBoard(x, y, st) {
