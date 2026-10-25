@@ -1,4 +1,4 @@
-/* LearnQuest — «Карта мира» (#/farm/map): ферма в центре и вокруг неё локации (лаборатория, озеро, пасека, шахта, торговый тракт) с замками по уровню фермы
+/* LearnQuest — «Карта мира» (#/farm/map): ферма в центре и вокруг неё локации (лаборатория, озеро, пасека, шахта, торговый тракт, аэропорт) с замками по уровню фермы
    и значками «что-то готово». Данные — /api/world, картинка рисуется кодом. */
 'use strict';
 
@@ -11,6 +11,7 @@ const WD_POS = {
   apiary: { x: 280, y: 105, r: 92, c: ['#b8e27a', '#92c850'], hint: 'ульи и мёд' },
   mine: { x: 735, y: 100, r: 100, c: ['#b4b6c4', '#8d8fa0'], hint: 'руда и самоцветы' },
   caravan: { x: 860, y: 365, r: 112, c: ['#e4c98f', '#c6a566'], hint: 'торговые повозки' },
+  airport: { x: 215, y: 525, r: 62, c: ['#c9ced6', '#a4abb6'], hint: 'рейсы… иногда' },
 };
 
 route(/^#\/farm\/map$/, async () => { await drawWorld(); });
@@ -38,7 +39,7 @@ function worldScene(s) {
   const by = Object.fromEntries(s.locations.map(l => [l.id, l]));
   // тропы от фермы к островам
   Object.keys(WD_POS).filter(k => k !== 'farm').forEach(k => { const p = WD_POS[k], f = WD_POS.farm; g += `<path d="M${f.x} ${f.y} Q${(f.x + p.x) / 2 + (k === 'lab' ? 0 : 0)} ${(f.y + p.y) / 2 - 20} ${p.x} ${p.y}" stroke="${by[k].unlocked ? '#f3e2b3' : 'rgba(255,255,255,.35)'}" stroke-width="${by[k].unlocked ? 6 : 4}" stroke-dasharray="${by[k].unlocked ? '2 12' : '3 10'}" stroke-linecap="round" fill="none"/>`; });
-  const order = ['lab', 'lake', 'apiary', 'mine', 'caravan', 'farm'];
+  const order = ['lab', 'lake', 'apiary', 'mine', 'caravan', 'airport', 'farm'];
   order.forEach((id, i) => {
     const l = by[id], p = WD_POS[id], on = l.unlocked;
     g += `<g class="fs-hit wd-loc ${on ? '' : 'locked'}" data-act="worldGo" data-id="${id}" aria-label="${l.name}${on ? '' : ', закрыто'}">`
@@ -59,6 +60,7 @@ function wdDeco(id, p) {
   if (id === 'lake') return `<ellipse cx="${p.x}" cy="${p.y + 10}" rx="${p.r * .62}" ry="${p.r * .36}" fill="#b8ecff" stroke="#7fc7e3" stroke-width="3" opacity=".9"/>`;
   if (id === 'apiary') return [[-50, -20], [48, -26], [-34, 36], [40, 34], [0, -50]].map(([dx, dy], i) => `<circle cx="${p.x + dx}" cy="${p.y + dy}" r="6" fill="${['#ff6f91', '#ffd54a', '#b39cff', '#fff', '#ff9ec2'][i]}" stroke="rgba(0,0,0,.2)"/>`).join('');
   if (id === 'caravan') return `<path d="M${p.x - 100} ${p.y + 40} Q${p.x} ${p.y - 20} ${p.x + 100} ${p.y - 30}" stroke="#a98a54" stroke-width="14" fill="none" stroke-linecap="round" opacity=".7"/>`;
+  if (id === 'airport') return `<rect x="${p.x - 70}" y="${p.y + 14}" width="140" height="16" rx="3" fill="#4b505a"/><path d="M${p.x - 56} ${p.y + 22} H${p.x + 56}" stroke="#fff" stroke-width="2.5" stroke-dasharray="9 8"/>`;
   if (id === 'lab') return `<rect x="${p.x - 30}" y="${p.y + 22}" width="60" height="14" fill="#6b7a8c" opacity=".6"/>`;
   return '';
 }

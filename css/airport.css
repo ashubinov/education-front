@@ -1,0 +1,16 @@
+/* LearnQuest — «Аэропорт» (шуточная локация фермы). Рамка, панель и кнопки — farm.css, общие окна — lab.css и locations.css. */
+.ar-stage { border-color: #d6314a; box-shadow: 0 6px 0 #9c2036, var(--shadow); background: #8fd3ff; }
+.ar-world { min-width: 760px; }
+.ar-ul { margin: 0 0 10px; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
+.ar-log { display: flex; flex-direction: column; gap: 6px; max-height: 42vh; overflow-y: auto; padding-right: 2px; }
+.ar-log-r { display: flex; gap: 10px; align-items: flex-start; background: var(--bg3); border: 2px solid var(--line); border-radius: 12px; padding: 7px 10px; }
+.ar-log-r.cancel { border-color: var(--bad); } .ar-log-r.delay, .ar-log-r.air { border-color: var(--warn); } .ar-log-r.land { border-color: var(--good); }
+.ar-log-ic { font-size: 22px; line-height: 1.2; }
+.ar-prize, .ar-rank { display: flex; align-items: center; gap: 12px; background: var(--accent-l); border: 2px solid var(--good); border-radius: 14px; padding: 10px 12px; margin-bottom: 10px; }
+.ar-prize > span:first-child, .ar-rank > span:first-child { font-size: 30px; } .ar-rank { border-color: var(--line); background: var(--bg3); }
+.ar-board { display: flex; flex-direction: column; gap: 6px; }
+.ar-brow { display: flex; align-items: center; gap: 10px; background: #1c2733; color: #d8e4ee; border-radius: 12px; padding: 8px 12px; } .ar-brow .muted { color: #8fa3b5; }
+.ar-time { font-variant-numeric: tabular-nums; color: #7fd2ff; min-width: 44px; }
+.ar-st { text-align: right; font-weight: 900; font-size: 12px; flex: none; } .ar-st small { display: block; font-weight: 700; opacity: .85; }
+.ar-st.bad { color: #ff6b6b; } .ar-st.warn { color: #ffcd4a; }
+@media (max-width: 560px) { .ar-brow { gap: 8px; padding: 7px 9px; } .ar-time { min-width: 40px; } .ar-log { max-height: 36vh; } }

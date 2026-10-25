@@ -12,7 +12,7 @@ function locPage(c) {
 }
 
 /**
- * Фабрика локации. cfg: { api: '/mine', hash: /^#\/farm\/mine$/, page: st => html, name: 'Шахта', events: (events, st) => void }.
+ * Фабрика локации. cfg: { api: '/mine', hash: /^#\/farm\/mine$/, page: st => html, name: 'Шахта', events: (events, st) => void, refreshPanel: перерисовывать открытое окно, когда таймер дошёл до нуля }.
  * Возвращает объект с состоянием K (st — последнее состояние сервера) и функциями draw/paint/show/panel/act.
  */
 function locKit(cfg) {
@@ -24,7 +24,7 @@ function locKit(cfg) {
     const sc = $('#fmScroll'); if (sc) sc.scrollLeft = sl != null ? sl : (sc.scrollWidth - sc.clientWidth) / 2;
     window.scrollTo(0, y);
   };
-  const tick = () => fmTickWith(() => { if (!K.busy) api(cfg.api).then(r => { set(r); paint(); }).catch(() => { }); });
+  const tick = () => fmTickWith(() => { if (!K.busy) api(cfg.api).then(r => { set(r); paint(); if (cfg.refreshPanel && K.reopen) { const f = K.reopen; f(); K.reopen = f; } }).catch(() => { }); });
   async function draw() {
     render(app(), shell('farm', html`<div class="center muted mt-l"><span class="spinner"></span></div>`));
     let r;
